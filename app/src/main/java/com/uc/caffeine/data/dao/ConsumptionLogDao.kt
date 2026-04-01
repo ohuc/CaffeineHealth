@@ -34,15 +34,18 @@ interface ConsumptionLogDao {
     suspend fun clearToday(startOfDay: Long)
 
     // The 2 most recently logged DISTINCT drinks — used for Quick Add
-    // GROUP BY drinkName collapses duplicate drinks into one row each
-    // MAX(timestamp) picks the most recent tap of each drink
-    // ORDER BY that timestamp DESC = most recent first
-    // LIMIT 2 = only the top 2
+    // This query gets the full row data for the most recent entry of each distinct drink
+    // The subquery finds the max timestamp for each drinkName
+    // The outer query joins back to get all column values from that specific row
     @Query("""
-        SELECT drinkName, caffeineMg, emoji, MAX(timestamp) as lastUsed
-        FROM consumption_log
-        GROUP BY drinkName
-        ORDER BY lastUsed DESC
+        SELECT c1.drinkName, c1.caffeineMg, c1.emoji, c1.timestamp as lastUsed
+        FROM consumption_log c1
+        INNER JOIN (
+            SELECT drinkName, MAX(timestamp) as maxTimestamp
+            FROM consumption_log
+            GROUP BY drinkName
+        ) c2 ON c1.drinkName = c2.drinkName AND c1.timestamp = c2.maxTimestamp
+        ORDER BY c1.timestamp DESC
         LIMIT 2
     """)
     fun getRecentlyUsedDrinks(): Flow<List<RecentDrink>>

@@ -4,9 +4,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -16,20 +15,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.data.model.DrinkPreset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.uc.caffeine.ui.components.CaffeineScreenScaffold
+import com.uc.caffeine.ui.viewmodel.AddScreenUiEvent
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.util.CategoryIcons
 import com.uc.caffeine.util.CategoryUtils
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
 
+    val allDrinks by viewModel.drinkPresets.collectAsStateWithLifecycle()
     val groupedDrinks by viewModel.groupedDrinkPresets.collectAsStateWithLifecycle()
     val selectedFilter by viewModel.selectedCategoryFilter.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -38,71 +39,64 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
     }
     val categories = viewModel.getAvailableCategories()
     val focusManager = LocalFocusManager.current
+    val isCatalogLoading = allDrinks.isEmpty() && selectedFilter == null && searchQuery.isBlank()
+    val listState = rememberLazyListState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Add a drink",
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Text(
-            text = "Tap to log it instantly",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ── Search bar ────────────────────────────────────────────
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { viewModel.updateSearchQuery(it) },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = {
-                Text(
-                    text = "Search drinks...",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            trailingIcon = {
-                // Only show the clear button when there is text to clear
-                if (searchQuery.isNotBlank()) {
-                    IconButton(onClick = {
-                        viewModel.updateSearchQuery("")
-                        focusManager.clearFocus()  // dismiss keyboard after clearing
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Clear,
-                            contentDescription = "Clear search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+    LaunchedEffect(viewModel, snackbarHostState) {
+        viewModel.addScreenEvents.collect { event ->
+            when (event) {
+                is AddScreenUiEvent.DrinkLogged -> {
+                    snackbarHostState.showSnackbar(
+                        message = "Logged ${event.drinkName}",
+                        duration = SnackbarDuration.Short
+                    )
                 }
+            }
+        }
+    }
+
+    CaffeineScreenScaffold(
+        title = "Add a drink",
+        subtitle = "Tap to log it instantly",
+        snackbarHostState = snackbarHostState
+    ) {
+        // ── Material 3 SearchBar ────────────────────────────────────────────
+        SearchBar(
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = searchQuery,
+                    onQueryChange = { viewModel.updateSearchQuery(it) },
+                    onSearch = { focusManager.clearFocus() },
+                    expanded = false,
+                    onExpandedChange = { },
+                    placeholder = { Text("Search drinks...") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search"
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = {
+                                listState.requestScrollToItem(0)
+                                viewModel.updateSearchQuery("")
+                                focusManager.clearFocus()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Clear,
+                                    contentDescription = "Clear search"
+                                )
+                            }
+                        }
+                    }
+                )
             },
-            singleLine = true,
-            shape = MaterialTheme.shapes.large,  // rounded corners — M3 style
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = { focusManager.clearFocus() }  // dismiss keyboard on Search key
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-            )
+            expanded = false,
+            onExpandedChange = { },
+            modifier = Modifier.fillMaxWidth(),
+            content = { /* No search suggestions needed */ }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -125,6 +119,7 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
                     checked = isChecked,
                     onCheckedChange = { 
                         if (it) { // Only act when checking (single-select pattern)
+                            listState.requestScrollToItem(0)
                             viewModel.selectCategoryFilter(category)
                         }
                     },
@@ -152,41 +147,110 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (groupedDrinks.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                categorizedDrinks.forEach { entry ->
-                    val (category, drinks) = entry
-                    
-                    stickyHeader(key = "header-$category") {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.surface
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = true)
+        ) {
+            if (isCatalogLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (groupedDrinks.isEmpty()) {
+                EmptyDrinkResultsState(
+                    selectedFilter = selectedFilter,
+                    searchQuery = searchQuery,
+                    onClearFilters = {
+                        listState.requestScrollToItem(0)
+                        viewModel.selectCategoryFilter(null)
+                        viewModel.updateSearchQuery("")
+                        focusManager.clearFocus()
+                    }
+                )
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    categorizedDrinks.forEach { entry ->
+                        val (category, drinks) = entry
+
+                        stickyHeader(
+                            key = "header-$category",
+                            contentType = "header"
                         ) {
-                            Text(
-                                text = category,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(vertical = 12.dp),
-                                color = MaterialTheme.colorScheme.primary
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.surface
+                            ) {
+                                Text(
+                                    text = category,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        items(
+                            items = drinks,
+                            key = { drink -> drink.id },
+                            contentType = { "drink" }
+                        ) { drink ->
+                            ElevatedDrinkCard(
+                                drink = drink,
+                                onClick = { viewModel.logDrinkFromAddScreen(drink) },
+                                modifier = Modifier.animateItem()
                             )
                         }
                     }
-                    
-                    items(
-                        items = drinks,
-                        key = { drink -> drink.id }
-                    ) { drink ->
-                        ElevatedDrinkCard(
-                            drink = drink,
-                            onClick = { viewModel.logDrink(drink) }
-                        )
-                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyDrinkResultsState(
+    selectedFilter: String?,
+    searchQuery: String,
+    onClearFilters: () -> Unit
+) {
+    val hasActiveFilters = selectedFilter != null || searchQuery.isNotBlank()
+    val title = if (hasActiveFilters) "No drinks found" else "No drinks available"
+    val message = when {
+        selectedFilter != null && searchQuery.isNotBlank() ->
+            "No drinks match \"$searchQuery\" in $selectedFilter."
+        selectedFilter != null ->
+            "No drinks are available in $selectedFilter right now."
+        searchQuery.isNotBlank() ->
+            "No drinks match \"$searchQuery\"."
+        else ->
+            "Add some presets to see drinks here."
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (hasActiveFilters) {
+                TextButton(onClick = onClearFilters) {
+                    Text("Clear filters")
                 }
             }
         }

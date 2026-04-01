@@ -1,6 +1,8 @@
 package com.uc.caffeine.ui.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
@@ -8,10 +10,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -21,139 +31,244 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.RecentDrink
+import com.uc.caffeine.data.UserSettings
+import com.uc.caffeine.ui.components.CaffeineScreenScaffold
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 
 @Composable
 fun HomeScreen(viewModel: CaffeineViewModel = viewModel()) {
-
+    val currentLevel by viewModel.currentCaffeineLevel.collectAsStateWithLifecycle()
     val totalCaffeine by viewModel.todayTotalMg.collectAsStateWithLifecycle()
-    val recentDrinks  by viewModel.recentDrinks.collectAsStateWithLifecycle()
-    val todayEntries  by viewModel.todayEntries.collectAsStateWithLifecycle()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // ── Caffeine counter ──────────────────────────────────────
-        Text(
-            text = "Today's Caffeine",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "${totalCaffeine}mg",
-            fontSize = 72.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
-        )
-
-        val statusMessage = when {
-            totalCaffeine == 0   -> "No caffeine yet today"
-            totalCaffeine < 100  -> "You're just waking up ☀️"
-            totalCaffeine < 200  -> "Feeling good ✅"
-            totalCaffeine < 400  -> "Getting there ⚠️"
-            else                 -> "Consider slowing down 🛑"
-        }
-        Text(
-            text = statusMessage,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ── Quick Add — only shown after the user has logged at least one drink ──
-        if (recentDrinks.isNotEmpty()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+    val caffeineAtBedtime by viewModel.caffeineAtBedtime.collectAsStateWithLifecycle()
+    val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
+    val todayEntries by viewModel.todayEntries.collectAsStateWithLifecycle()
+    
+    var logExpanded by remember { mutableStateOf(false) }
+    
+    CaffeineScreenScaffold(title = "Home") {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = true)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // ── Graph Card ──────────────────────────────────────
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
             ) {
-                Text(
-                    text = "Quick Add",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "recently used",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Row of max 2 recent drink cards side by side
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                recentDrinks.forEach { recent ->
-                    RecentDrinkCard(
-                        recent = recent,
-                        modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // TODO: Replace with actual Vico chart in next todo
+                    // For now, placeholder
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        viewModel.logRecentDrink(recent)
+                        Icon(
+                            imageVector = Icons.Default.ShowChart,
+                            contentDescription = "Chart",
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "24-Hour Caffeine Curve",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Current level overlay (top-left or center-top)
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Active Caffeine",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "%.1f mg".format(currentLevel),
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
-                // If only 1 recent drink, fill the other half with empty space
-                if (recentDrinks.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-        }
 
-        // ── First time prompt — shown before any drink is logged ─────────────
-        if (recentDrinks.isEmpty()) {
-            Card(
+            // ── Sleep Forecast (Compact) ──────────────────────────────────────
+            val (bedtimeCaffeineLevel, bedtimeTimestamp) = caffeineAtBedtime
+
+            ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = when {
+                        bedtimeCaffeineLevel < userSettings.sleepThresholdMg ->
+                            MaterialTheme.colorScheme.primaryContainer
+                        bedtimeCaffeineLevel < userSettings.sleepThresholdMg * 1.5 ->
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        else -> MaterialTheme.colorScheme.errorContainer
+                    }
                 )
             ) {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "☕", fontSize = 40.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Log your first drink",
-                        style = MaterialTheme.typography.titleSmall,
-                        textAlign = TextAlign.Center
+                    Icon(
+                        imageVector = when {
+                            bedtimeCaffeineLevel < userSettings.sleepThresholdMg -> Icons.Default.CheckCircle
+                            bedtimeCaffeineLevel < userSettings.sleepThresholdMg * 1.5 -> Icons.Default.Warning
+                            else -> Icons.Default.Cancel
+                        },
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    Text(
-                        text = "Tap Add to browse all drinks",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Sleep Forecast",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = when {
+                                bedtimeCaffeineLevel < userSettings.sleepThresholdMg ->
+                                    "Safe to sleep at ${formatBedtime(userSettings)}"
+                                bedtimeCaffeineLevel < userSettings.sleepThresholdMg * 1.5 ->
+                                    "May affect sleep (${bedtimeCaffeineLevel.toInt()}mg at bedtime)"
+                                else ->
+                                    "Sleep disruption likely (${bedtimeCaffeineLevel.toInt()}mg)"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        if (todayEntries.isNotEmpty()) {
-            TextButton(onClick = { viewModel.resetToday() }) {
-                Text("Reset Today")
+            // ── Summary Stats ──────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Total today:",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "$totalCaffeine mg",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Collapsible Today's Log ──────────────────────────────────────
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { logExpanded = !logExpanded }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Today's Log (${todayEntries.size})",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Icon(
+                        imageVector = if (logExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (logExpanded) "Collapse" else "Expand"
+                    )
+                }
+
+                if (logExpanded) {
+                    if (todayEntries.isEmpty()) {
+                        Text(
+                            text = "No drinks logged today",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp)
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(todayEntries, key = { it.timestamp }) { entry ->
+                                TodayLogItem(entry)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+@Composable
+private fun TodayLogItem(entry: ConsumptionEntry) {
+    // Keep existing drink card UI
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(entry.emoji, fontSize = 32.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = entry.drinkName,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${entry.caffeineMg.toInt()} mg",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+private fun formatBedtime(settings: UserSettings): String {
+    val hour = if (settings.sleepTimeHour > 12) settings.sleepTimeHour - 12 else settings.sleepTimeHour
+    val amPm = if (settings.sleepTimeHour >= 12) "PM" else "AM"
+    return "$hour:%02d $amPm".format(settings.sleepTimeMinute)
 }
 
 // ── Quick Add card — built from RecentDrink (log history), not DrinkPreset ──

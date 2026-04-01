@@ -4,25 +4,48 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.uc.caffeine.data.CaffeineDatabase
+import com.uc.caffeine.data.SettingsRepository
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.RecentDrink
+import com.uc.caffeine.util.CaffeineCalculator
 import com.uc.caffeine.util.CategoryUtils
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlin.time.Duration.Companion.minutes
+
+sealed interface AddScreenUiEvent {
+    data class DrinkLogged(val drinkName: String) : AddScreenUiEvent
+}
 
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db        = CaffeineDatabase.getDatabase(application)
     private val presetDao = db.drinkPresetDao()
     private val logDao    = db.consumptionLogDao()
+    private val settingsRepo = SettingsRepository(application)
+
+    // User settings flow
+    val userSettings = settingsRepo.settingsFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = com.uc.caffeine.data.UserSettings()
+    )
+
+    // Ticker flow - emits every 5 minutes to trigger caffeine level recalculation
+    private val tickerFlow = flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            delay(5.minutes)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = System.currentTimeMillis()
+    )
 
     // Selected category filter (null = "All", shows all categories)
     private val _selectedCategoryFilter = MutableStateFlow<String?>(null)
@@ -31,6 +54,8 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     // Search query filter
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    private val addScreenEventsChannel = Channel<AddScreenUiEvent>(capacity = Channel.BUFFERED)
+    val addScreenEvents: Flow<AddScreenUiEvent> = addScreenEventsChannel.receiveAsFlow()
 
     private fun startOfToday(): Long {
         val cal = Calendar.getInstance()
@@ -41,9 +66,10 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         return cal.timeInMillis
     }
 
+    private val allDrinkPresets = presetDao.getAllPresets()
+
     // Full drink catalog — used by the Add screen
-    val drinkPresets: StateFlow<List<DrinkPreset>> = presetDao
-        .getAllPresets()
+    val drinkPresets: StateFlow<List<DrinkPreset>> = allDrinkPresets
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -53,7 +79,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     // Grouped drink catalog by category — used by the Add screen for categorized display
     val groupedDrinkPresets: StateFlow<Map<String, List<DrinkPreset>>> = 
         combine(
-            presetDao.getAllPresets(), 
+            drinkPresets,
             selectedCategoryFilter,
             searchQuery  // Add search query
         ) { drinks, filter, query ->
@@ -120,15 +146,101 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             initialValue = emptyList()
         )
 
+    // Current active caffeine level with real-time decay
+    val currentCaffeineLevel: StateFlow<Double> = combine(
+        logDao.getAllEntries(),
+        tickerFlow,
+        userSettings
+    ) { allEntries, currentTime, settings ->
+        CaffeineCalculator.calculateCurrentLevel(
+            entries = allEntries,
+            currentTimeMillis = currentTime,
+            halfLifeMinutes = settings.halfLifeMinutes
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = 0.0
+    )
+
+    /**
+     * Predicts caffeine level at user's next bedtime.
+     * Returns: Pair<caffeineLevelAtBedtime, timeUntilBedtime>
+     */
+    val caffeineAtBedtime: StateFlow<Pair<Double, Long>> = combine(
+        logDao.getAllEntries(),
+        userSettings,
+        tickerFlow
+    ) { allEntries, settings, _ ->
+        val now = System.currentTimeMillis()
+        val calendar = Calendar.getInstance()
+        
+        // Calculate next bedtime
+        calendar.timeInMillis = now
+        calendar.set(Calendar.HOUR_OF_DAY, settings.sleepTimeHour)
+        calendar.set(Calendar.MINUTE, settings.sleepTimeMinute)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        
+        // If bedtime already passed today, move to tomorrow
+        if (calendar.timeInMillis <= now) {
+            calendar.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        
+        val bedtime = calendar.timeInMillis
+        val caffeineLevel = CaffeineCalculator.calculateCurrentLevel(
+            entries = allEntries,
+            currentTimeMillis = bedtime,  // Calculate AT bedtime, not now
+            halfLifeMinutes = settings.halfLifeMinutes
+        )
+        
+        Pair(caffeineLevel, bedtime)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = Pair(0.0, System.currentTimeMillis())
+    )
+
+    // Time until peak absorption - shows when caffeine is still being absorbed
+    val timeUntilPeak: StateFlow<Long?> = combine(
+        logDao.getAllEntries(),
+        tickerFlow
+    ) { allEntries, _ ->
+        if (allEntries.isEmpty()) return@combine null
+        val mostRecent = allEntries.maxByOrNull { it.timestamp } ?: return@combine null
+        val peakTime = mostRecent.timestamp + (mostRecent.absorptionRate * 60 * 1000L)
+        val now = System.currentTimeMillis()
+        if (peakTime > now) peakTime else null
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = null
+    )
+
     fun logDrink(preset: DrinkPreset) {
         viewModelScope.launch {
             logDao.logDrink(
                 ConsumptionEntry(
                     drinkName  = preset.name,
                     caffeineMg = preset.defaultCaffeineMg,
-                    emoji      = preset.emoji
+                    emoji      = preset.emoji,
+                    absorptionRate = preset.absorptionRate
                 )
             )
+        }
+    }
+
+    fun logDrinkFromAddScreen(preset: DrinkPreset) {
+        viewModelScope.launch {
+            logDao.logDrink(
+                ConsumptionEntry(
+                    drinkName = preset.name,
+                    caffeineMg = preset.defaultCaffeineMg,
+                    emoji = preset.emoji,
+                    absorptionRate = preset.absorptionRate
+                )
+            )
+            addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(preset.name))
         }
     }
 
@@ -163,5 +275,24 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     // Helper function to get all available categories
     fun getAvailableCategories(): List<String> {
         return CategoryUtils.getCategoryDisplayNamesOrdered()
+    }
+
+    // Settings update functions
+    fun updateHalfLife(hours: Int) {
+        viewModelScope.launch {
+            settingsRepo.updateHalfLife(hours * 60) // Convert hours to minutes
+        }
+    }
+
+    fun updateSleepTime(hour: Int, minute: Int) {
+        viewModelScope.launch {
+            settingsRepo.updateSleepTime(hour, minute)
+        }
+    }
+
+    fun updateSleepThreshold(milligrams: Int) {
+        viewModelScope.launch {
+            settingsRepo.updateSleepThreshold(milligrams)
+        }
     }
 }

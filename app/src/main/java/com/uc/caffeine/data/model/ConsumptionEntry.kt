@@ -20,6 +20,10 @@ data class ConsumptionEntry(
     val caffeineMg: Int,
     val emoji: String,
 
+    // Absorption rate in minutes - time to peak blood concentration
+    // Stored here (not FK) so historical data remains accurate even if preset changes
+    val absorptionRate: Int = 45,
+
     // Timestamp = milliseconds since epoch (System.currentTimeMillis())
     // Easy to compare, sort, and filter by date
     // e.g. "today" = timestamp > (start of today in ms)

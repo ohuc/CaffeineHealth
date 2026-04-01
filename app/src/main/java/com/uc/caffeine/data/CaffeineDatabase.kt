@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [DrinkPreset::class, DrinkUnit::class, ConsumptionEntry::class],
-    version = 4,   // bumped: fixed duplicate seeding bug
+    version = 5,   // bumped: added absorptionRate to ConsumptionEntry
     exportSchema = false
 )
 abstract class CaffeineDatabase : RoomDatabase() {
