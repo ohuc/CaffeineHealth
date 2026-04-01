@@ -14,6 +14,12 @@ interface ConsumptionLogDao {
     @Insert
     suspend fun logDrink(entry: ConsumptionEntry)
 
+    @Query("UPDATE consumption_log SET caffeineMg = :caffeineMg, timestamp = :timestamp WHERE id = :entryId")
+    suspend fun updateEntryById(entryId: Int, caffeineMg: Int, timestamp: Long)
+
+    @Query("DELETE FROM consumption_log WHERE id = :entryId")
+    suspend fun deleteEntryById(entryId: Int)
+
     // Get ALL entries from today only
     // :startOfDay is a parameter we pass in — Room replaces it with the actual value
     // startOfDay = midnight today in milliseconds

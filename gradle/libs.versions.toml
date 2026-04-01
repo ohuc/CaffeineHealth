@@ -1,5 +1,6 @@
 [versions]
 agp = "9.1.0"
+navigationCompose = "2.10.0-alpha02"
 room = "2.8.4"
 ksp = "2.2.10-2.0.2" # Matches Kotlin 2.2.10
 lifecycleViewmodelCompose = "2.10.0"
@@ -19,6 +20,7 @@ vico = "3.0.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

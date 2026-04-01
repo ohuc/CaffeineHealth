@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -25,6 +26,7 @@ import com.uc.caffeine.ui.viewmodel.AddScreenUiEvent
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.util.CategoryIcons
 import com.uc.caffeine.util.CategoryUtils
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -44,9 +46,10 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel, snackbarHostState) {
-        viewModel.addScreenEvents.collect { event ->
+        viewModel.addScreenEvents.collectLatest { event ->
             when (event) {
                 is AddScreenUiEvent.DrinkLogged -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
                     snackbarHostState.showSnackbar(
                         message = "Logged ${event.drinkName}",
                         duration = SnackbarDuration.Short
@@ -59,7 +62,8 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
     CaffeineScreenScaffold(
         title = "Add a drink",
         subtitle = "Tap to log it instantly",
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
+        headerBottomSpacing = 0.dp
     ) {
         // ── Material 3 SearchBar ────────────────────────────────────────────
         SearchBar(
@@ -70,6 +74,7 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
                     onSearch = { focusManager.clearFocus() },
                     expanded = false,
                     onExpandedChange = { },
+
                     placeholder = { Text("Search drinks...") },
                     leadingIcon = {
                         Icon(
@@ -96,6 +101,8 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
             expanded = false,
             onExpandedChange = { },
             modifier = Modifier.fillMaxWidth(),
+            windowInsets = WindowInsets(0.dp),
+            shape = RoundedCornerShape(16.dp),
             content = { /* No search suggestions needed */ }
         )
 
@@ -198,9 +205,11 @@ fun AddScreen(viewModel: CaffeineViewModel = viewModel()) {
                             key = { drink -> drink.id },
                             contentType = { "drink" }
                         ) { drink ->
+                            val currentDrink by rememberUpdatedState(drink)
+
                             ElevatedDrinkCard(
-                                drink = drink,
-                                onClick = { viewModel.logDrinkFromAddScreen(drink) },
+                                drink = currentDrink,
+                                onClick = { viewModel.logDrinkFromAddScreen(currentDrink) },
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -264,9 +273,11 @@ fun ElevatedDrinkCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
+    Surface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainerLow, // Gives a card-like look without shadows
+        shape = MaterialTheme.shapes.medium
     ) {
         Row(
             modifier = Modifier

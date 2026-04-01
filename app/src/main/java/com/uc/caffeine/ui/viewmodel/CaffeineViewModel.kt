@@ -10,6 +10,9 @@ import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.RecentDrink
 import com.uc.caffeine.util.CaffeineCalculator
 import com.uc.caffeine.util.CategoryUtils
+import com.uc.caffeine.util.ChartData
+import com.uc.caffeine.util.ChartDataGenerator
+import com.uc.caffeine.util.ConsumptionContributionDetail
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -19,6 +22,10 @@ import kotlin.time.Duration.Companion.minutes
 
 sealed interface AddScreenUiEvent {
     data class DrinkLogged(val drinkName: String) : AddScreenUiEvent
+}
+
+sealed interface HomeScreenUiEvent {
+    data class LogActionCompleted(val message: String) : HomeScreenUiEvent
 }
 
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
@@ -56,6 +63,8 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     private val addScreenEventsChannel = Channel<AddScreenUiEvent>(capacity = Channel.BUFFERED)
     val addScreenEvents: Flow<AddScreenUiEvent> = addScreenEventsChannel.receiveAsFlow()
+    private val homeScreenEventsChannel = Channel<HomeScreenUiEvent>(capacity = Channel.BUFFERED)
+    val homeScreenEvents: Flow<HomeScreenUiEvent> = homeScreenEventsChannel.receiveAsFlow()
 
     private fun startOfToday(): Long {
         val cal = Calendar.getInstance()
@@ -217,6 +226,29 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         initialValue = null
     )
 
+    // Reactive 24-hour caffeine curve data for charting
+    val chartData: StateFlow<ChartData> = combine(
+        logDao.getAllEntries(),
+        tickerFlow,
+        userSettings
+    ) { entries, currentTime, settings ->
+        ChartDataGenerator.generateChartData(
+            entries = entries,
+            settings = settings,
+            currentTime = currentTime
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = ChartData(
+            dataPoints = emptyList(),
+            consumptionMarkers = emptyList(),
+            thresholdLevel = 100.0,
+            bedtimeMillis = 0L,
+            currentTimeMillis = System.currentTimeMillis()
+        )
+    )
+
     fun logDrink(preset: DrinkPreset) {
         viewModelScope.launch {
             logDao.logDrink(
@@ -253,6 +285,57 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     caffeineMg = recent.caffeineMg,
                     emoji      = recent.emoji
                 )
+            )
+        }
+    }
+
+    fun getContributionDetail(
+        entry: ConsumptionEntry,
+        currentTimeMillis: Long = System.currentTimeMillis()
+    ): ConsumptionContributionDetail {
+        return ChartDataGenerator.generateContributionDetail(
+            entry = entry,
+            settings = userSettings.value,
+            currentTime = currentTimeMillis
+        )
+    }
+
+    fun updateLoggedEntry(
+        entry: ConsumptionEntry,
+        caffeineMg: Int,
+        timestamp: Long
+    ) {
+        viewModelScope.launch {
+            logDao.updateEntryById(
+                entryId = entry.id,
+                caffeineMg = caffeineMg,
+                timestamp = timestamp
+            )
+            homeScreenEventsChannel.send(
+                HomeScreenUiEvent.LogActionCompleted("Updated ${entry.drinkName}")
+            )
+        }
+    }
+
+    fun duplicateLoggedEntry(entry: ConsumptionEntry) {
+        viewModelScope.launch {
+            logDao.logDrink(
+                entry.copy(
+                    id = 0,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+            homeScreenEventsChannel.send(
+                HomeScreenUiEvent.LogActionCompleted("Logged ${entry.drinkName} again")
+            )
+        }
+    }
+
+    fun deleteLoggedEntry(entry: ConsumptionEntry) {
+        viewModelScope.launch {
+            logDao.deleteEntryById(entry.id)
+            homeScreenEventsChannel.send(
+                HomeScreenUiEvent.LogActionCompleted("Deleted ${entry.drinkName}")
             )
         }
     }

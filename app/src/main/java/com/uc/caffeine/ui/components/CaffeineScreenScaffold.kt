@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -28,6 +29,7 @@ fun CaffeineScreenScaffold(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState? = null,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+    headerBottomSpacing: Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Scaffold(
@@ -67,7 +69,9 @@ fun CaffeineScreenScaffold(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            if (headerBottomSpacing > 0.dp) {
+                Spacer(modifier = Modifier.height(headerBottomSpacing))
+            }
             content()
         }
     }
