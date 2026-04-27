@@ -1,5 +1,4 @@
 @file:OptIn(
-    ExperimentalLayoutApi::class,
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
 )
@@ -22,7 +21,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.basicMarquee
@@ -32,13 +34,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -69,13 +71,16 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -98,10 +103,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
@@ -131,6 +138,17 @@ import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.Brush
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.Fill
 
 internal const val OnboardingStepCount = 5
 
@@ -152,8 +170,6 @@ internal data class OnboardingLayoutMetrics(
     val cardPadding: Dp,
     val cardSpacing: Dp,
     val postCardSpacerWeight: Float,
-    val compactTextMaxLines: Int,
-    val allowBodyScroll: Boolean,
 )
 
 @Composable
@@ -172,8 +188,6 @@ private fun rememberOnboardingLayoutMetrics(maxHeight: Dp): OnboardingLayoutMetr
                 cardPadding = 14.dp,
                 cardSpacing = 12.dp,
                 postCardSpacerWeight = 0f,
-                compactTextMaxLines = 2,
-                allowBodyScroll = maxHeight < 620.dp,
             )
 
             maxHeight < 860.dp -> OnboardingLayoutMetrics(
@@ -188,8 +202,6 @@ private fun rememberOnboardingLayoutMetrics(maxHeight: Dp): OnboardingLayoutMetr
                 cardPadding = 16.dp,
                 cardSpacing = 14.dp,
                 postCardSpacerWeight = 0.08f,
-                compactTextMaxLines = 2,
-                allowBodyScroll = false,
             )
 
             else -> OnboardingLayoutMetrics(
@@ -204,8 +216,6 @@ private fun rememberOnboardingLayoutMetrics(maxHeight: Dp): OnboardingLayoutMetr
                 cardPadding = 18.dp,
                 cardSpacing = 16.dp,
                 postCardSpacerWeight = 0.15f,
-                compactTextMaxLines = 3,
-                allowBodyScroll = false,
             )
         }
     }
@@ -259,63 +269,101 @@ internal fun OnboardingScaffold(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .then(
-                                    if (layout.allowBodyScroll) {
-                                        Modifier.verticalScroll(scrollState)
-                                    } else {
-                                        Modifier
-                                    },
-                                ),
+                                .verticalScroll(scrollState),
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                when {
-                                    showBackButton && onBack != null -> {
-                                        IconButton(
-                                            onClick = {
-                                                haptics.navigation()
-                                                onBack()
-                                            },
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                                contentDescription = "Back",
-                                            )
+                            if (currentStep > 0) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Box(
+                                        modifier = Modifier.weight(1f),
+                                        contentAlignment = Alignment.CenterStart,
+                                    ) {
+                                        if (showBackButton && onBack != null) {
+                                            IconButton(
+                                                onClick = {
+                                                    haptics.navigation()
+                                                    onBack()
+                                                },
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                                    contentDescription = "Back",
+                                                )
+                                            }
                                         }
                                     }
-
-                                    leadingHeaderContent != null -> {
-                                        leadingHeaderContent(layout)
+                                    Box(
+                                        modifier = Modifier.weight(1f),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = "STEP $currentStep OF $OnboardingStepCount",
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                letterSpacing = 1.sp,
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
                                     }
-
-                                    else -> {
+                                    Box(
+                                        modifier = Modifier.weight(1f),
+                                        contentAlignment = Alignment.CenterEnd,
+                                    ) {
+                                        if (showSkipButton && onSkip != null) {
+                                            TextButton(
+                                                onClick = {
+                                                    haptics.toggle()
+                                                    onSkip()
+                                                },
+                                            ) {
+                                                Text("Skip")
+                                            }
+                                        }
+                                    }
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 6.dp, bottom = 2.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    repeat(OnboardingStepCount) { index ->
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(3.dp)
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .background(
+                                                    if (index < currentStep) {
+                                                        MaterialTheme.colorScheme.primary
+                                                    } else {
+                                                        MaterialTheme.colorScheme.surfaceContainerHighest
+                                                    },
+                                                ),
+                                        )
+                                    }
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    leadingHeaderContent?.invoke(layout) ?: Spacer(modifier = Modifier.size(48.dp))
+                                    if (showSkipButton && onSkip != null) {
+                                        TextButton(
+                                            onClick = {
+                                                haptics.toggle()
+                                                onSkip()
+                                            },
+                                        ) {
+                                            Text("Skip for now")
+                                        }
+                                    } else {
                                         Spacer(modifier = Modifier.size(48.dp))
                                     }
                                 }
-
-                                if (showSkipButton && onSkip != null) {
-                                    TextButton(
-                                        onClick = {
-                                            haptics.toggle()
-                                            onSkip()
-                                        },
-                                    ) {
-                                        Text("Skip for now")
-                                    }
-                                } else {
-                                    Spacer(modifier = Modifier.size(48.dp))
-                                }
-                            }
-
-                            if (currentStep > 0) {
-                                OnboardingStepHeader(
-                                    currentStep = currentStep,
-                                    compact = layout.profile == OnboardingLayoutProfile.Compact,
-                                )
-                            } else {
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
 
@@ -347,8 +395,6 @@ internal fun OnboardingScaffold(
                                 },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = layout.subtitleTopSpacing),
-                                maxLines = layout.compactTextMaxLines,
-                                overflow = TextOverflow.Ellipsis,
                             )
 
                             Spacer(modifier = Modifier.height(layout.preCardSpacing))
@@ -361,7 +407,7 @@ internal fun OnboardingScaffold(
                                 modifier = Modifier.height(
                                     if (pushCardUpward) {
                                         when (layout.profile) {
-                                            OnboardingLayoutProfile.Compact -> if (layout.allowBodyScroll) 14.dp else 8.dp
+                                            OnboardingLayoutProfile.Compact -> 14.dp
                                             OnboardingLayoutProfile.Regular -> 12.dp
                                             OnboardingLayoutProfile.Tall -> 16.dp
                                         }
@@ -578,49 +624,6 @@ private fun MorphingBackdropBlob(
     )
 }
 
-@Composable
-private fun OnboardingStepHeader(
-    currentStep: Int,
-    compact: Boolean,
-) {
-    Column(
-        modifier = Modifier.padding(top = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp),
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainer,
-        ) {
-            Text(
-                text = "Step $currentStep of $OnboardingStepCount",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            repeat(OnboardingStepCount) { index ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(if (compact) 8.dp else 10.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(
-                            if (index < currentStep) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.surfaceContainerHighest
-                            },
-                        ),
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun OnboardingQuestionCard(
@@ -874,8 +877,6 @@ internal fun InfoTextWithSource(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f, fill = false),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
         )
 
         if (hasSourceLink) {
@@ -998,7 +999,9 @@ private fun <T> AdaptiveExpressiveChoiceGroup(
 
         if (useSingleRow) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
                 horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
             ) {
                 options.forEachIndexed { index, option ->
@@ -1006,7 +1009,9 @@ private fun <T> AdaptiveExpressiveChoiceGroup(
                         label = labelFor(option),
                         checked = isChecked(option),
                         onCheckedChange = { checked -> onCheckedChange(option, checked) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         role = role,
                         minHeight = minHeight,
                         shapes = expressiveChoiceShapes(index = index, count = options.size),
@@ -1014,26 +1019,36 @@ private fun <T> AdaptiveExpressiveChoiceGroup(
                 }
             }
         } else {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                maxItemsInEachRow = 2,
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            Column(
                 verticalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
             ) {
-                options.forEachIndexed { index, option ->
-                    val countInRow = minOf(2, options.size - ((index / 2) * 2))
-                    OnboardingChoiceTile(
-                        label = labelFor(option),
-                        checked = isChecked(option),
-                        onCheckedChange = { checked -> onCheckedChange(option, checked) },
-                        modifier = Modifier.weight(1f),
-                        role = role,
-                        minHeight = minHeight,
-                        shapes = expressiveChoiceShapes(
-                            index = index % 2,
-                            count = countInRow,
-                        ),
-                    )
+                options.chunked(2).forEach { rowOptions ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Max),
+                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                    ) {
+                        rowOptions.forEachIndexed { colIndex, option ->
+                            OnboardingChoiceTile(
+                                label = labelFor(option),
+                                checked = isChecked(option),
+                                onCheckedChange = { checked -> onCheckedChange(option, checked) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                role = role,
+                                minHeight = minHeight,
+                                shapes = expressiveChoiceShapes(
+                                    index = colIndex,
+                                    count = rowOptions.size,
+                                ),
+                            )
+                        }
+                        if (rowOptions.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
@@ -1134,8 +1149,6 @@ internal fun SelectedSummary(
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -1314,39 +1327,41 @@ internal fun WeightStepperCard(
     val haptics = rememberAppHaptics()
     var showInputDialog by rememberSaveable { mutableStateOf(false) }
 
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-        ),
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            ConnectedChoiceButtonGroup(
-                options = WeightUnit.entries,
-                selectedOption = weightUnit,
-                labelFor = { unit -> unit.label },
-                onOptionSelected = onWeightUnitSelected,
-            )
+        ConnectedChoiceButtonGroup(
+            options = WeightUnit.entries,
+            selectedOption = weightUnit,
+            labelFor = { unit -> unit.label },
+            onOptionSelected = onWeightUnitSelected,
+        )
 
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                FilledTonalIconButton(
+                FilledIconButton(
                     onClick = {
                         haptics.toggle()
                         onDecrement()
                     },
                     enabled = weightValue > weightUnit.minSelectable(),
                     modifier = Modifier.size(48.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+                        disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.38f),
+                    ),
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Remove,
@@ -1359,40 +1374,37 @@ internal fun WeightStepperCard(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    Surface(
-                        onClick = {
-                            haptics.toggle()
-                            showInputDialog = true
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    ) {
-                        RollingNumberText(
-                            text = weightValue.toString(),
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                            ),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                            labelPrefix = "weight_stepper",
-                        )
-                    }
+                    RollingNumberText(
+                        text = weightValue.toString(),
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        labelPrefix = "weight_stepper",
+                    )
                     Text(
-                        text = "Tap number to type, or use +/\u2212",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = weightUnit.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
                     )
                 }
 
-                FilledTonalIconButton(
+                FilledIconButton(
                     onClick = {
                         haptics.toggle()
                         onIncrement()
                     },
                     enabled = weightValue < weightUnit.maxSelectable(),
                     modifier = Modifier.size(48.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+                        disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.38f),
+                    ),
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
@@ -1468,6 +1480,9 @@ internal fun SleepTimePickerCard(
     displaySettings: UserSettings,
     selectedTime: java.time.LocalTime,
     onSleepTimeChanged: (java.time.LocalTime) -> Unit,
+    enabled: Boolean = true,
+    hint: String? = null,
+    title: String? = "Typical bedtime",
 ) {
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     val haptics = rememberAppHaptics()
@@ -1491,14 +1506,20 @@ internal fun SleepTimePickerCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
+                if (title != null) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
                 Text(
-                    text = "Typical bedtime",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = "Starts at 11 PM. Adjust only if yours is different.",
+                    text = hint ?: "Starts at 11 PM. Adjust only if yours is different.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Primary color only when the field is locked by HC; muted otherwise
+                    color = if (!enabled && hint != null)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -1509,6 +1530,7 @@ internal fun SleepTimePickerCard(
                     haptics.toggle()
                     showTimePicker = true
                 },
+                enabled = enabled,
                 shape = CircleShape,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
@@ -1635,8 +1657,10 @@ internal fun LegalSheet(
     onAcknowledgedChanged: (Boolean) -> Unit,
     onComplete: () -> Unit,
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
@@ -1737,5 +1761,261 @@ internal fun formatHalfLife(halfLifeMinutes: Int): String {
         "$hours h"
     } else {
         "$hours h $minutes m"
+    }
+}
+
+@Composable
+internal fun BedtimeDotSlider(
+    selectedTime: java.time.LocalTime,
+    onTimeSelected: (java.time.LocalTime) -> Unit,
+) {
+    val haptics = rememberAppHaptics()
+    val times = remember {
+        listOf(21, 22, 23, 0, 1).map { hour -> java.time.LocalTime.of(hour, 0) }
+    }
+    val labels = remember { listOf("9 PM", "10 PM", "11 PM", "12 AM", "1 AM") }
+
+    val targetIndex = remember(selectedTime.hour) {
+        times.indexOfFirst { it.hour == selectedTime.hour }.coerceAtLeast(0)
+    }
+    var displayedIndex by remember {
+        mutableIntStateOf(times.indexOfFirst { it.hour == selectedTime.hour }.coerceAtLeast(0))
+    }
+
+    LaunchedEffect(targetIndex) {
+        displayedIndex = targetIndex
+    }
+
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Text(
+                text = "Typical bedtime",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 17.dp)
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            RoundedCornerShape(999.dp),
+                        ),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    times.forEachIndexed { index, time ->
+                        val isVisuallySelected = index == displayedIndex
+                        val dotSize by animateDpAsState(
+                            targetValue = if (isVisuallySelected) 18.dp else 12.dp,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessHigh,
+                            ),
+                            label = "dotSize_$index",
+                        )
+                        val dotColor by animateColorAsState(
+                            targetValue = if (isVisuallySelected) MaterialTheme.colorScheme.primary
+                                          else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f),
+                            animationSpec = tween(durationMillis = 200),
+                            label = "dotColor_$index",
+                        )
+                        val bgColor by animateColorAsState(
+                            targetValue = if (isVisuallySelected) MaterialTheme.colorScheme.primaryContainer
+                                          else Color.Transparent,
+                            animationSpec = tween(durationMillis = 200),
+                            label = "bgColor_$index",
+                        )
+                        val textColor by animateColorAsState(
+                            targetValue = if (isVisuallySelected) MaterialTheme.colorScheme.primary
+                                          else MaterialTheme.colorScheme.onSurfaceVariant,
+                            animationSpec = tween(durationMillis = 200),
+                            label = "textColor_$index",
+                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.size(36.dp),
+                            ) {
+                                Surface(
+                                    onClick = {
+                                        haptics.toggle()
+                                        onTimeSelected(time)
+                                    },
+                                    shape = CircleShape,
+                                    color = bgColor,
+                                    modifier = Modifier.size(36.dp),
+                                ) {}
+                                Box(
+                                    modifier = Modifier
+                                        .size(dotSize)
+                                        .background(dotColor, CircleShape),
+                                )
+                            }
+                            Text(
+                                text = labels[index],
+                                style = if (isVisuallySelected) {
+                                    MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                } else {
+                                    MaterialTheme.typography.labelSmall
+                                },
+                                color = textColor,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun SampleCaffeineChart(modifier: Modifier = Modifier) {
+    val colorScheme = MaterialTheme.colorScheme
+    val modelProducer = remember { CartesianChartModelProducer() }
+
+    val xData = remember { (0..17).map { it.toDouble() } }
+    val yData = remember {
+        listOf(
+            10.0, 68.0, 185.0, 245.0, 215.0, 188.0, 168.0, 152.0,
+            178.0, 158.0, 132.0, 108.0, 85.0, 65.0, 48.0, 34.0, 22.0, 13.0,
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        modelProducer.runTransaction {
+            lineSeries {
+                series(xData, yData)
+            }
+        }
+    }
+
+    val lineColor = colorScheme.primary
+    val lineFill = remember(lineColor) {
+        LineCartesianLayer.LineFill.single(Fill(lineColor))
+    }
+    val areaFill = remember(lineColor) {
+        LineCartesianLayer.AreaFill.single(
+            Fill(
+                Brush.verticalGradient(
+                    colors = listOf(lineColor.copy(alpha = 0.40f), Color.Transparent),
+                ),
+            ),
+        )
+    }
+    val line = remember(lineFill, areaFill) {
+        LineCartesianLayer.Line(
+            fill = lineFill,
+            areaFill = areaFill,
+            pointConnector = LineCartesianLayer.PointConnector.cubic(curvature = 0.5f),
+        )
+    }
+
+    BoxWithConstraints(modifier = modifier) {
+        val chartHeight = maxHeight - 20.dp
+
+        CartesianChartHost(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(bottom = 20.dp),
+            chart = rememberCartesianChart(
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(line),
+                    rangeProvider = CartesianLayerRangeProvider.fixed(
+                        minX = 0.0,
+                        maxX = 17.0,
+                        minY = 0.0,
+                        maxY = 280.0,
+                    ),
+                ),
+            ),
+            modelProducer = modelProducer,
+            scrollState = rememberVicoScrollState(scrollEnabled = false),
+            zoomState = rememberVicoZoomState(zoomEnabled = false),
+        )
+
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(chartHeight),
+        ) {
+            // Dashed bedtime vertical line (11 PM = rightmost data point)
+            val bedtimeX = size.width * (15.8f / 17f)
+            drawLine(
+                color = lineColor.copy(alpha = 0.45f),
+                start = Offset(bedtimeX, 0f),
+                end = Offset(bedtimeX, size.height),
+                strokeWidth = 1.5.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f),
+            )
+
+            // Consumption event dots on the curve
+            val dotRadius = 5.dp.toPx()
+            listOf(1 to 68.0, 5 to 188.0, 9 to 158.0).forEach { (xIndex, yValue) ->
+                val dotX = size.width * (xIndex / 17f)
+                val dotY = size.height * (1f - (yValue / 280.0).toFloat())
+                drawCircle(color = lineColor, radius = dotRadius, center = Offset(dotX, dotY))
+            }
+        }
+
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 8.dp, top = 4.dp),
+            shape = RoundedCornerShape(999.dp),
+            color = colorScheme.secondaryContainer,
+        ) {
+            Text(
+                text = "BEDTIME",
+                style = MaterialTheme.typography.labelSmall,
+                color = colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = "6 AM",
+                style = MaterialTheme.typography.labelSmall,
+                color = colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "NOON",
+                style = MaterialTheme.typography.labelSmall,
+                color = colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "11 PM",
+                style = MaterialTheme.typography.labelSmall,
+                color = colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }

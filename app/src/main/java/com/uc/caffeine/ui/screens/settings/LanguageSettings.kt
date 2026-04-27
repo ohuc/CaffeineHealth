@@ -33,15 +33,6 @@ internal fun LanguageSettingsScreen(
             contentPadding = PaddingValues(bottom = bottomPadding + 24.dp),
         ) {
             item {
-                Text(
-                    text = "App-wide language switching is coming later. The current build still needs resource-backed text before real localization can ship cleanly.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-            }
-
-            item {
                 SegmentedListItem(
                     onClick = { },
                     content = {

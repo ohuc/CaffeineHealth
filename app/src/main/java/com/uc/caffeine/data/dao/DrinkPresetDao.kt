@@ -33,4 +33,10 @@ interface DrinkPresetDao {
 
     @Query("SELECT COUNT(*) FROM drink_presets")
     suspend fun getCount(): Int
+
+    @Query("SELECT * FROM drink_presets WHERE isCustom = 1 ORDER BY name ASC")
+    suspend fun getCustomPresets(): List<DrinkPreset>
+
+    @Query("DELETE FROM drink_presets WHERE isCustom = 1")
+    suspend fun deleteCustomPresets()
 }

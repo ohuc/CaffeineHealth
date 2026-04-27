@@ -1,17 +1,19 @@
 package com.uc.caffeine.ui.screens.settings
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.InvertColors
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
@@ -25,11 +27,11 @@ import com.uc.caffeine.data.ThemeMode
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.SettingsPageScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
+import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalLayoutApi::class,
 )
 @Composable
 internal fun AppearanceSettingsScreen(
@@ -58,82 +60,93 @@ internal fun AppearanceSettingsScreen(
                 .padding(bottom = bottomPadding + 24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Text(
-                text = "Control how Caffeine looks across the app, from overall theme mode to Material You colors.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
             Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text(
-                    text = "Theme Mode",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = "Choose whether the app follows your device theme or stays in a fixed light or dark mode.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                FlowRow(
-                    modifier = Modifier
-                        .horizontalScroll(rememberScrollState())
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                ) {
-                    themeModes.forEachIndexed { index, (themeMode, label) ->
-                        ToggleButton(
-                            checked = userSettings.themeMode == themeMode,
-                            onCheckedChange = { checked ->
-                                if (checked && userSettings.themeMode != themeMode) {
-                                    haptics.toggle()
-                                    onThemeModeChange(themeMode)
-                                }
-                            },
-                            shapes = when (index) {
-                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                themeModes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                            },
+                SegmentedListItem(
+                    onClick = {},
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = null,
+                        )
+                    },
+                    content = {
+                        Text(
+                            text = "Theme",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    },
+                    supportingContent = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                         ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelMedium,
-                            )
+                            themeModes.forEachIndexed { index, (themeMode, label) ->
+                                ToggleButton(
+                                    modifier = Modifier.weight(1f),
+                                    checked = userSettings.themeMode == themeMode,
+                                    onCheckedChange = { checked ->
+                                        if (checked && userSettings.themeMode != themeMode) {
+                                            haptics.toggle()
+                                            onThemeModeChange(themeMode)
+                                        }
+                                    },
+                                    shapes = when (index) {
+                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                        themeModes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                    },
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
+                            }
                         }
-                    }
-                }
-            }
+                    },
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                    colors = ListItemDefaults.colors(
+                        containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
+                    ),
+                )
 
-            SegmentedListItem(
-                onClick = {
-                    haptics.toggle()
-                    onDynamicColorChange(!userSettings.useDynamicColor)
-                },
-                content = {
-                    Text(text = "Dynamic Color")
-                },
-                supportingContent = {
-                    Text(text = "Use your wallpaper colors for the app theme")
-                },
-                trailingContent = {
-                    Switch(
-                        checked = userSettings.useDynamicColor,
-                        onCheckedChange = { enabled ->
-                            haptics.toggle()
-                            onDynamicColorChange(enabled)
-                        },
-                    )
-                },
-                shapes = ListItemDefaults.segmentedShapes(
-                    index = 0,
-                    count = 1,
-                ),
-                colors = ListItemDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ),
-            )
+                SegmentedListItem(
+                    onClick = {
+                        haptics.toggle()
+                        onDynamicColorChange(!userSettings.useDynamicColor)
+                    },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.InvertColors,
+                            contentDescription = null,
+                        )
+                    },
+                    content = {
+                        Text(text = "Dynamic Color")
+                    },
+                    supportingContent = {
+                        Text(text = "Adapt theme from your wallpaper")
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = userSettings.useDynamicColor,
+                            onCheckedChange = { enabled ->
+                                haptics.toggle()
+                                onDynamicColorChange(enabled)
+                            },
+                        )
+                    },
+                    shapes = ListItemDefaults.segmentedShapes(
+                        index = 1,
+                        count = 2,
+                    ),
+                    colors = ListItemDefaults.colors(
+                        containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
+                    ),
+                )
+            }
         }
     }
 }

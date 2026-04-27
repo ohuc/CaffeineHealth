@@ -54,6 +54,16 @@ enum class HormonalStatus(val label: String, val clearanceFactor: Double) {
     }
 }
 
+enum class HcSleepMode {
+    PREVIOUS_DAY,
+    SEVEN_DAY_AVERAGE;
+
+    companion object {
+        fun fromStorage(value: String?): HcSleepMode =
+            entries.find { it.name == value } ?: PREVIOUS_DAY
+    }
+}
+
 /**
  * User preferences for personalized caffeine tracking.
  *
@@ -147,6 +157,10 @@ data class UserSettings(
      */
     val hormonalStatus: HormonalStatus = HormonalStatus.NONE,
     val healthConnectEnabled: Boolean = false,
+    val hcSleepEnabled: Boolean = false,
+    val hcSleepMode: HcSleepMode = HcSleepMode.PREVIOUS_DAY,
+    val hcSleepTimeHour: Int? = null,
+    val hcSleepTimeMinute: Int? = null,
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.
@@ -163,4 +177,10 @@ data class UserSettings(
      */
     val effectiveHalfLifeMinutes: Int
         get() = (halfLifeMinutes / clearanceFactor).roundToInt()
+
+    val effectiveSleepTimeHour: Int
+        get() = if (hcSleepEnabled && hcSleepTimeHour != null) hcSleepTimeHour else sleepTimeHour
+
+    val effectiveSleepTimeMinute: Int
+        get() = if (hcSleepEnabled && hcSleepTimeMinute != null) hcSleepTimeMinute else sleepTimeMinute
 }

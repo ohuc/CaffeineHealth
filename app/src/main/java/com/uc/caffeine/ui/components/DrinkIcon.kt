@@ -23,9 +23,14 @@ fun DrinkIcon(
     val context = LocalContext.current
 
     if (imageName.isNotBlank()) {
+        val imageData = when {
+            imageName.startsWith("content://") || imageName.startsWith("file://") -> imageName
+            imageName.startsWith("/") -> "file://$imageName"
+            else -> "file:///android_asset/items/${imageName}.png"
+        }
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data("file:///android_asset/items/${imageName}.png")
+                .data(imageData)
                 .crossfade(true)
                 .build(),
             contentDescription = contentDescription,

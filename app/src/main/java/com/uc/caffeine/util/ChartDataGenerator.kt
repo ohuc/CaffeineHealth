@@ -28,8 +28,23 @@ object ChartDataGenerator {
     private const val SEVEN_DAYS_MILLIS = HOURLY_HISTORY_DAYS * ONE_DAY_MILLIS
     private const val THIRTY_DAYS_MILLIS = THREE_HOURLY_HISTORY_DAYS * ONE_DAY_MILLIS
     private const val MINI_CHART_TAIL_HOURS = 2
-    private const val MAX_DETAIL_WINDOW_HOURS = 24
     private const val BASELINE_TARGET_MG = 1.0
+    // Once caffeine drops below 1 mg it is pharmacologically negligible.
+    // Clamping to 0.0 makes the line descend cleanly to the x-axis and
+    // prevents the cubic point-connector from creating spline-overshoot
+    // artifacts that keep the line floating above the axis.
+    private const val DISPLAY_ZERO_THRESHOLD_MG = BASELINE_TARGET_MG
+
+    internal fun toDisplayCaffeineLevel(
+        actualCaffeineLevel: Double,
+        hasEntries: Boolean,
+    ): Double {
+        return when {
+            !hasEntries -> actualCaffeineLevel
+            actualCaffeineLevel < DISPLAY_ZERO_THRESHOLD_MG -> 0.0
+            else -> actualCaffeineLevel
+        }
+    }
 
     /**
      * Generate an adaptive all-history caffeine curve for charting.
@@ -45,12 +60,12 @@ object ChartDataGenerator {
         currentTime: Long = System.currentTimeMillis()
     ): ChartData {
         val bedtime = calculateNextBedtimeMillis(currentTime, settings)
-        val baselineReturnTime = CaffeineCalculator.predictTimeUntilLevel(
+        val baselineReturnTime = predictFutureBaselineReturnTime(
             entries = entries,
             targetLevelMg = BASELINE_TARGET_MG,
             currentTimeMillis = currentTime,
             halfLifeMinutes = settings.effectiveHalfLifeMinutes,
-        )?.coerceAtMost(currentTime + MAX_FUTURE_BASELINE_WINDOW_MILLIS)
+        )
         val baselineTailEndTime = baselineReturnTime?.plus(BASE_INTERVAL_MILLIS) ?: currentTime
         val endTime = roundUpToInterval(
             max(
@@ -66,7 +81,6 @@ object ChartDataGenerator {
             currentTime = currentTime,
             startTime = domainStartTime,
             endTime = endTime,
-            baselineTouchTime = baselineReturnTime ?: Long.MAX_VALUE,
         )
 
         val bedtimeIndex = dataPoints.indexOfFirst { it.timestampMillis >= bedtime }
@@ -97,6 +111,54 @@ object ChartDataGenerator {
         )
     }
 
+    private fun predictFutureBaselineReturnTime(
+        entries: List<ConsumptionEntry>,
+        targetLevelMg: Double,
+        currentTimeMillis: Long,
+        halfLifeMinutes: Int,
+    ): Long? {
+        val maxPredictionTime = currentTimeMillis + MAX_FUTURE_BASELINE_WINDOW_MILLIS
+
+        val currentReturnTime = CaffeineCalculator.predictTimeUntilLevel(
+            entries = entries,
+            targetLevelMg = targetLevelMg,
+            currentTimeMillis = currentTimeMillis,
+            halfLifeMinutes = halfLifeMinutes,
+        )
+        if (currentReturnTime != null) {
+            return currentReturnTime.coerceAtMost(maxPredictionTime)
+        }
+
+        val latestFuturePeakTime = entries
+            .asSequence()
+            .map { entry ->
+                CaffeineCalculator.calculatePeakTime(
+                    entry = entry,
+                    halfLifeMinutes = halfLifeMinutes,
+                )
+            }
+            .filter { peakTime -> peakTime > currentTimeMillis }
+            .maxOrNull()
+            ?: return null
+
+        val searchStartTime = min(latestFuturePeakTime, maxPredictionTime)
+        val peakLevel = CaffeineCalculator.calculateCurrentLevel(
+            entries = entries,
+            currentTimeMillis = searchStartTime,
+            halfLifeMinutes = halfLifeMinutes,
+        )
+        if (peakLevel <= targetLevelMg) {
+            return null
+        }
+
+        return CaffeineCalculator.predictTimeUntilLevel(
+            entries = entries,
+            targetLevelMg = targetLevelMg,
+            currentTimeMillis = searchStartTime,
+            halfLifeMinutes = halfLifeMinutes,
+        )?.coerceAtMost(maxPredictionTime)
+    }
+
     fun generateContributionDetail(
         entry: ConsumptionEntry,
         settings: UserSettings,
@@ -108,8 +170,16 @@ object ChartDataGenerator {
             halfLifeMinutes = settings.effectiveHalfLifeMinutes,
         )
         val startTime = roundDownToInterval(entry.startedAtMillis, intervalMillis)
-        val maxWindowEnd = startTime + (MAX_DETAIL_WINDOW_HOURS * 60 * 60 * 1000L)
-        val desiredEnd = max(currentTime, peakTime) + (MINI_CHART_TAIL_HOURS * 60 * 60 * 1000L)
+        val maxWindowEnd = startTime + MAX_FUTURE_BASELINE_WINDOW_MILLIS
+        val baselineReturnTime = predictEntryBaselineReturnTime(
+            entry = entry,
+            targetLevelMg = BASELINE_TARGET_MG,
+            peakTimeMillis = peakTime,
+            maxPredictionTimeMillis = maxWindowEnd,
+            halfLifeMinutes = settings.effectiveHalfLifeMinutes,
+        )
+        val desiredEnd = baselineReturnTime?.plus(intervalMillis)
+            ?: max(currentTime, peakTime) + (MINI_CHART_TAIL_HOURS * 60 * 60 * 1000L)
         val endTime = max(
             startTime + intervalMillis,
             min(roundUpToInterval(desiredEnd, intervalMillis), maxWindowEnd)
@@ -121,10 +191,13 @@ object ChartDataGenerator {
                 add(
                     ConsumptionContributionPoint(
                         timestampMillis = pointTime,
-                        caffeineContributionMg = CaffeineCalculator.calculateEntryContribution(
-                            entry = entry,
-                            currentTimeMillis = pointTime,
-                            halfLifeMinutes = settings.effectiveHalfLifeMinutes,
+                        caffeineContributionMg = toDisplayCaffeineLevel(
+                            actualCaffeineLevel = CaffeineCalculator.calculateEntryContribution(
+                                entry = entry,
+                                currentTimeMillis = pointTime,
+                                halfLifeMinutes = settings.effectiveHalfLifeMinutes,
+                            ),
+                            hasEntries = true,
                         )
                     )
                 )
@@ -169,6 +242,30 @@ object ChartDataGenerator {
         )
     }
 
+    private fun predictEntryBaselineReturnTime(
+        entry: ConsumptionEntry,
+        targetLevelMg: Double,
+        peakTimeMillis: Long,
+        maxPredictionTimeMillis: Long,
+        halfLifeMinutes: Int,
+    ): Long? {
+        val peakContribution = CaffeineCalculator.calculateEntryContribution(
+            entry = entry,
+            currentTimeMillis = peakTimeMillis,
+            halfLifeMinutes = halfLifeMinutes,
+        )
+        if (peakContribution <= targetLevelMg) {
+            return null
+        }
+
+        return CaffeineCalculator.predictTimeUntilLevel(
+            entries = listOf(entry),
+            targetLevelMg = targetLevelMg,
+            currentTimeMillis = peakTimeMillis,
+            halfLifeMinutes = halfLifeMinutes,
+        )?.coerceAtMost(maxPredictionTimeMillis)
+    }
+
     fun timestampToDomainX(
         domainStartMillis: Long,
         targetTimestampMillis: Long,
@@ -205,9 +302,9 @@ object ChartDataGenerator {
         currentTime: Long,
         startTime: Long,
         endTime: Long,
-        baselineTouchTime: Long,
     ): MutableList<CaffeineDataPoint> {
         val dataPoints = mutableListOf<CaffeineDataPoint>()
+        val hasEntries = entries.isNotEmpty()
         var pointTime = startTime
 
         while (pointTime <= endTime) {
@@ -216,11 +313,10 @@ object ChartDataGenerator {
                 currentTimeMillis = pointTime,
                 halfLifeMinutes = settings.effectiveHalfLifeMinutes,
             )
-            val displayCaffeineLevel = when {
-                entries.isEmpty() -> actualCaffeineLevel
-                pointTime >= baselineTouchTime && actualCaffeineLevel <= BASELINE_TARGET_MG -> 0.0
-                else -> actualCaffeineLevel
-            }
+            val displayCaffeineLevel = toDisplayCaffeineLevel(
+                actualCaffeineLevel = actualCaffeineLevel,
+                hasEntries = hasEntries,
+            )
 
             dataPoints += CaffeineDataPoint(
                 timestampMillis = pointTime,

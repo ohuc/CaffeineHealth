@@ -3,6 +3,10 @@ package com.uc.caffeine.ui.screens
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,11 +29,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SentimentDissatisfied
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -57,22 +69,29 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.lifecycleScope
 import com.uc.caffeine.LocalSnackbarHostState
+import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.data.model.RecentDrink
+import com.uc.caffeine.util.CaffeineCalculator
+import com.uc.caffeine.util.calculateNextBedtimeMillis
+import kotlin.math.roundToInt
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
 import com.uc.caffeine.ui.components.ConsumptionTimingSection
 import com.uc.caffeine.ui.components.DrinkIcon
@@ -110,6 +129,7 @@ fun AddScreen(
     val selectedFilter by viewModel.selectedCategoryFilter.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
+    val todayEntries by viewModel.todayEntries.collectAsStateWithLifecycle()
     val categorizedDrinks = remember(groupedDrinks) {
         groupedDrinks.entries.toList()
     }
@@ -119,6 +139,9 @@ fun AddScreen(
     val listState = rememberLazyListState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedDrink by remember { mutableStateOf<DrinkPreset?>(null) }
+    var showCustomDrinkSheet by remember { mutableStateOf(false) }
+    var customDrinkInitialName by remember { mutableStateOf("") }
+    val customSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(viewModel, snackbarHostState, sheetState) {
         viewModel.addScreenEvents.collectLatest { event ->
@@ -148,7 +171,12 @@ fun AddScreen(
 
     CaffeineScreenScaffold(
         title = "Add a drink",
-        headerBottomSpacing = 0.dp
+        headerBottomSpacing = 0.dp,
+        actions = {
+            FilledIconButton(onClick = { showCustomDrinkSheet = true }) {
+                Icon(imageVector = Icons.Filled.Add, contentDescription = "Create custom drink")
+            }
+        }
     ) { bottomPadding ->
         SearchBar(
             inputField = {
@@ -330,6 +358,10 @@ fun AddScreen(
                         viewModel.selectCategoryFilter(null)
                         viewModel.updateSearchQuery("")
                         focusManager.clearFocus()
+                    },
+                    onCreateCustomDrink = { name ->
+                        customDrinkInitialName = name
+                        showCustomDrinkSheet = true
                     }
                 )
             } else {
@@ -405,6 +437,7 @@ fun AddScreen(
                 preset = drink,
                 viewModel = viewModel,
                 userSettings = userSettings,
+                todayEntries = todayEntries,
                 onAdd = { quantity, unit, startedAtMillis, durationMinutes ->
                     haptics.confirm()
                     viewModel.logDrinkFromAddScreen(
@@ -418,6 +451,26 @@ fun AddScreen(
             )
         }
     }
+
+    if (showCustomDrinkSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showCustomDrinkSheet = false
+                customDrinkInitialName = ""
+            },
+            sheetState = customSheetState,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            CreateCustomDrinkSheet(
+                viewModel = viewModel,
+                initialName = customDrinkInitialName,
+                onDismiss = {
+                    showCustomDrinkSheet = false
+                    customDrinkInitialName = ""
+                },
+            )
+        }
+    }
 }
 
 @Composable
@@ -425,6 +478,7 @@ private fun AddDrinkServingSheet(
     preset: DrinkPreset,
     viewModel: CaffeineViewModel,
     userSettings: com.uc.caffeine.data.UserSettings,
+    todayEntries: List<ConsumptionEntry>,
     onAdd: (Int, DrinkUnit, Long, Int) -> Unit,
 ) {
     val units by produceState<List<DrinkUnit>?>(initialValue = null, key1 = preset.id) {
@@ -534,7 +588,11 @@ private fun AddDrinkServingSheet(
 
             HorizontalDivider()
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = "Total caffeine",
                     style = MaterialTheme.typography.titleMedium,
@@ -542,12 +600,59 @@ private fun AddDrinkServingSheet(
                 )
                 RollingNumberText(
                     text = "$totalCaffeineMg mg",
-                    style = MaterialTheme.typography.displaySmall.copy(
+                    style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     ),
                     labelPrefix = "add_sheet_total",
                 )
+            }
+
+            val caffeineAtBedtimeMg = remember(
+                todayEntries, totalCaffeineMg, startedAtMillis, durationMinutes, userSettings,
+            ) {
+                if (totalCaffeineMg == 0) return@remember 0.0
+                val virtualEntry = ConsumptionEntry(
+                    id = -1,
+                    drinkName = preset.name,
+                    caffeineMg = totalCaffeineMg,
+                    emoji = preset.emoji,
+                    absorptionRate = preset.absorptionRate,
+                    startedAtMillis = startedAtMillis,
+                    durationMinutes = durationMinutes,
+                )
+                val bedtimeMillis = calculateNextBedtimeMillis(System.currentTimeMillis(), userSettings)
+                CaffeineCalculator.calculateCurrentLevel(
+                    entries = todayEntries + virtualEntry,
+                    currentTimeMillis = bedtimeMillis,
+                    halfLifeMinutes = userSettings.effectiveHalfLifeMinutes,
+                )
+            }
+            AnimatedVisibility(visible = caffeineAtBedtimeMg > userSettings.sleepThresholdMg) {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                    ),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Bedtime,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Text(
+                            text = "By bedtime, ~${caffeineAtBedtimeMg.roundToInt()} mg will still be active — above your ${userSettings.sleepThresholdMg} mg sleep threshold.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
             }
 
             HorizontalDivider()
@@ -583,16 +688,18 @@ private fun AddDrinkServingSheet(
 private fun EmptyDrinkResultsState(
     selectedFilter: String?,
     searchQuery: String,
-    onClearFilters: () -> Unit
+    onClearFilters: () -> Unit,
+    onCreateCustomDrink: (String) -> Unit,
 ) {
-    val hasActiveFilters = selectedFilter != null || searchQuery.isNotBlank()
+    val hasSearchQuery = searchQuery.isNotBlank()
+    val hasActiveFilters = selectedFilter != null || hasSearchQuery
     val title = if (hasActiveFilters) "No drinks found" else "No drinks available"
     val message = when {
-        selectedFilter != null && searchQuery.isNotBlank() ->
+        selectedFilter != null && hasSearchQuery ->
             "No drinks match \"$searchQuery\" in $selectedFilter."
         selectedFilter != null ->
             "No drinks are available in $selectedFilter right now."
-        searchQuery.isNotBlank() ->
+        hasSearchQuery ->
             "No drinks match \"$searchQuery\"."
         else ->
             "Add some presets to see drinks here."
@@ -607,6 +714,12 @@ private fun EmptyDrinkResultsState(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Icon(
+                imageVector = Icons.Filled.SentimentDissatisfied,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium
@@ -616,7 +729,17 @@ private fun EmptyDrinkResultsState(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            if (hasActiveFilters) {
+            if (hasSearchQuery) {
+                FilledTonalButton(onClick = { onCreateCustomDrink(searchQuery) }) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text("Create Custom Drink")
+                }
+            } else if (hasActiveFilters) {
                 TextButton(onClick = onClearFilters) {
                     Text("Clear filters")
                 }
@@ -711,6 +834,214 @@ private fun SegmentedDrinkListItem(
             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
         ),
     )
+}
+
+@Composable
+private fun CreateCustomDrinkSheet(
+    viewModel: CaffeineViewModel,
+    initialName: String = "",
+    onDismiss: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val haptics = rememberAppHaptics()
+
+    var name by remember { mutableStateOf(initialName) }
+    var emoji by remember { mutableStateOf("☕") }
+    var imageUri by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("coffee") }
+    var selectedUnitKey by remember { mutableStateOf("cup") }
+    var caffeineText by remember { mutableStateOf("") }
+
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val path = viewModel.copyCustomDrinkImage(uri)
+                if (path != null) imageUri = path
+            }
+        }
+    }
+
+    val caffeineValue = caffeineText.toDoubleOrNull()
+    val isValid = name.isNotBlank() && caffeineValue != null && caffeineValue > 0
+
+    val categoryKeys = CategoryUtils.getCategoryOrder()
+    val unitKeys = listOf(
+        "cup", "shot", "can", "bottle", "mug", "ml", "fl oz", "liter",
+        "g", "pod", "teabag", "pill", "piece", "bar", "scoop",
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.clickable { pickImage.launch("image/*") }) {
+                ExpressiveIconBadge(index = 0, size = 76.dp) {
+                    DrinkIcon(
+                        imageName = imageUri,
+                        emoji = emoji.ifBlank { "☕" },
+                        contentDescription = "Tap to pick image",
+                        modifier = Modifier.size(48.dp),
+                        emojiSize = MaterialTheme.typography.headlineLarge.fontSize,
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = "New custom drink",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = name.ifBlank { "—" },
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            }
+        }
+
+        HorizontalDivider()
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Drink name") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = emoji,
+                onValueChange = { emoji = it },
+                label = { Text("Emoji") },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = { pickImage.launch("image/*") }) {
+                Icon(
+                    imageVector = Icons.Filled.Image,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.size(6.dp))
+                Text(if (imageUri.isBlank()) "Pick image" else "Change")
+            }
+            if (imageUri.isNotBlank()) {
+                TextButton(onClick = { imageUri = "" }) {
+                    Text("Remove")
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Category", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            ) {
+                categoryKeys.forEachIndexed { index, key ->
+                    ToggleButton(
+                        checked = selectedCategory == key,
+                        onCheckedChange = { if (it) { haptics.toggle(); selectedCategory = key } },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            categoryKeys.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                    ) {
+                        Text(
+                            text = CategoryUtils.getCategoryButtonLabel(
+                                CategoryUtils.getCategoryDisplayName(key)
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Serving unit", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            ) {
+                unitKeys.forEachIndexed { index, key ->
+                    ToggleButton(
+                        checked = selectedUnitKey == key,
+                        onCheckedChange = { if (it) { haptics.toggle(); selectedUnitKey = key } },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            unitKeys.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                    ) {
+                        Text(
+                            text = formatUnitLabel(key),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Caffeine per serving", style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = caffeineText,
+                onValueChange = { caffeineText = it.filter { c -> c.isDigit() || c == '.' } },
+                label = { Text("Amount") },
+                suffix = { Text("mg") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        Button(
+            onClick = {
+                val caffeine = caffeineValue ?: return@Button
+                haptics.confirm()
+                viewModel.saveCustomDrink(
+                    name = name.trim(),
+                    emoji = emoji.ifBlank { "☕" },
+                    imageUri = imageUri,
+                    category = selectedCategory,
+                    unitKey = selectedUnitKey,
+                    caffeineMg = caffeine,
+                )
+                onDismiss()
+            },
+            enabled = isValid,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+        ) {
+            Text("Save custom drink")
+        }
+
+        Spacer(Modifier.height(8.dp))
+    }
 }
 
 private tailrec fun Context.findComponentActivity(): ComponentActivity? {

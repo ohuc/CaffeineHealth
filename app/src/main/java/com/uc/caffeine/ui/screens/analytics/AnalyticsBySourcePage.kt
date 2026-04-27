@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,6 +73,8 @@ private enum class SourceView(val label: String) {
     ITEM("Item"),
 }
 
+internal const val AnalyticsSingleSliceChartTag = "analytics_single_slice_chart"
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun AnalyticsBySourcePage(
@@ -84,6 +87,7 @@ internal fun AnalyticsBySourcePage(
     val haptics = rememberAppHaptics()
     var selectedView by remember { mutableStateOf(SourceView.CATEGORY) }
     var showRangeSheet by remember { mutableStateOf(false) }
+    val isSingleCategory = uiState.sourceValues.size == 1 && uiState.sourceAxisLabels.size == 1
 
     val sliceColors = with(MaterialTheme.colorScheme) {
         listOf(primary, secondary, tertiary, error, outline)
@@ -244,11 +248,20 @@ internal fun AnalyticsBySourcePage(
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
-                                    PieChartHost(
-                                        chart = pieChart,
-                                        modelProducer = modelProducer,
-                                        modifier = Modifier.height(240.dp),
-                                    )
+                                    if (isSingleCategory) {
+                                        SingleCategoryPieFallback(
+                                            color = sliceColors.first(),
+                                            modifier = Modifier.height(240.dp),
+                                        )
+                                    } else {
+                                        PieChartHost(
+                                            chart = pieChart,
+                                            modelProducer = modelProducer,
+                                            animationSpec = null,
+                                            animateIn = false,
+                                            modifier = Modifier.height(240.dp),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -331,6 +344,34 @@ internal fun AnalyticsBySourcePage(
             },
             onDismiss = { showRangeSheet = false },
         )
+    }
+}
+
+@Composable
+private fun SingleCategoryPieFallback(
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(AnalyticsSingleSliceChartTag),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(180.dp)
+                .clip(CircleShape)
+                .background(color),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "100%",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+            )
+        }
     }
 }
 

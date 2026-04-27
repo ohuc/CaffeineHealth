@@ -144,8 +144,8 @@ fun calculateNextBedtimeMillis(
     val zoneId = settings.resolvedZoneId()
     val currentZonedTime = Instant.ofEpochMilli(currentTimeMillis).atZone(zoneId)
     var bedtime = currentZonedTime
-        .withHour(settings.sleepTimeHour)
-        .withMinute(settings.sleepTimeMinute)
+        .withHour(settings.effectiveSleepTimeHour)
+        .withMinute(settings.effectiveSleepTimeMinute)
         .withSecond(0)
         .withNano(0)
 

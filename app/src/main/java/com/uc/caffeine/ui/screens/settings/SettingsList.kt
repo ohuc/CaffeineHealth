@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -41,6 +42,7 @@ internal fun SettingsListScreen(
     onLanguageClick: () -> Unit,
     onDateTimeClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
+    onMyDataClick: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
     val categories = listOf(
@@ -74,6 +76,12 @@ internal fun SettingsListScreen(
             icon = Icons.Filled.Favorite,
             onClick = onHealthConnectClick,
         ),
+        SettingsCategoryItem(
+            title = "My Data",
+            summary = "Export and import your data",
+            icon = Icons.Filled.Storage,
+            onClick = onMyDataClick,
+        ),
     )
 
     SettingsPageScaffold(title = "Settings") { bottomPadding ->
@@ -84,15 +92,6 @@ internal fun SettingsListScreen(
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(bottom = bottomPadding + 24.dp),
         ) {
-            item {
-                Text(
-                    text = "Tune your caffeine profile, appearance, and date & time preferences in one place. Language support will land once the app is fully resource-backed.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-            }
-
             itemsIndexed(categories) { index, category ->
                 SegmentedListItem(
                     onClick = {

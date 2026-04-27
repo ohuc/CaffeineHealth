@@ -1,4 +1,5 @@
 package com.uc.caffeine.ui.components
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -36,17 +37,17 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -75,7 +76,6 @@ import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.cartesian.rememberFadingEdges
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.Fill
@@ -102,6 +102,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -111,6 +112,7 @@ private const val POINTS_PER_2_HOURS = 8
 private const val POINTS_PER_3_HOURS = 12
 private const val POINTS_PER_4_HOURS = 16
 private const val TIMELINE_BASE_INTERVAL_MINUTES = 15
+private const val TIMELINE_AXIS_SPACING_UNITS = POINTS_PER_3_HOURS
 private const val TIMELINE_SCROLL_BUFFER_DAYS = 10
 private const val TIMELINE_SCROLL_BUFFER_UNITS =
     (TIMELINE_SCROLL_BUFFER_DAYS * 24 * 60) / TIMELINE_BASE_INTERVAL_MINUTES
@@ -127,25 +129,67 @@ private val BedtimeIconTopOffset = 56.dp
 private val BedtimeIconSize = 12.dp
 private val SleepReferenceColor = Color(0xFF6FC06B)
 
+internal data class HomeChartDisplayPoint(
+    val x: Double,
+    val y: Double,
+)
+
+internal data class HomeChartDisplaySeries(
+    val xValues: List<Double>,
+    val yValues: List<Double>,
+    val currentTimeX: Double,
+)
+
+internal fun buildHomeChartDisplaySeries(
+    chartData: ChartData,
+    liveNowMillis: Long,
+): HomeChartDisplaySeries {
+    val displayPoints = chartData.dataPoints.map { point ->
+        HomeChartDisplayPoint(
+            x = ChartDataGenerator.timestampToDomainX(
+                domainStartMillis = chartData.domainStartMillis,
+                targetTimestampMillis = point.timestampMillis,
+            ),
+            y = point.caffeineLevel,
+        )
+    }
+    val currentTimeX = ChartDataGenerator.timestampToDomainX(
+        domainStartMillis = chartData.domainStartMillis,
+        targetTimestampMillis = liveNowMillis,
+    )
+    return HomeChartDisplaySeries(
+        xValues = displayPoints.map(HomeChartDisplayPoint::x),
+        yValues = displayPoints.map(HomeChartDisplayPoint::y),
+        currentTimeX = currentTimeX,
+    )
+}
+
+private fun CartesianDrawingContext.xToCanvas(xValue: Double): Float {
+    val fullRangeStart = ranges.minX - layerDimensions.startPadding / layerDimensions.xSpacing * ranges.xStep
+    val offsetPx = ((xValue - fullRangeStart) / ranges.xStep).toFloat() * layerDimensions.xSpacing
+    val unscrolledCanvasX = if (isLtr) layerBounds.left + offsetPx else layerBounds.right - offsetPx
+    return unscrolledCanvasX - scroll
+}
+
 @Composable
 fun CaffeineChart(
     chartData: ChartData,
     modelProducer: CartesianChartModelProducer,
     userSettings: UserSettings,
+    liveNowMillis: Long,
     currentCaffeineLevel: Double,
     predictedBedtimeCaffeineLevel: Double,
     modifier: Modifier = Modifier
 ) {
-    val configuration = LocalConfiguration.current
-    val density = LocalDensity.current
     val colorScheme = MaterialTheme.colorScheme
-    val bottomAxisSpacing = rememberResponsiveBottomAxisSpacing(
-        screenWidthDp = configuration.screenWidthDp,
-        fontScale = density.fontScale,
-        use24HourClock = userSettings.use24HourClock,
-    )
-    val maxCaffeine = remember(chartData.dataPoints) {
-        chartData.dataPoints.maxOfOrNull { it.caffeineLevel } ?: 0.0
+    val displaySeries = remember(chartData, liveNowMillis) {
+        buildHomeChartDisplaySeries(
+            chartData = chartData,
+            liveNowMillis = liveNowMillis,
+        )
+    }
+    val maxCaffeine = remember(displaySeries.yValues) {
+        displaySeries.yValues.maxOrNull() ?: 0.0
     }
 
     val yAxisStep = remember(maxCaffeine) {
@@ -156,21 +200,11 @@ fun CaffeineChart(
         yAxisStep * 4.0
     }
 
-    val dataMinX = remember(chartData.domainStartMillis, chartData.dataPoints) {
-        chartData.dataPoints.firstOrNull()?.let { point ->
-            ChartDataGenerator.timestampToDomainX(
-                domainStartMillis = chartData.domainStartMillis,
-                targetTimestampMillis = point.timestampMillis,
-            )
-        } ?: 0.0
+    val dataMinX = remember(displaySeries.xValues) {
+        displaySeries.xValues.firstOrNull() ?: 0.0
     }
-    val dataMaxX = remember(chartData.domainStartMillis, chartData.dataPoints) {
-        chartData.dataPoints.lastOrNull()?.let { point ->
-            ChartDataGenerator.timestampToDomainX(
-                domainStartMillis = chartData.domainStartMillis,
-                targetTimestampMillis = point.timestampMillis,
-            )
-        } ?: 0.0
+    val dataMaxX = remember(displaySeries.xValues) {
+        displaySeries.xValues.lastOrNull() ?: 0.0
     }
     val bufferedMinX = remember(dataMinX) {
         dataMinX - TIMELINE_SCROLL_BUFFER_UNITS
@@ -188,6 +222,25 @@ fun CaffeineChart(
         )
     }
 
+    // ── Sync model data with chart configuration ──────────────────────────
+    // The model producer must always use the SAME domainStartMillis that
+    // the rangeProvider and axis formatters use.  Updating the producer
+    // here (instead of in the ViewModel collector) guarantees that the
+    // line-series x-values and the axis x-range are never from different
+    // snapshots of chartData, which previously caused one-frame visual
+    // glitches ("broken" look) whenever domainStartMillis shifted.
+    var isModelReady by remember { mutableStateOf(false) }
+    LaunchedEffect(displaySeries.xValues, displaySeries.yValues) {
+        if (displaySeries.xValues.isNotEmpty()) {
+            modelProducer.runTransaction {
+                lineSeries {
+                    series(displaySeries.xValues, displaySeries.yValues)
+                }
+            }
+        }
+        isModelReady = true
+    }
+
     val yAxisItemPlacer = remember(yAxisStep) {
         VerticalAxis.ItemPlacer.step(step = { yAxisStep })
     }
@@ -198,7 +251,7 @@ fun CaffeineChart(
     )
     val bottomAxisOffset = rememberTimelineAxisOffset(
         domainStartMillis = chartData.domainStartMillis,
-        spacing = bottomAxisSpacing,
+        spacing = TIMELINE_AXIS_SPACING_UNITS,
         userSettings = userSettings,
     )
     val yAxisFormatter = remember {
@@ -242,11 +295,8 @@ fun CaffeineChart(
         thresholdLevel = chartData.thresholdLevel,
         label = "Sleep threshold"
     )
-    val currentTimeX = remember(chartData.domainStartMillis, chartData.currentTimeMillis) {
-        ChartDataGenerator.timestampToDomainX(
-            domainStartMillis = chartData.domainStartMillis,
-            targetTimestampMillis = chartData.currentTimeMillis,
-        )
+    val currentTimeX = remember(displaySeries.currentTimeX) {
+        displaySeries.currentTimeX
     }
     val currentTimeDecoration = rememberVerticalReferenceLineDecoration(
         xValue = currentTimeX,
@@ -276,7 +326,6 @@ fun CaffeineChart(
     val markerPairs = consumptionMarkers.map { (x, label) ->
         x to rememberConsumptionMarker(label)
     }
-    val fadingEdges = rememberFadingEdges()
 
     val chart = rememberCartesianChart(
         rememberLineCartesianLayer(
@@ -292,17 +341,20 @@ fun CaffeineChart(
         bottomAxis = HorizontalAxis.rememberBottom(
             valueFormatter = bottomAxisFormatter,
             label = labelComponent,
-            itemPlacer = remember(bottomAxisSpacing, bottomAxisOffset) {
+            itemPlacer = remember(bottomAxisOffset) {
                 HorizontalAxis.ItemPlacer.aligned(
-                    spacing = { bottomAxisSpacing },
+                    spacing = { TIMELINE_AXIS_SPACING_UNITS },
                     offset = { bottomAxisOffset },
                     addExtremeLabelPadding = true,
                 )
             },
             guideline = null
         ),
-        decorations = listOfNotNull(thresholdDecoration, currentTimeDecoration) + bedtimeDecorations,
-        fadingEdges = fadingEdges,
+        decorations =
+            listOfNotNull(
+                thresholdDecoration,
+                currentTimeDecoration,
+            ) + bedtimeDecorations,
         persistentMarkers = {
             markerPairs.forEach { (x, marker) ->
                 marker at x
@@ -359,10 +411,10 @@ fun CaffeineChart(
             if (anchorValue.isNaN()) 0f else scrollState.value - anchorValue
         }
     }
-    val currentDay = remember(chartData.currentTimeMillis, zoneId) {
-        Instant.ofEpochMilli(chartData.currentTimeMillis).atZone(zoneId).toLocalDate()
+    val currentDay = remember(liveNowMillis, zoneId) {
+        Instant.ofEpochMilli(liveNowMillis).atZone(zoneId).toLocalDate()
     }
-    val dayOffsetFromToday by remember(currentDay, chartData.currentTimeMillis, zoneId) {
+    val dayOffsetFromToday by remember(currentDay, liveNowMillis, zoneId) {
         derivedStateOf {
             val xSpacing = timelineAnchorXSpacing.floatValue
             val xStep = timelineAnchorXStep.floatValue
@@ -370,7 +422,7 @@ fun CaffeineChart(
                 0L
             } else {
                 val deltaUnits = scrollDeltaFromToday / xSpacing * xStep
-                val viewedTimestamp = chartData.currentTimeMillis +
+                val viewedTimestamp = liveNowMillis +
                     (deltaUnits.toDouble() * TIMELINE_BASE_INTERVAL_MINUTES * 60_000.0).roundToLong()
                 ChronoUnit.DAYS.between(
                     currentDay,
@@ -389,15 +441,19 @@ fun CaffeineChart(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        CartesianChartHost(
-            chart = chart,
-            modelProducer = modelProducer,
-            scrollState = scrollState,
-            zoomState = zoomState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 4.dp, vertical = 4.dp)
-        )
+        if (isModelReady) {
+            CartesianChartHost(
+                chart = chart,
+                modelProducer = modelProducer,
+                scrollState = scrollState,
+                zoomState = zoomState,
+                animationSpec = null,
+                animateIn = false,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp, vertical = 4.dp)
+            )
+        }
 
         CaffeineChartStatus(
             currentCaffeineLevel = currentCaffeineLevel,
@@ -579,15 +635,27 @@ fun ConsumptionContributionChart(
     val yValues = remember(detail.dataPoints) {
         detail.dataPoints.map { it.caffeineContributionMg }
     }
+    val contributionVisibleUnits = remember(xValues) {
+        val span = ((xValues.lastOrNull() ?: 0.0) - (xValues.firstOrNull() ?: 0.0))
+            .coerceAtLeast(0.0)
+        max(CONTRIBUTION_VISIBLE_WINDOW_UNITS.toDouble(), span + 1.0)
+    }
+    val contributionAxisSpacing = remember(contributionVisibleUnits) {
+        when {
+            contributionVisibleUnits > (24 * 60 / TIMELINE_BASE_INTERVAL_MINUTES) -> POINTS_PER_4_HOURS
+            contributionVisibleUnits > CONTRIBUTION_VISIBLE_WINDOW_UNITS -> POINTS_PER_3_HOURS
+            else -> POINTS_PER_2_HOURS
+        }
+    }
     
     val maxContribution = remember(detail.dataPoints) {
         detail.dataPoints.maxOfOrNull { it.caffeineContributionMg } ?: 0.0
     }
     
     val yAxisStep = remember(maxContribution) {
-        maxOf(100.0, kotlin.math.ceil(maxContribution / 3.0 / 100.0) * 100.0)
+        maxOf(25.0, kotlin.math.ceil(maxContribution / 4.0 / 25.0) * 25.0)
     }
-    
+
     val yAxisMax = remember(yAxisStep) {
         yAxisStep * 4.0
     }
@@ -608,19 +676,10 @@ fun ConsumptionContributionChart(
         )
     }
 
-    val yAxisItemPlacer = remember(yAxisStep) {
-        VerticalAxis.ItemPlacer.step(step = { yAxisStep })
-    }
-
     val bottomAxisFormatter = rememberClockValueFormatter(
         domainStartMillis = timestamps.firstOrNull() ?: detail.currentTimeMillis,
         userSettings = userSettings,
     )
-    val yAxisFormatter = remember {
-        CartesianValueFormatter { _, value, _ ->
-            if (value.roundToInt() == 0) "\u200B" else "${value.roundToInt()}"
-        }
-    }
     val labelStyle = MaterialTheme.typography.labelSmall.copy(
         fontFamily = MontserratFamily,
         color = colorScheme.onSurfaceVariant,
@@ -650,50 +709,22 @@ fun ConsumptionContributionChart(
     val lineProvider = remember(line) {
         LineCartesianLayer.LineProvider.series(line)
     }
-    val thresholdDecoration = rememberThresholdLineDecoration(
-        thresholdLevel = detail.thresholdLevel,
-        label = "Sleep threshold"
-    )
-    val nowDecoration = rememberVerticalReferenceLineDecoration(
-        xValue = detail.currentX,
-        label = "Now",
-        lineColor = colorScheme.primary.copy(alpha = 0.9f),
-        labelColor = colorScheme.primary,
-        dashed = false,
-        labelAtTop = false
-    )
-    val peakMarker = rememberBadgeMarker(
-        labelText = "Peak",
-        containerColor = colorScheme.primaryContainer,
-        contentColor = colorScheme.onPrimaryContainer
-    )
-
     val chart = rememberCartesianChart(
         rememberLineCartesianLayer(
             lineProvider = lineProvider,
             rangeProvider = rangeProvider
         ),
-        startAxis = VerticalAxis.rememberStart(
-            itemPlacer = yAxisItemPlacer,
-            valueFormatter = yAxisFormatter,
-            label = labelComponent,
-            guideline = null
-        ),
         bottomAxis = HorizontalAxis.rememberBottom(
             valueFormatter = bottomAxisFormatter,
             label = labelComponent,
-            itemPlacer = remember {
+            itemPlacer = remember(contributionAxisSpacing) {
                 HorizontalAxis.ItemPlacer.aligned(
-                    spacing = { POINTS_PER_2_HOURS },
+                    spacing = { contributionAxisSpacing },
                     addExtremeLabelPadding = true // <-- ADD THIS
                 )
             },
             guideline = null
         ),
-        decorations = listOfNotNull(thresholdDecoration, nowDecoration),
-        persistentMarkers = {
-            peakMarker at detail.peakMarkerIndex
-        }
     )
 
     RenderContributionChart(
@@ -701,6 +732,7 @@ fun ConsumptionContributionChart(
         modelProducer = modelProducer,
         xValues = xValues,
         yValues = yValues,
+        visibleUnits = contributionVisibleUnits,
         modifier = modifier
     )
 }
@@ -711,6 +743,7 @@ private fun RenderContributionChart(
     modelProducer: CartesianChartModelProducer,
     xValues: List<Double>,
     yValues: List<Double>,
+    visibleUnits: Double,
     modifier: Modifier = Modifier
 ) {
     val latestDataXState = rememberUpdatedState(xValues.lastOrNull() ?: 0.0)
@@ -722,8 +755,8 @@ private fun RenderContributionChart(
             ).getValue(context, layerDimensions, bounds, maxValue)
         }
     }
-    val contributionZoom = remember {
-        Zoom.x(CONTRIBUTION_VISIBLE_WINDOW_UNITS.toDouble())
+    val contributionZoom = remember(visibleUnits) {
+        Zoom.x(visibleUnits)
     }
     val scrollState = rememberVicoScrollState(
         scrollEnabled = true,
@@ -823,23 +856,14 @@ private fun rememberTimelineAxisValueFormatter(
     val timeFormatter = remember(userSettings.use24HourClock, locale) {
         userSettings.chartTimeFormatter(locale)
     }
-    val dateFormatter = remember(userSettings.dateFormat, locale) {
-        compactTimelineDateFormatter(userSettings.dateFormat, locale)
-    }
 
-    return remember(domainStartMillis, zoneId, timeFormatter, dateFormatter) {
+    return remember(domainStartMillis, zoneId, timeFormatter) {
         CartesianValueFormatter { _, value, _ ->
             val timestampMillis = ChartDataGenerator.domainXToTimestamp(
                 domainStartMillis = domainStartMillis,
                 xValue = value,
             )
-            val zonedDateTime = Instant.ofEpochMilli(timestampMillis).atZone(zoneId)
-
-            if (zonedDateTime.hour == 0 && zonedDateTime.minute == 0) {
-                zonedDateTime.format(dateFormatter)
-            } else {
-                zonedDateTime.format(timeFormatter)
-            }
+            Instant.ofEpochMilli(timestampMillis).atZone(zoneId).format(timeFormatter)
         }
     }
 }
@@ -874,23 +898,6 @@ private fun compactTimelineDateFormatter(
         AppDateFormat.YEAR_MONTH_DAY -> "MMM d"
     }
     return DateTimeFormatter.ofPattern(pattern, locale)
-}
-
-@Composable
-private fun rememberResponsiveBottomAxisSpacing(
-    screenWidthDp: Int,
-    fontScale: Float,
-    use24HourClock: Boolean,
-): Int {
-    return remember(screenWidthDp, fontScale, use24HourClock) {
-        val compactWidthDp = screenWidthDp / fontScale
-        when {
-            use24HourClock && compactWidthDp < 360f -> POINTS_PER_3_HOURS
-            !use24HourClock && compactWidthDp < 380f -> POINTS_PER_4_HOURS
-            !use24HourClock && compactWidthDp < 520f -> POINTS_PER_3_HOURS
-            else -> POINTS_PER_2_HOURS
-        }
-    }
 }
 
 @Composable
@@ -1149,10 +1156,7 @@ private data class VerticalReferenceLineDecoration(
         with(context) {
             if (layerDimensions.xSpacing == 0f || ranges.xStep == 0.0) return
 
-            val fullRangeStart = ranges.minX - layerDimensions.startPadding / layerDimensions.xSpacing * ranges.xStep
-            val offsetPx = ((xValue - fullRangeStart) / ranges.xStep).toFloat() * layerDimensions.xSpacing
-            val unscrolledCanvasX = if (isLtr) layerBounds.left + offsetPx else layerBounds.right - offsetPx
-            val canvasX = unscrolledCanvasX - scroll
+            val canvasX = xToCanvas(xValue)
 
             if (canvasX < layerBounds.left || canvasX > layerBounds.right) return
 

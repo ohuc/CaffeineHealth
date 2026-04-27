@@ -35,6 +35,10 @@ object SettingsKeys {
     val AHR_GENOTYPE = stringPreferencesKey("ahr_genotype")
     val HORMONAL_STATUS = stringPreferencesKey("hormonal_status")
     val HEALTH_CONNECT_ENABLED = booleanPreferencesKey("health_connect_enabled")
+    val HC_SLEEP_ENABLED = booleanPreferencesKey("hc_sleep_enabled")
+    val HC_SLEEP_MODE = stringPreferencesKey("hc_sleep_mode")
+    val HC_SLEEP_TIME_HOUR = intPreferencesKey("hc_sleep_time_hour")
+    val HC_SLEEP_TIME_MINUTE = intPreferencesKey("hc_sleep_time_minute")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -189,6 +193,56 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.HEALTH_CONNECT_ENABLED] = enabled
         }
     }
+
+    suspend fun updateHcSleepEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.HC_SLEEP_ENABLED] = enabled
+        }
+    }
+
+    suspend fun updateHcSleepMode(mode: HcSleepMode) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.HC_SLEEP_MODE] = mode.name
+        }
+    }
+
+    suspend fun saveHcSleepTime(hour: Int, minute: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.HC_SLEEP_TIME_HOUR] = hour
+            prefs[SettingsKeys.HC_SLEEP_TIME_MINUTE] = minute
+        }
+    }
+
+    suspend fun importSettings(settings: UserSettings) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.HALF_LIFE_MINUTES] = settings.halfLifeMinutes
+            prefs[SettingsKeys.SLEEP_THRESHOLD_MG] = settings.sleepThresholdMg
+            prefs[SettingsKeys.ABSORPTION_RATE_MINUTES] = settings.absorptionRateMinutes
+            prefs[SettingsKeys.SLEEP_TIME_HOUR] = settings.sleepTimeHour
+            prefs[SettingsKeys.SLEEP_TIME_MINUTE] = settings.sleepTimeMinute
+            prefs[SettingsKeys.THEME_MODE] = settings.themeMode.name
+            prefs[SettingsKeys.USE_DYNAMIC_COLOR] = settings.useDynamicColor
+            prefs[SettingsKeys.USE_24_HOUR_CLOCK] = settings.use24HourClock
+            prefs[SettingsKeys.DATE_FORMAT] = settings.dateFormat.name
+            prefs[SettingsKeys.TIME_ZONE_ID] = settings.timeZoneId
+            prefs[SettingsKeys.CYP1A2_GENOTYPE] = settings.cyp1a2Genotype.name
+            prefs[SettingsKeys.AHR_GENOTYPE] = settings.ahrGenotype.name
+            prefs[SettingsKeys.HORMONAL_STATUS] = settings.hormonalStatus.name
+            prefs[SettingsKeys.ONBOARDING_COMPLETE] = true
+            val pf = settings.profileFactors
+            pf.ageBucket?.let { prefs[SettingsKeys.PROFILE_AGE_BUCKET] = it }
+            prefs[SettingsKeys.PROFILE_WEIGHT_VALUE] = pf.weightValue
+            prefs[SettingsKeys.PROFILE_WEIGHT_UNIT] = pf.weightUnit
+            pf.hasInsomnia?.let { prefs[SettingsKeys.PROFILE_HAS_INSOMNIA] = it.toString() }
+            pf.smokingHabit?.let { prefs[SettingsKeys.PROFILE_SMOKING_HABIT] = it }
+            pf.heavyAlcohol?.let { prefs[SettingsKeys.PROFILE_HEAVY_ALCOHOL] = it.toString() }
+            pf.heavyCaffeine?.let { prefs[SettingsKeys.PROFILE_HEAVY_CAFFEINE] = it.toString() }
+            pf.liverDisease?.let { prefs[SettingsKeys.PROFILE_LIVER_DISEASE] = it }
+            if (pf.medications.isNotEmpty()) {
+                prefs[SettingsKeys.PROFILE_MEDICATIONS] = pf.medications
+            }
+        }
+    }
 }
 
 internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSettings {
@@ -211,6 +265,10 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         ahrGenotype = AhrGenotype.fromStorage(this[SettingsKeys.AHR_GENOTYPE]),
         hormonalStatus = HormonalStatus.fromStorage(this[SettingsKeys.HORMONAL_STATUS]),
         healthConnectEnabled = this[SettingsKeys.HEALTH_CONNECT_ENABLED] ?: false,
+        hcSleepEnabled = this[SettingsKeys.HC_SLEEP_ENABLED] ?: false,
+        hcSleepMode = HcSleepMode.fromStorage(this[SettingsKeys.HC_SLEEP_MODE]),
+        hcSleepTimeHour = this[SettingsKeys.HC_SLEEP_TIME_HOUR],
+        hcSleepTimeMinute = this[SettingsKeys.HC_SLEEP_TIME_MINUTE],
     )
 }
 

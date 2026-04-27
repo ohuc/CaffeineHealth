@@ -62,6 +62,9 @@ interface ConsumptionLogDao {
     @Query("DELETE FROM consumption_log WHERE startedAtMillis >= :startOfDay")
     suspend fun clearToday(startOfDay: Long)
 
+    @Query("DELETE FROM consumption_log")
+    suspend fun deleteAll()
+
     // The 2 most recently logged DISTINCT serving combos — used for Add screen quick add
     // The subquery finds the max timestamp for each saved serving selection
     // The outer query joins back to get all column values from that specific row

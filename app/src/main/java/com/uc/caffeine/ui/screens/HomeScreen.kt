@@ -120,6 +120,7 @@ fun HomeScreen(
     val snackbarHostState = LocalSnackbarHostState.current
 
     val currentLevel by viewModel.currentCaffeineLevel.collectAsStateWithLifecycle()
+    val liveNowMillis by viewModel.liveCurrentTimeMillis.collectAsStateWithLifecycle()
     val bedtimeForecast by viewModel.caffeineAtBedtime.collectAsStateWithLifecycle()
     val chartData by viewModel.chartData.collectAsStateWithLifecycle()
     val isConsumptionEntriesLoading by viewModel.isConsumptionEntriesLoading.collectAsStateWithLifecycle()
@@ -173,6 +174,7 @@ fun HomeScreen(
                         chartData = chartData,
                         modelProducer = viewModel.chartModelProducer,
                         userSettings = userSettings,
+                        liveNowMillis = liveNowMillis,
                         currentCaffeineLevel = currentLevel,
                         predictedBedtimeCaffeineLevel = bedtimeForecast.first,
                         modifier = Modifier

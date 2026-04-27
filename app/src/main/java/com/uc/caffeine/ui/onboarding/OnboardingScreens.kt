@@ -1,12 +1,27 @@
 package com.uc.caffeine.ui.onboarding
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,73 +32,166 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.uc.caffeine.R
 import com.uc.caffeine.data.UserSettings
+import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.util.formatTimeOfDay
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun IntroScreen(
     onStart: () -> Unit,
     onSkip: () -> Unit,
 ) {
-    OnboardingScaffold(
-        title = "Let’s tune your caffeine rhythm",
-        subtitle = "A better first estimate makes the chart and bedtime guidance feel personal right away.",
-        currentStep = 0,
-        showBackButton = false,
-        showSkipButton = true,
-        onSkip = onSkip,
-        continueLabel = "Start profiling",
-        continueEnabled = true,
-        onContinue = onStart,
-        enabledHint = "Usually takes about a minute.",
-        pushCardUpward = true,
-        leadingHeaderContent = { layout ->
-            OnboardingBrandLockup(layout = layout)
-        },
-        heroContent = { layout ->
-            OnboardingHero(layout = layout)
-            OnboardingMarquee(text = "Your caffeine profile")
-        },
+    val haptics = rememberAppHaptics()
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
     ) {
-        TypingText(
-            text = "We’ll set a bedtime-aware starting profile so your first cup feels believable instead of generic.",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            OnboardingInfoBadge(label = "Live curve")
-            OnboardingInfoBadge(label = "Bedtime forecast")
-            OnboardingInfoBadge(label = "Sleep threshold")
-        }
-
-        Text(
-            text = buildAnnotatedString {
-                append("You can still fine-tune ")
-                withStyle(
-                    SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Horizontal + WindowInsetsSides.Top,
                     ),
+                )
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    append("half-life, bedtime, and threshold")
+                    Image(
+                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                    )
+                    Text(
+                        text = "Caffeine Health",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                        ),
+                    )
                 }
-                append(" later in Settings.")
-            },
-            style = MaterialTheme.typography.bodyMedium,
-        )
+                TextButton(onClick = { haptics.toggle(); onSkip() }) {
+                    Text("Skip")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(160.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_coffee_cup),
+                    contentDescription = null,
+                    modifier = Modifier.size(108.dp),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "WELCOME",
+                style = MaterialTheme.typography.labelMedium.copy(
+                    letterSpacing = 3.sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = buildAnnotatedString {
+                    append("Know your\n")
+                    withStyle(
+                        SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontStyle = FontStyle.Italic,
+                        ),
+                    ) {
+                        append("caffeine.")
+                    }
+                    append("\nProtect\nyour sleep.")
+                },
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                ),
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "A live look at what's still in your system and whether tonight's espresso will cost you sleep.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom),
+                    )
+                    .padding(top = 16.dp, bottom = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Button(
+                    onClick = { haptics.confirm(); onStart() },
+                    shape = CircleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                    contentPadding = PaddingValues(horizontal = 28.dp, vertical = 18.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "Get started",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                Text(
+                    text = "Takes about a minute · No account needed",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -155,7 +263,7 @@ internal fun SleepScreen(
 ) {
     OnboardingScaffold(
         title = "Map your sleep window",
-        subtitle = "Bedtime starts at 11 PM, so you only need to change it if your usual night looks different.",
+        subtitle = "Pick your usual bedtime. We'll let you know when caffeine may still be active.",
         currentStep = OnboardingDestination.Sleep.stepNumber,
         showBackButton = true,
         onBack = onBack,
@@ -167,10 +275,16 @@ internal fun SleepScreen(
         disabledHint = "Tell us if sleep is sensitive for you.",
         enabledHint = "This powers the bedtime forecast and threshold line.",
     ) {
+        BedtimeWheel(
+            selected = Bedtime.from(uiState.answers.sleepTime),
+            onSelect = { onSleepTimeChanged(it.time) },
+        )
+
         SleepTimePickerCard(
             displaySettings = displaySettings,
             selectedTime = uiState.answers.sleepTime,
             onSleepTimeChanged = onSleepTimeChanged,
+            title = null,
         )
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
@@ -266,12 +380,6 @@ internal fun MedicalScreen(
     onLiverDiseaseChanged: (LiverDisease) -> Unit,
     onMedicationToggled: (Medication) -> Unit,
 ) {
-    val medicationSummary = when {
-        uiState.answers.medications.isEmpty() -> "None selected yet"
-        uiState.answers.medications == setOf(Medication.None) -> "None selected"
-        else -> "${uiState.answers.medications.size} selected"
-    }
-
     OnboardingScaffold(
         title = "Keep the estimate responsible",
         subtitle = "A little health context keeps the first-day profile from being overly optimistic.",
@@ -304,10 +412,6 @@ internal fun MedicalScreen(
                 selectedOptions = uiState.answers.medications,
                 labelFor = { medication -> medication.buttonLabel() },
                 onOptionToggled = onMedicationToggled,
-            )
-            SelectedSummary(
-                label = "Selected",
-                value = medicationSummary,
             )
             InfoTextWithSource(
                 text = "Some CYP1A2 inhibitors can make caffeine hang around much longer than usual.",
@@ -342,28 +446,6 @@ internal fun ProfileReadyScreen(
         onContinue = onOpenLegalSheet,
         enabledHint = "You can fine-tune these values later in Settings.",
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = "Dialed in for your first day",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-                Text(
-                    text = "This gives you a more believable chart and bedtime forecast from the very first drink you log.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.86f),
-                )
-            }
-        }
-
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceContainerHighest,

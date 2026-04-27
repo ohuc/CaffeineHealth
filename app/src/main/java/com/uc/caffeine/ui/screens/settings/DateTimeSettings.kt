@@ -62,14 +62,6 @@ internal fun DateTimeSettingsScreen(
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(bottom = bottomPadding + 24.dp),
         ) {
-            item {
-                Text(
-                    text = "Control how times are shown and which timezone powers bedtime predictions, charts, and day boundaries throughout the app.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-            }
 
             item {
                 SegmentedListItem(

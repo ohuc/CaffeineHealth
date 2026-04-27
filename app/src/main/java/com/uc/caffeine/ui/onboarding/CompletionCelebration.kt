@@ -6,17 +6,32 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import kotlinx.coroutines.delay
@@ -79,40 +95,66 @@ fun CompletionCelebration(
         }
     }
 
-    LaunchedEffect(Unit) {
-        delay(2200)
-        onComplete()
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .size(96.dp)
-                    .scale(circleScale.value)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Glow rings + checkmark
+            Box(contentAlignment = Alignment.Center) {
+                Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .scale(checkScale.value),
+                        .size(180.dp)
+                        .scale(circleScale.value)
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                            CircleShape,
+                        ),
                 )
+                Box(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .scale(circleScale.value)
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                            CircleShape,
+                        ),
+                )
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .scale(circleScale.value)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .scale(checkScale.value),
+                    )
+                }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = "You're all set!",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "Profile saved.",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                ),
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.graphicsLayer {
                     alpha = textAlpha.value
@@ -120,16 +162,79 @@ fun CompletionCelebration(
                 },
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Welcome to Caffeine",
+                text = "Caffeine Health is ready when you are.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                modifier = Modifier.graphicsLayer {
-                    alpha = subtitleAlpha.value
-                },
+                modifier = Modifier.graphicsLayer { alpha = subtitleAlpha.value },
             )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = subtitleAlpha.value },
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .size(24.dp),
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "Next: log your first cup",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.SemiBold,
+                            ),
+                        )
+                        Text(
+                            text = "One tap from your home screen. The curve fills in from there.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = onComplete,
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.inverseSurface,
+                    contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                ),
+                contentPadding = PaddingValues(horizontal = 28.dp, vertical = 18.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = subtitleAlpha.value },
+            ) {
+                Text(
+                    text = "Take me home",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

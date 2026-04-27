@@ -67,6 +67,29 @@ class AnalyticsUtilsTest {
     }
 
     @Test
+    fun buildAnalyticsUiState_preservesSingleCategorySeries() {
+        val uiState = buildAnalyticsUiState(
+            entries = listOf(
+                testEntry(
+                    id = 1,
+                    startedAt = "2026-04-08T10:00:00Z",
+                    caffeineMg = 95,
+                    presetItemId = "coffee-1",
+                ),
+            ),
+            presets = listOf(testPreset(itemId = "coffee-1", category = "coffee")),
+            settings = UserSettings(timeZoneId = "UTC"),
+            selectedRange = AnalyticsRange.LAST_30_DAYS,
+            nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli(),
+            locale = Locale.US,
+        )
+
+        assertTrue(uiState.hasData)
+        assertEquals(listOf("Coffee"), uiState.sourceAxisLabels)
+        assertEquals(listOf(95.0), uiState.sourceValues)
+    }
+
+    @Test
     fun buildAnalyticsUiState_assignsConsumptionIntoTimeOfDayBuckets() {
         val presets = listOf(testPreset(itemId = "coffee-1", category = "coffee"))
         val entries = listOf(

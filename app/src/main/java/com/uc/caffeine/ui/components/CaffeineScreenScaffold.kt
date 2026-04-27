@@ -4,11 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.uc.caffeine.LocalAppScaffoldPadding // Import your new global
+import com.uc.caffeine.LocalAppScaffoldPadding
 
 @Composable
 fun CaffeineScreenScaffold(
@@ -17,7 +18,7 @@ fun CaffeineScreenScaffold(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     headerBottomSpacing: Dp = 16.dp,
-    // Provide bottomPadding to the content block so lists know how much to offset
+    actions: @Composable RowScope.() -> Unit = {},
     content: @Composable ColumnScope.(bottomPadding: Dp) -> Unit
 ) {
     val appPadding = LocalAppScaffoldPadding.current
@@ -25,7 +26,6 @@ fun CaffeineScreenScaffold(
     Column(
         modifier = modifier
             .fillMaxSize()
-            // 1. ADD THIS LINE: Explicitly push the content below the status bar / notch!
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
             .padding(
                 start = contentPadding.calculateLeftPadding(LocalLayoutDirection.current),
@@ -33,23 +33,33 @@ fun CaffeineScreenScaffold(
                 top = contentPadding.calculateTopPadding()
             )
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall
-        )
-        if (!subtitle.isNullOrBlank()) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                content = actions,
             )
         }
         if (headerBottomSpacing > 0.dp) {
             Spacer(modifier = Modifier.height(headerBottomSpacing))
         }
 
-        // 3. Pass the combined bottom padding (Nav Bar + Pill height) down!
-        // Because we don't pad the bottom of the Column, backgrounds draw edge-to-edge.
         content(appPadding.calculateBottomPadding())
     }
 }

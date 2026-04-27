@@ -64,6 +64,13 @@ sealed interface HomeScreenUiEvent {
     data class LogActionCompleted(val message: String) : HomeScreenUiEvent
 }
 
+sealed interface MyDataUiState {
+    object Idle : MyDataUiState
+    object Working : MyDataUiState
+    data class Success(val message: String) : MyDataUiState
+    data class Error(val message: String) : MyDataUiState
+}
+
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db        = CaffeineDatabase.getDatabase(application)
@@ -72,6 +79,11 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     private val logDao    = db.consumptionLogDao()
     private val settingsRepo = SettingsRepository(application)
     val healthConnectManager = HealthConnectManager(application)
+
+    private val backupManager = com.uc.caffeine.data.BackupManager(logDao, presetDao, unitDao, settingsRepo)
+
+    private val _myDataState = MutableStateFlow<MyDataUiState>(MyDataUiState.Idle)
+    val myDataState: StateFlow<MyDataUiState> = _myDataState.asStateFlow()
 
     // User settings flow
     val userSettings = settingsRepo.settingsFlow.stateIn(
@@ -168,57 +180,6 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             initialValue = emptyList()
         )
 
-    // Grouped drink catalog by category — used by the Add screen for categorized display
-    val groupedDrinkPresets: StateFlow<Map<String, List<DrinkPreset>>> = 
-        combine(
-            drinkPresets,
-            selectedCategoryFilter,
-            searchQuery  // Add search query
-        ) { drinks, filter, query ->
-            // First apply category filter
-            val categoryFiltered = if (filter != null) {
-                val lowercaseKey = CategoryUtils.getAllCategories()
-                    .entries.find { it.value == filter }?.key ?: filter.lowercase()
-                drinks.filter { it.category.lowercase() == lowercaseKey }
-            } else {
-                drinks
-            }
-            
-            // Then apply search filter
-            val searchFiltered = if (query.isNotBlank()) {
-                categoryFiltered.filter { drink ->
-                    drink.name.contains(query, ignoreCase = true) ||
-                    drink.brand.contains(query, ignoreCase = true) ||
-                    drink.description?.contains(query, ignoreCase = true) == true
-                }
-            } else {
-                categoryFiltered
-            }
-            
-            // Group and sort
-            searchFiltered
-                .groupBy { it.category.lowercase() }
-                .mapKeys { (category, _) -> CategoryUtils.getCategoryDisplayName(category) }
-                .toSortedMap(compareBy { displayName ->
-                    val lowercaseKey = CategoryUtils.getAllCategories()
-                        .entries.find { it.value == displayName }?.key ?: ""
-                    CategoryUtils.getCategoryOrder().indexOf(lowercaseKey)
-                })
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyMap()
-        )
-
-    // The 2 most recently logged serving combos — used by quick add on AddScreen.
-    val recentDrinks: StateFlow<List<RecentDrink>> = logDao
-        .getRecentlyUsedDrinks()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
-
     // Today's caffeine total — the big number
     val todayTotalMg: StateFlow<Int> = combine(
         allConsumptionEntries,
@@ -236,6 +197,70 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = 0
+        )
+
+    // Today's raw entries — used by the Add screen to project caffeine level at bedtime
+    val todayEntries: StateFlow<List<ConsumptionEntry>> = combine(
+        allConsumptionEntries,
+        userSettings,
+        chartTickerFlow
+    ) { entries, settings, currentTime ->
+        val zoneId = settings.resolvedZoneId()
+        val startOfDay = startOfDayMillis(currentTime, zoneId)
+        val startOfNextDay = nextStartOfDayMillis(currentTime, zoneId)
+        entries.filter { entry -> entry.startedAtMillis in startOfDay until startOfNextDay }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList()
+    )
+
+    // The 2 most recently logged serving combos — used by quick add on AddScreen.
+    val recentDrinks: StateFlow<List<RecentDrink>> = logDao
+        .getRecentlyUsedDrinks()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+
+    // Grouped drink catalog by category — used by the Add screen for categorized display
+    val groupedDrinkPresets: StateFlow<Map<String, List<DrinkPreset>>> =
+        combine(
+            drinkPresets,
+            selectedCategoryFilter,
+            searchQuery
+        ) { drinks, filter, query ->
+            val categoryFiltered = if (filter != null) {
+                val lowercaseKey = CategoryUtils.getAllCategories()
+                    .entries.find { it.value == filter }?.key ?: filter.lowercase()
+                drinks.filter { it.category.lowercase() == lowercaseKey }
+            } else {
+                drinks
+            }
+
+            val searchFiltered = if (query.isNotBlank()) {
+                categoryFiltered.filter { drink ->
+                    drink.name.contains(query, ignoreCase = true) ||
+                    drink.brand.contains(query, ignoreCase = true) ||
+                    drink.description?.contains(query, ignoreCase = true) == true
+                }
+            } else {
+                categoryFiltered
+            }
+
+            searchFiltered
+                .groupBy { it.category.lowercase() }
+                .mapKeys { (category, _) -> CategoryUtils.getCategoryDisplayName(category) }
+                .toSortedMap(compareBy { displayName ->
+                    val lowercaseKey = CategoryUtils.getAllCategories()
+                        .entries.find { it.value == displayName }?.key ?: ""
+                    CategoryUtils.getCategoryOrder().indexOf(lowercaseKey)
+                })
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyMap()
         )
 
     // Full historical consumption timeline for the Home screen.
@@ -667,6 +692,29 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateHcSleepEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateHcSleepEnabled(enabled)
+            if (enabled) refreshHcSleepData()
+        }
+    }
+
+    fun updateHcSleepMode(mode: com.uc.caffeine.data.HcSleepMode) {
+        viewModelScope.launch {
+            settingsRepo.updateHcSleepMode(mode)
+            if (userSettings.value.hcSleepEnabled) refreshHcSleepData()
+        }
+    }
+
+    private suspend fun refreshHcSleepData() {
+        val settings = userSettings.value
+        val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+        val bedtime = runCatching {
+            healthConnectManager.readSleepBedtime(settings.hcSleepMode, zoneId)
+        }.getOrNull() ?: return
+        settingsRepo.saveHcSleepTime(bedtime.hour, bedtime.minute)
+    }
+
     // Profile factor update functions — each saves the raw value and recomputes the derived profile.
     fun updateProfileAgeBucket(ageBucket: AgeBucket?) {
         updateProfileFactorAndRecompute {
@@ -895,5 +943,35 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             grams = null,
             isDefault = true,
         )
+    }
+
+    suspend fun createBackupJson(settings: UserSettings): String = withContext(Dispatchers.IO) {
+        backupManager.createBackup(settings)
+    }
+
+    fun importBackup(json: String, mode: com.uc.caffeine.data.ImportMode) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _myDataState.value = MyDataUiState.Working
+            try {
+                backupManager.restoreBackup(json, mode)
+                _myDataState.value = MyDataUiState.Success("Data imported successfully")
+            } catch (e: IllegalArgumentException) {
+                _myDataState.value = MyDataUiState.Error(e.message ?: "Invalid backup file")
+            } catch (e: Exception) {
+                _myDataState.value = MyDataUiState.Error("Import failed: ${e.message ?: "Unknown error"}")
+            }
+        }
+    }
+
+    fun onExportSuccess() {
+        _myDataState.value = MyDataUiState.Success("Backup saved")
+    }
+
+    fun onExportError(message: String) {
+        _myDataState.value = MyDataUiState.Error(message)
+    }
+
+    fun clearMyDataState() {
+        _myDataState.value = MyDataUiState.Idle
     }
 }
