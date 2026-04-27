@@ -18,7 +18,7 @@
 
 ---
 
-Caffeine Health is a beautifully designed Android app that helps you understand how your caffeine intake affects your body throughout the day — and whether that late-afternoon espresso might cost you sleep tonight.
+Caffeine Health is a beautifully designed Android app that helps you understand how your caffeine intake affects your body throughout the day, and whether that late-afternoon espresso might cost you sleep tonight.
 
 Log drinks from a curated catalog, watch your active caffeine level in real time on a 24-hour curve, and get a personalized sleep forecast based on your unique metabolism.
 
@@ -26,8 +26,8 @@ Log drinks from a curated catalog, watch your active caffeine level in real time
 
 <table align="center">
   <tr>
-    <td align="center"><img src="screenshots/onboarding_baseline.png" width="220" alt="Set your baseline" /><br><sub>Onboarding</sub></td>
-    <td align="center"><img src="screenshots/onboarding_profile.png" width="220" alt="Profile Ready" /><br><sub>Profile Ready</sub></td>
+    <td align="center"><img src="screenshots/Welcome.png" width="220" alt="Set your baseline" /><br><sub>Welcome</sub></td>
+    <td align="center"><img src="screenshots/Onboarding.png" width="220" alt="Profile Ready" /><br><sub>Onboarding</sub></td>
     <td align="center"><img src="screenshots/home.png" width="220" alt="Home Dashboard" /><br><sub>Dashboard</sub></td>
     <td align="center"><img src="screenshots/caffeine_sources.png" width="220" alt="Caffeine by Source" /><br><sub>Source Analytics</sub></td>
   </tr>
@@ -38,31 +38,31 @@ Log drinks from a curated catalog, watch your active caffeine level in real time
 ## ✨ Features
 
 ### 🏠 Dashboard
-- **Live caffeine curve** — a smooth 24-hour chart showing your active caffeine level, updated in real time
-- **Emoji markers** — each logged drink appears on the chart with its emoji for quick visual reference
-- **Sleep forecast** — see how much caffeine will still be active at your bedtime and whether it crosses your safe threshold
-- **Today's total** — at-a-glance milligram count for everything consumed today
-- **Drink detail sheet** — tap any logged drink to see its contribution curve, peak level, current level, and total impact over time
-- **Quick actions** — edit, duplicate, or delete entries directly from the detail sheet
+- **Live caffeine curve:** a smooth 24-hour chart showing your active caffeine level, updated in real time
+- **Emoji markers:** each logged drink appears on the chart with its emoji for quick visual reference
+- **Sleep forecast:** see how much caffeine will still be active at your bedtime and whether it crosses your safe threshold
+- **Today's total:** at-a-glance milligram count for everything consumed today
+- **Drink detail sheet:** tap any logged drink to see its contribution curve, peak level, current level, and total impact over time
+- **Quick actions:** edit, duplicate, or delete entries directly from the detail sheet
 
 ### ☕ Drink Catalog
-- **Curated drink database** — browse drinks across categories like coffee, tea, energy drinks, soda, and more
-- **Search & filter** — Material 3 search bar with expressive category filter chips
-- **One-tap logging** — log a drink with a single tap and get snackbar confirmation
-- **Custom serving sizes** — adjust caffeine amount and timing before logging
+- **Curated drink database:** browse drinks across categories like coffee, tea, energy drinks, soda, and more
+- **Search & filter:** Material 3 search bar with expressive category filter chips
+- **One-tap logging:** log a drink with a single tap and get snackbar confirmation
+- **Custom serving sizes:** adjust caffeine amount and timing before logging
 
 ### 🧬 Personalized Onboarding
-- **Guided profiling flow** — set your age range, weight, bedtime, sleep sensitivity, lifestyle factors, and relevant medications
-- **Pharmacokinetic modeling** — the app calculates a personalized caffeine half-life based on real-world factors (smoking, alcohol, CYP1A2 inhibitors)
-- **Science-backed sources** — every lifestyle adjustment links to its pharmacological source
-- **Skip-friendly** — sensible defaults if you prefer to get started immediately
+- **Guided profiling flow:** set your age range, weight, bedtime, sleep sensitivity, lifestyle factors, and relevant medications
+- **Pharmacokinetic modeling:** the app calculates a personalized caffeine half-life based on real-world factors (smoking, alcohol, CYP1A2 inhibitors)
+- **Science-backed sources:** every lifestyle adjustment links to its pharmacological source
+- **Skip-friendly:** sensible defaults if you prefer to get started immediately
 
 ### ⚙️ Settings
-- **Half-life tuning** — fine-tune your caffeine metabolism rate
-- **Bedtime configuration** — set your typical sleep time for accurate forecasts
-- **Sleep threshold** — define the milligram level you consider safe before bed
-- **Appearance** — theme and display preferences
-- **Date & time format** — 12-hour / 24-hour clock, date format customization
+- **Half-life tuning:** fine-tune your caffeine metabolism rate
+- **Bedtime configuration:** set your typical sleep time for accurate forecasts
+- **Sleep threshold:** define the milligram level you consider safe before bed
+- **Appearance:** theme and display preferences
+- **Date & time format:** 12-hour / 24-hour clock, date format customization
 
 ---
 
@@ -126,9 +126,9 @@ The app follows a **single-activity MVVM** pattern:
 
 The app uses a **one-compartment oral pharmacokinetic model**:
 
-- **Absorption phase** — linear ramp from ingestion to peak based on drink-specific absorption rate
-- **Elimination phase** — exponential decay governed by your personal half-life setting
-- **Half-life personalization** — computed from age, weight, smoking, alcohol, liver health, and CYP1A2-inhibiting medications during onboarding
+- **Absorption phase:** linear ramp from ingestion to peak based on drink-specific absorption rate
+- **Elimination phase:** exponential decay governed by your personal half-life setting
+- **Half-life personalization:** computed from age, weight, smoking, alcohol, liver health, and CYP1A2-inhibiting medications during onboarding
 
 This keeps the curve and sleep forecast grounded in real pharmacology while remaining practical for daily use.
 
@@ -179,11 +179,11 @@ CaffeineHealth/
 
 Caffeine Health is built with **Material 3 Expressive** principles:
 
-- **Dynamic Color** — adapts to your device wallpaper on Android 12+ with a curated espresso-toned fallback palette
-- **Expressive Motion** — `MotionScheme.expressive()` for fluid, personality-rich transitions
-- **Montserrat typography** — clean, modern font family throughout the entire app
-- **Haptic feedback** — tactile responses on key interactions across dashboard, catalog, and settings
-- **Dark mode** — full dark theme support with carefully tuned surface/container colors
+- **Dynamic Color:** adapts to your device wallpaper on Android 12+ with a curated espresso-toned fallback palette
+- **Expressive Motion:** `MotionScheme.expressive()` for fluid, personality-rich transitions
+- **Montserrat typography:** clean, modern font family throughout the entire app
+- **Haptic feedback:** tactile responses on key interactions across dashboard, catalog, and settings
+- **Dark mode:** full dark theme support with carefully tuned surface/container colors
 
 ---
 
