@@ -56,6 +56,8 @@
     <!-- Language settings -->
     <string name="language_section_title">Language</string>
     <string name="language_selected_cd">Selected</string>
+    <string name="language_deferred_title">Localization deferred</string>
+    <string name="language_deferred_description">English will remain the active language in this build.</string>
 
     <!-- Common actions reused across screens -->
     <string name="action_yes">Yes</string>

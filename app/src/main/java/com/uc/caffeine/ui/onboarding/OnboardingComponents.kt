@@ -419,7 +419,7 @@ internal fun OnboardingScaffold(
                         }
                     }
 
-                    OnboardingActionArea(
+                            OnboardingActionArea(
                         layout = layout,
                         continueEnabled = continueEnabled,
                         continueLabel = continueLabel,
