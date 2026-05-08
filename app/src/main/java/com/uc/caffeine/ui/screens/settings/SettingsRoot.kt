@@ -26,6 +26,7 @@ private enum class SettingsDestination : NavKey {
     DateTime,
     HealthConnect,
     MyData,
+    Notifications,
 }
 
 @Composable
@@ -82,6 +83,9 @@ fun SettingsScreen(
                         onMyDataClick = {
                             nestedBackStack.add(SettingsDestination.MyData)
                         },
+                        onNotificationsClick = {
+                            nestedBackStack.add(SettingsDestination.Notifications)
+                        },
                     )
 
                     SettingsDestination.CaffeineProfile -> CaffeineProfileSettingsScreen(
@@ -122,6 +126,13 @@ fun SettingsScreen(
                     SettingsDestination.MyData -> MyDataSettingsScreen(
                         onBack = { nestedBackStack.removeLastOrNull() },
                         viewModel = viewModel,
+                    )
+
+                    SettingsDestination.Notifications -> NotificationsSettingsScreen(
+                        userSettings = userSettings,
+                        onInactivityReminderToggle = viewModel::updateInactivityReminderEnabled,
+                        onDailyReminderTimesChange = viewModel::updateDailyReminderTimes,
+                        onBack = { nestedBackStack.removeLastOrNull() },
                     )
                 }
             }

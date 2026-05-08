@@ -68,6 +68,37 @@ interface ConsumptionLogDao {
     // The 2 most recently logged DISTINCT serving combos — used for Add screen quick add
     // The subquery finds the max timestamp for each saved serving selection
     // The outer query joins back to get all column values from that specific row
+    // One-shot version used by widgets (no Flow, no lifecycle needed)
+    @Query("""
+        SELECT
+            c1.drinkName,
+            c1.caffeineMg,
+            c1.emoji,
+            c1.presetItemId,
+            c1.quantity,
+            c1.unitKey,
+            c1.unitCaffeineMg,
+            c1.imageName,
+            c1.absorptionRate,
+            c1.durationMinutes,
+            c1.startedAtMillis as lastUsed
+        FROM consumption_log c1
+        INNER JOIN (
+            SELECT presetItemId, drinkName, quantity, unitKey, durationMinutes, MAX(startedAtMillis) as maxStartedAtMillis
+            FROM consumption_log
+            GROUP BY presetItemId, drinkName, quantity, unitKey, durationMinutes
+        ) c2
+            ON c1.presetItemId = c2.presetItemId
+            AND c1.drinkName = c2.drinkName
+            AND c1.quantity = c2.quantity
+            AND c1.unitKey = c2.unitKey
+            AND c1.durationMinutes = c2.durationMinutes
+            AND c1.startedAtMillis = c2.maxStartedAtMillis
+        ORDER BY c1.startedAtMillis DESC
+        LIMIT 2
+    """)
+    suspend fun getRecentlyUsedDrinksOnce(): List<RecentDrink>
+
     @Query("""
         SELECT
             c1.drinkName,

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Activity window background, dark variant. Matches CaffeineBackgroundDark. -->
+    <color name="window_background">#17120F</color>
+    <!-- Widget colors (dark / night) -->
+    <color name="widget_surface">#2F2824</color>
+    <color name="widget_on_surface">#EDE0D8</color>
+    <color name="widget_on_surface_variant">#D1C5BB</color>
+    <color name="widget_icon_container">#3A322E</color>
+    <color name="widget_primary">#DDB892</color>
+    <color name="widget_on_primary">#3B2611</color>
+    <color name="widget_tertiary">#B8D09E</color>
+    <color name="widget_divider">#50453D</color>
+</resources>

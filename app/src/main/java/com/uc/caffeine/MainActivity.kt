@@ -1,9 +1,13 @@
 package com.uc.caffeine
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -81,12 +85,16 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
@@ -109,11 +117,27 @@ import com.uc.caffeine.ui.screens.settings.SettingsScreen
 import com.uc.caffeine.ui.theme.CaffeineTheme
 import com.uc.caffeine.ui.theme.MontserratFamily
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
+import com.uc.caffeine.widget.CaffeineWidgetUpdater
 
 class MainActivity : ComponentActivity() {
+
+    private val requestNotificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { /* result handled by the system — no-op */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        com.uc.caffeine.util.notifications.NotificationChannels.createChannels(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+        CaffeineWidgetUpdater.schedulePeriodicRefresh(this)
+        lifecycleScope.launch {
+            CaffeineWidgetUpdater.publishWidgetPreviews(applicationContext)
+        }
         setContent {
             CaffeineApp()
         }
@@ -137,6 +161,10 @@ fun CaffeineApp(
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val isUserSettingsLoaded by viewModel.isUserSettingsLoaded.collectAsStateWithLifecycle()
     val isConsumptionEntriesLoading by viewModel.isConsumptionEntriesLoading.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(Unit) {
+        viewModel.onAppOpened()
+        onPauseOrDispose {}
+    }
     val hasExistingConsumptionHistory by viewModel.hasExistingConsumptionHistory.collectAsStateWithLifecycle()
     val darkTheme = when (userSettings.themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
@@ -153,40 +181,47 @@ fun CaffeineApp(
         darkTheme = darkTheme,
         dynamicColor = userSettings.useDynamicColor,
     ) {
-        AnimatedContent(
-            targetState = startupDestination,
+        // Backdrop for the startup transition: the Onboarding→Main scaleIn from 0.92 leaves a
+        // margin around the incoming shell, which would otherwise expose the windowBackground.
+        Surface(
             modifier = Modifier.fillMaxSize(),
-            transitionSpec = {
-                when {
-                    initialState == StartupDestination.Onboarding &&
-                        targetState == StartupDestination.Main -> {
-                        (
-                            fadeIn(animationSpec = tween(durationMillis = 500)) +
-                                scaleIn(
-                                    initialScale = 0.92f,
-                                    animationSpec = tween(durationMillis = 600, easing = EaseOut),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            AnimatedContent(
+                targetState = startupDestination,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    when {
+                        initialState == StartupDestination.Onboarding &&
+                            targetState == StartupDestination.Main -> {
+                            (
+                                fadeIn(animationSpec = tween(durationMillis = 500)) +
+                                    scaleIn(
+                                        initialScale = 0.92f,
+                                        animationSpec = tween(durationMillis = 600, easing = EaseOut),
+                                    )
+                                ) togetherWith (
+                                fadeOut(animationSpec = tween(durationMillis = 400)) +
+                                    scaleOut(
+                                        targetScale = 1.06f,
+                                        animationSpec = tween(durationMillis = 400),
+                                    )
                                 )
-                            ) togetherWith (
-                            fadeOut(animationSpec = tween(durationMillis = 400)) +
-                                scaleOut(
-                                    targetScale = 1.06f,
-                                    animationSpec = tween(durationMillis = 400),
-                                )
-                            )
-                    }
+                        }
 
-                    else -> {
-                        fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 40)) togetherWith
-                            fadeOut(animationSpec = tween(durationMillis = 180))
-                    }
-                }.using(SizeTransform(clip = false))
-            },
-            label = "startup_destination_transition",
-        ) { destination ->
-            when (destination) {
-                StartupDestination.Loading -> StartupLoadingScreen()
-                StartupDestination.Onboarding -> OnboardingRoot(displaySettings = userSettings)
-                StartupDestination.Main -> MainAppShell(userSettings = userSettings)
+                        else -> {
+                            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 40)) togetherWith
+                                fadeOut(animationSpec = tween(durationMillis = 180))
+                        }
+                    }.using(SizeTransform(clip = false))
+                },
+                label = "startup_destination_transition",
+            ) { destination ->
+                when (destination) {
+                    StartupDestination.Loading -> StartupLoadingScreen()
+                    StartupDestination.Onboarding -> OnboardingRoot(displaySettings = userSettings)
+                    StartupDestination.Main -> MainAppShell(userSettings = userSettings)
+                }
             }
         }
     }
@@ -341,7 +376,7 @@ internal fun MainAppShell(
                                             ),
                                         ) {
                                             Text(
-                                                text = destination.label,
+                                                text = stringResource(destination.labelRes),
                                                 modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
                                                 style = MaterialTheme.typography.titleSmall.copy(
                                                     fontWeight = FontWeight.Bold,
@@ -430,7 +465,7 @@ private fun DestinationIcon(
     if (vectorIcon != null) {
         Icon(
             imageVector = vectorIcon,
-            contentDescription = destination.label,
+            contentDescription = stringResource(destination.labelRes),
             modifier = Modifier.size(24.dp),
         )
         return
@@ -445,7 +480,7 @@ private fun DestinationIcon(
     if (iconRes != null) {
         Icon(
             painter = painterResource(iconRes),
-            contentDescription = destination.label,
+            contentDescription = stringResource(destination.labelRes),
             modifier = Modifier.size(24.dp),
         )
     }
@@ -489,7 +524,7 @@ private fun AddConsumptionButton(
                     .background(Color.White),
             )
             Text(
-                text = "Add Consumption",
+                text = stringResource(R.string.main_add_consumption),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontFamily = MontserratFamily,
                     fontWeight = FontWeight.Bold,

@@ -39,10 +39,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.PermissionController
 import com.uc.caffeine.LocalAppScaffoldPadding
@@ -73,6 +72,9 @@ internal fun HealthConnectSettingsScreen(
 
     val isConnected = userSettings.healthConnectEnabled || userSettings.hcSleepEnabled
 
+    val noPermissionsMessage = stringResource(R.string.health_connect_no_permissions_granted)
+    val notInstalledMessage = stringResource(R.string.health_connect_not_installed)
+
     val permissionLauncher = rememberLauncherForActivityResult(
         PermissionController.createRequestPermissionResultContract()
     ) { _ ->
@@ -80,7 +82,7 @@ internal fun HealthConnectSettingsScreen(
             val syncGranted = healthConnectManager.hasPermission()
             val sleepGranted = healthConnectManager.hasSleepPermission()
             if (!syncGranted && !sleepGranted) {
-                snackbarHostState.showSnackbar("No Health Connect permissions were granted")
+                snackbarHostState.showSnackbar(noPermissionsMessage)
             } else {
                 if (syncGranted) onHealthConnectToggle(true)
                 if (sleepGranted) onHcSleepEnabledToggle(true)
@@ -97,7 +99,7 @@ internal fun HealthConnectSettingsScreen(
         }
         if (!healthConnectManager.isAvailable()) {
             scope.launch {
-                snackbarHostState.showSnackbar("Health Connect is not installed on this device")
+                snackbarHostState.showSnackbar(notInstalledMessage)
             }
             return
         }
@@ -106,7 +108,7 @@ internal fun HealthConnectSettingsScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         SettingsPageScaffold(
-            title = "Health Connect",
+            title = stringResource(R.string.settings_health_connect_title),
             showBackButton = true,
             onBack = onBack,
         ) { bottomPadding ->
@@ -123,23 +125,23 @@ internal fun HealthConnectSettingsScreen(
                     leadingContent = {
                         Image(
                             painter = painterResource(R.drawable.health_connect_logo),
-                            contentDescription = "Health Connect",
+                            contentDescription = stringResource(R.string.settings_health_connect_title),
                             modifier = Modifier.size(24.dp),
                         )
                     },
-                    content = { Text(text = "Sync with Health Connect") },
+                    content = { Text(text = stringResource(R.string.health_connect_sync_label)) },
                     supportingContent = {
                         val desc = when {
                             !healthConnectManager.isAvailable() ->
-                                "Health Connect is not installed on this device"
+                                stringResource(R.string.health_connect_not_installed)
                             !isConnected ->
-                                "Grant access to caffeine and sleep data"
+                                stringResource(R.string.health_connect_grant_access)
                             userSettings.healthConnectEnabled && userSettings.hcSleepEnabled ->
-                                "Caffeine sync and sleep data active"
+                                stringResource(R.string.health_connect_caffeine_and_sleep_active)
                             userSettings.healthConnectEnabled ->
-                                "Caffeine sync active"
+                                stringResource(R.string.health_connect_caffeine_active)
                             else ->
-                                "Sleep data active"
+                                stringResource(R.string.health_connect_sleep_active)
                         }
                         Text(text = desc)
                     },
@@ -157,13 +159,7 @@ internal fun HealthConnectSettingsScreen(
                 )
 
                 Text(
-                    text = buildAnnotatedString {
-                        append("Syncs your ")
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("caffeine intake") }
-                        append(" and if sleep access is granted ")
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("auto-sets your bedtime") }
-                        append(" from Health Connect.")
-                    },
+                    text = AnnotatedString.fromHtml(stringResource(R.string.health_connect_description)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -193,7 +189,7 @@ internal fun HealthConnectSettingsScreen(
                                         modifier = Modifier.size(18.dp),
                                     )
                                     Text(
-                                        text = "No sleep data found in Health Connect. Your manual bedtime is used until sleep sessions are recorded.",
+                                        text = stringResource(R.string.health_connect_no_sleep_warning),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer,
                                     )
@@ -202,7 +198,7 @@ internal fun HealthConnectSettingsScreen(
                         }
 
                         Text(
-                            text = "Bedtime source",
+                            text = stringResource(R.string.health_connect_bedtime_source),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -210,7 +206,7 @@ internal fun HealthConnectSettingsScreen(
                         Column {
                             SegmentedListItem(
                                 onClick = { onHcSleepModeChange(HcSleepMode.PREVIOUS_DAY) },
-                                content = { Text(text = "Last night's sleep") },
+                                content = { Text(text = stringResource(R.string.health_connect_last_night)) },
                                 supportingContent = {
                                     val fetchedTime = if (
                                         userSettings.hcSleepMode == HcSleepMode.PREVIOUS_DAY &&
@@ -225,8 +221,8 @@ internal fun HealthConnectSettingsScreen(
                                     } else null
                                     Text(
                                         text = fetchedTime
-                                            ?.let { "Bedtime reading: $it" }
-                                            ?: "Uses the most recent sleep session"
+                                            ?.let { stringResource(R.string.health_connect_bedtime_reading, it) }
+                                            ?: stringResource(R.string.health_connect_uses_recent_session)
                                     )
                                 },
                                 trailingContent = {
@@ -242,7 +238,7 @@ internal fun HealthConnectSettingsScreen(
                             )
                             SegmentedListItem(
                                 onClick = { onHcSleepModeChange(HcSleepMode.SEVEN_DAY_AVERAGE) },
-                                content = { Text(text = "7-day average") },
+                                content = { Text(text = stringResource(R.string.health_connect_seven_day_avg)) },
                                 supportingContent = {
                                     val fetchedTime = if (
                                         userSettings.hcSleepMode == HcSleepMode.SEVEN_DAY_AVERAGE &&
@@ -257,8 +253,8 @@ internal fun HealthConnectSettingsScreen(
                                     } else null
                                     Text(
                                         text = fetchedTime
-                                            ?.let { "Bedtime reading: $it" }
-                                            ?: "Averages bedtime across the past week"
+                                            ?.let { stringResource(R.string.health_connect_bedtime_reading, it) }
+                                            ?: stringResource(R.string.health_connect_seven_day_avg_description)
                                     )
                                 },
                                 trailingContent = {

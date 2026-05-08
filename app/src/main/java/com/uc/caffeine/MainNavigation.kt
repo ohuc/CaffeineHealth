@@ -1,5 +1,6 @@
 package com.uc.caffeine
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Settings
@@ -12,24 +13,24 @@ import java.io.Serializable
 sealed interface AppRoute : NavKey
 
 enum class AppDestinations(
-    val label: String,
+    @param:StringRes val labelRes: Int,
     val iconOutlinedRes: Int? = null,
     val iconFilledRes: Int? = null,
     val iconOutlinedVector: ImageVector? = null,
     val iconFilledVector: ImageVector? = null,
 ) : AppRoute {
     HOME(
-        label = "Home",
+        labelRes = R.string.nav_home,
         iconOutlinedRes = R.drawable.ic_home,
         iconFilledRes = R.drawable.ic_home_filled,
     ),
     ANALYTICS(
-        label = "Analytics",
+        labelRes = R.string.nav_analytics,
         iconOutlinedVector = Icons.Outlined.Analytics,
         iconFilledVector = Icons.Filled.Analytics,
     ),
     SETTINGS(
-        label = "Settings",
+        labelRes = R.string.nav_settings,
         iconOutlinedVector = Icons.Outlined.Settings,
         iconFilledVector = Icons.Filled.Settings,
     ),

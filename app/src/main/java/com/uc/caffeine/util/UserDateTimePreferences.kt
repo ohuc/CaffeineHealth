@@ -6,6 +6,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.LinkedHashMap
@@ -165,6 +166,27 @@ fun combineDateWithTime(
     val zoneId = settings.resolvedZoneId()
     val date = Instant.ofEpochMilli(baseTimestamp).atZone(zoneId).toLocalDate()
     return ZonedDateTime.of(date, LocalTime.of(hour, minute), zoneId)
+        .withSecond(0)
+        .withNano(0)
+        .toInstant()
+        .toEpochMilli()
+}
+
+fun toDatePickerMillis(timestampMillis: Long, settings: UserSettings): Long {
+    val localDate = Instant.ofEpochMilli(timestampMillis).atZone(settings.resolvedZoneId()).toLocalDate()
+    return localDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+}
+
+fun combineDatePickerSelectionWithTime(
+    datePickerSelectionMillis: Long,
+    hour: Int,
+    minute: Int,
+    settings: UserSettings,
+): Long {
+    val selectedLocalDate = Instant.ofEpochMilli(datePickerSelectionMillis)
+        .atZone(ZoneOffset.UTC)
+        .toLocalDate()
+    return ZonedDateTime.of(selectedLocalDate, LocalTime.of(hour, minute), settings.resolvedZoneId())
         .withSecond(0)
         .withNano(0)
         .toInstant()

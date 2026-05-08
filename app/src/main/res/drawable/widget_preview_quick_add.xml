@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="400dp"
+    android:height="200dp"
+    android:viewportWidth="400"
+    android:viewportHeight="200">
+
+    <!-- Dark espresso background -->
+    <path
+        android:fillColor="#2F2824"
+        android:pathData="M16,0 L384,0 Q400,0 400,16 L400,184 Q400,200 384,200 L16,200 Q0,200 0,184 L0,16 Q0,0 16,0 Z"/>
+
+    <!-- ── Row 1 ── -->
+    <!-- Drink icon box -->
+    <path
+        android:fillColor="#3D3530"
+        android:pathData="M16,48 L68,48 Q74,48 74,54 L74,106 Q74,112 68,112 L16,112 Q10,112 10,106 L10,54 Q10,48 16,48 Z"/>
+    <!-- Drink icon inside box (coffee cup silhouette approximation) -->
+    <path
+        android:fillColor="#DDB892"
+        android:pathData="M30,68 L54,68 Q57,68 57,71 L57,92 Q57,95 54,95 L30,95 Q27,95 27,92 L27,71 Q27,68 30,68 Z"/>
+    <path
+        android:fillColor="#3D3530"
+        android:pathData="M33,72 L51,72 L51,89 L33,89 Z"/>
+
+    <!-- Drink name bar -->
+    <path
+        android:fillColor="#EDE0D8"
+        android:pathData="M84,56 L220,56 Q223,56 223,59 L223,68 Q223,71 220,71 L84,71 Q81,71 81,68 L81,59 Q81,56 84,56 Z"/>
+    <!-- Subtitle bar -->
+    <path
+        android:fillColor="#60B09A8E"
+        android:pathData="M84,76 L185,76 Q188,76 188,79 L188,87 Q188,90 185,90 L84,90 Q81,90 81,87 L81,79 Q81,76 84,76 Z"/>
+
+    <!-- + button circle -->
+    <path
+        android:fillColor="#DDB892"
+        android:pathData="M340,80 m-26,0 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0"/>
+    <!-- + symbol -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#2F2824"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M340,67 L340,93 M327,80 L353,80"/>
+
+    <!-- ── Row 2 ── -->
+    <!-- Drink icon box -->
+    <path
+        android:fillColor="#3D3530"
+        android:pathData="M16,122 L68,122 Q74,122 74,128 L74,174 Q74,180 68,180 L16,180 Q10,180 10,174 L10,128 Q10,122 16,122 Z"/>
+    <!-- Drink icon placeholder -->
+    <path
+        android:fillColor="#8C7B6E"
+        android:pathData="M28,136 L56,136 Q59,136 59,139 L59,162 Q59,165 56,165 L28,165 Q25,165 25,162 L25,139 Q25,136 28,136 Z"/>
+
+    <!-- Drink name bar -->
+    <path
+        android:fillColor="#EDE0D8"
+        android:pathData="M84,130 L200,130 Q203,130 203,133 L203,142 Q203,145 200,145 L84,145 Q81,145 81,142 L81,133 Q81,130 84,130 Z"/>
+    <!-- Subtitle bar -->
+    <path
+        android:fillColor="#60B09A8E"
+        android:pathData="M84,150 L170,150 Q173,150 173,153 L173,161 Q173,164 170,164 L84,164 Q81,164 81,161 L81,153 Q81,150 84,150 Z"/>
+
+    <!-- + button circle -->
+    <path
+        android:fillColor="#DDB892"
+        android:pathData="M340,148 m-26,0 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0"/>
+    <!-- + symbol -->
+    <path
+        android:strokeColor="#2F2824"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M340,138 L340,158 M330,148 L350,148"/>
+</vector>

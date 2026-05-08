@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
 import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 
-private val DarkColorScheme = darkColorScheme(
+internal val DarkColorScheme = darkColorScheme(
     primary = EspressoPrimaryDark,
     onPrimary = OnEspressoPrimaryDark,
     primaryContainer = EspressoPrimaryContainerDark,
@@ -48,7 +48,7 @@ private val DarkColorScheme = darkColorScheme(
     surfaceContainerHighest = CaffeineSurfaceHighestDark,
 )
 
-private val LightColorScheme = lightColorScheme(
+internal val LightColorScheme = lightColorScheme(
     primary = EspressoPrimaryLight,
     onPrimary = OnEspressoPrimaryLight,
     primaryContainer = EspressoPrimaryContainerLight,

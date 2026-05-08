@@ -233,7 +233,7 @@ internal fun OnboardingScaffold(
     continueLabel: String,
     continueEnabled: Boolean,
     onContinue: () -> Unit,
-    disabledHint: String = "Answer this section to continue.",
+    disabledHint: String? = null,
     enabledHint: String? = null,
     pushCardUpward: Boolean = false,
     leadingHeaderContent: (@Composable (OnboardingLayoutMetrics) -> Unit)? = null,
@@ -289,7 +289,7 @@ internal fun OnboardingScaffold(
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                                    contentDescription = "Back",
+                                                    contentDescription = stringResource(R.string.action_back),
                                                 )
                                             }
                                         }
@@ -299,7 +299,7 @@ internal fun OnboardingScaffold(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
-                                            text = "STEP $currentStep OF $OnboardingStepCount",
+                                            text = stringResource(R.string.onboarding_step_format, currentStep, OnboardingStepCount),
                                             style = MaterialTheme.typography.labelMedium.copy(
                                                 letterSpacing = 1.sp,
                                             ),
@@ -317,7 +317,7 @@ internal fun OnboardingScaffold(
                                                     onSkip()
                                                 },
                                             ) {
-                                                Text("Skip")
+                                                Text(stringResource(R.string.action_skip))
                                             }
                                         }
                                     }
@@ -358,7 +358,7 @@ internal fun OnboardingScaffold(
                                                 onSkip()
                                             },
                                         ) {
-                                            Text("Skip for now")
+                                            Text(stringResource(R.string.onboarding_skip_for_now))
                                         }
                                     } else {
                                         Spacer(modifier = Modifier.size(48.dp))
@@ -657,7 +657,7 @@ private fun OnboardingActionArea(
     continueEnabled: Boolean,
     continueLabel: String,
     onContinue: () -> Unit,
-    disabledHint: String,
+    disabledHint: String?,
     enabledHint: String?,
 ) {
     Surface(
@@ -713,12 +713,14 @@ private fun OnboardingActionArea(
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
-                    Text(
-                        text = disabledHint,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        textAlign = TextAlign.Center,
-                    )
+                    if (disabledHint != null) {
+                        Text(
+                            text = disabledHint,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
 
@@ -754,12 +756,12 @@ internal fun OnboardingBrandLockup(
     ) {
         Image(
             painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-            contentDescription = "Caffeine Health Logo",
+            contentDescription = stringResource(R.string.onboarding_brand_logo_cd),
             modifier = Modifier.size(mainIconSize),
         )
 
         Text(
-            text = "Caffeine Health",
+            text = stringResource(R.string.brand_caffeine_health),
             style = if (layout.profile == OnboardingLayoutProfile.Compact) {
                 MaterialTheme.typography.titleSmall
             } else {
@@ -890,7 +892,7 @@ internal fun InfoTextWithSource(
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Source")
+                Text(stringResource(R.string.onboarding_source_label))
             }
         }
     }
@@ -1304,7 +1306,7 @@ internal fun OnboardingHero(
                 ),
         ) {
             Text(
-                text = "Bedtime-aware from the first cup",
+                text = stringResource(R.string.onboarding_bedtime_aware),
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                 color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -1331,10 +1333,11 @@ internal fun WeightStepperCard(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        val weightUnitLabels = WeightUnit.entries.associateWith { stringResource(it.labelRes) }
         ConnectedChoiceButtonGroup(
             options = WeightUnit.entries,
             selectedOption = weightUnit,
-            labelFor = { unit -> unit.label },
+            labelFor = { unit -> weightUnitLabels[unit] ?: "" },
             onOptionSelected = onWeightUnitSelected,
         )
 
@@ -1365,7 +1368,7 @@ internal fun WeightStepperCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Remove,
-                        contentDescription = "Lower weight",
+                        contentDescription = stringResource(R.string.onboarding_lower_weight_cd),
                     )
                 }
 
@@ -1385,7 +1388,7 @@ internal fun WeightStepperCard(
                         labelPrefix = "weight_stepper",
                     )
                     Text(
-                        text = weightUnit.label,
+                        text = stringResource(weightUnit.labelRes),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
@@ -1408,7 +1411,7 @@ internal fun WeightStepperCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
-                        contentDescription = "Raise weight",
+                        contentDescription = stringResource(R.string.onboarding_raise_weight_cd),
                     )
                 }
             }
@@ -1446,27 +1449,28 @@ private fun WeightInputDialog(
                 onClick = { parsed?.let { onConfirm(weightUnit.clamp(it)) } },
                 enabled = isValid,
             ) {
-                Text("OK")
+                Text(stringResource(R.string.action_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         },
-        title = { Text("Enter weight") },
+        title = { Text(stringResource(R.string.onboarding_enter_weight)) },
         text = {
+            val weightUnitLabel = stringResource(weightUnit.labelRes)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it.filter { c -> c.isDigit() } },
-                    label = { Text("Weight (${weightUnit.label})") },
+                    label = { Text(stringResource(R.string.onboarding_weight_field_label, weightUnitLabel)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     isError = text.isNotEmpty() && !isValid,
                 )
                 Text(
-                    text = "Range: ${weightUnit.minSelectable()}–${weightUnit.maxSelectable()} ${weightUnit.label}",
+                    text = stringResource(R.string.onboarding_weight_range_format, weightUnit.minSelectable(), weightUnit.maxSelectable(), weightUnitLabel),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1482,7 +1486,7 @@ internal fun SleepTimePickerCard(
     onSleepTimeChanged: (java.time.LocalTime) -> Unit,
     enabled: Boolean = true,
     hint: String? = null,
-    title: String? = "Typical bedtime",
+    title: String? = null,
 ) {
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     val haptics = rememberAppHaptics()
@@ -1506,14 +1510,13 @@ internal fun SleepTimePickerCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                if (title != null) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
+                val resolvedTitle = title ?: stringResource(R.string.profile_typical_bedtime)
                 Text(
-                    text = hint ?: "Starts at 11 PM. Adjust only if yours is different.",
+                    text = resolvedTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = hint ?: stringResource(R.string.onboarding_default_bedtime_hint),
                     style = MaterialTheme.typography.bodySmall,
                     // Primary color only when the field is locked by HC; muted otherwise
                     color = if (!enabled && hint != null)
@@ -1575,7 +1578,7 @@ private fun OnboardingTimePickerDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Pick your usual bedtime")
+            Text(stringResource(R.string.onboarding_pick_bedtime))
         },
         text = {
             Box(
@@ -1591,12 +1594,12 @@ private fun OnboardingTimePickerDialog(
                     onTimeSelected(java.time.LocalTime.of(timePickerState.hour, timePickerState.minute))
                 },
             ) {
-                Text("Save")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )
@@ -1635,7 +1638,7 @@ internal fun ProfileMetricRow(
             IconButton(onClick = onInfoClick) {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = "About $title",
+                    contentDescription = stringResource(R.string.onboarding_about_format, title),
                 )
             }
         }
@@ -1670,11 +1673,11 @@ internal fun LegalSheet(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(
-                text = "Legal stuff",
+                text = stringResource(R.string.onboarding_legal_title),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = "One quick acknowledgement before you start tracking.",
+                text = stringResource(R.string.onboarding_legal_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1692,11 +1695,11 @@ internal fun LegalSheet(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "Medical disclaimer",
+                        text = stringResource(R.string.onboarding_medical_disclaimer_title),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = "Caffeine is for general wellness tracking only. It is not medical advice, diagnosis, or treatment. If you have health concerns, take medicines that affect caffeine, or notice severe symptoms, please talk to a clinician.",
+                        text = stringResource(R.string.onboarding_medical_disclaimer_body),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -1722,7 +1725,7 @@ internal fun LegalSheet(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            text = "I understand this app offers estimates for personal tracking only and should not replace medical guidance.",
+                            text = stringResource(R.string.onboarding_legal_acknowledgement),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -1748,7 +1751,7 @@ internal fun LegalSheet(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                 }
-                Text(if (isSaving) "Saving profile..." else "Let's start tracking")
+                Text(stringResource(if (isSaving) R.string.onboarding_saving_profile else R.string.onboarding_lets_start_tracking))
             }
         }
     }
@@ -1773,7 +1776,13 @@ internal fun BedtimeDotSlider(
     val times = remember {
         listOf(21, 22, 23, 0, 1).map { hour -> java.time.LocalTime.of(hour, 0) }
     }
-    val labels = remember { listOf("9 PM", "10 PM", "11 PM", "12 AM", "1 AM") }
+    val labels = listOf(
+        stringResource(R.string.bedtime_label_9_pm),
+        stringResource(R.string.bedtime_label_10_pm),
+        stringResource(R.string.bedtime_label_11_pm),
+        stringResource(R.string.bedtime_label_12_am),
+        stringResource(R.string.bedtime_label_1_am),
+    )
 
     val targetIndex = remember(selectedTime.hour) {
         times.indexOfFirst { it.hour == selectedTime.hour }.coerceAtLeast(0)
@@ -1801,7 +1810,7 @@ internal fun BedtimeDotSlider(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(
-                text = "Typical bedtime",
+                text = stringResource(R.string.onboarding_typical_bedtime_section),
                 style = MaterialTheme.typography.titleMedium,
             )
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -1988,7 +1997,7 @@ internal fun SampleCaffeineChart(modifier: Modifier = Modifier) {
             color = colorScheme.secondaryContainer,
         ) {
             Text(
-                text = "BEDTIME",
+                text = stringResource(R.string.onboarding_bedtime_axis_label),
                 style = MaterialTheme.typography.labelSmall,
                 color = colorScheme.onSecondaryContainer,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -2002,17 +2011,17 @@ internal fun SampleCaffeineChart(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "6 AM",
+                text = stringResource(R.string.onboarding_clock_6_am),
                 style = MaterialTheme.typography.labelSmall,
                 color = colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "NOON",
+                text = stringResource(R.string.onboarding_clock_noon),
                 style = MaterialTheme.typography.labelSmall,
                 color = colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "11 PM",
+                text = stringResource(R.string.onboarding_clock_11_pm),
                 style = MaterialTheme.typography.labelSmall,
                 color = colorScheme.onSurfaceVariant,
             )

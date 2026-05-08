@@ -4,4 +4,470 @@
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
+    <string name="widget_caffeine_now_label">Caffeine Level</string>
+    <string name="widget_caffeine_now_description">Shows your current active caffeine level at a glance.</string>
+    <string name="widget_quick_add_label">Quick Log</string>
+    <string name="widget_quick_add_description">Log your recent drinks directly from the home screen.</string>
+    <string name="widget_combined_label">Caffeine Dashboard</string>
+    <string name="widget_combined_description">See your caffeine level and log drinks without opening the app.</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Back</string>
+
+    <!-- Settings list -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_caffeine_profile_title">Caffeine Profile</string>
+    <string name="settings_caffeine_profile_summary">Half-life, bedtime, safe threshold</string>
+    <string name="settings_appearance_title">Appearance</string>
+    <string name="settings_appearance_summary">Theme mode and dynamic color</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_summary">Choose your language</string>
+    <string name="settings_date_time_title">Date and Time</string>
+    <string name="settings_date_time_summary">Clock, date format, timezone</string>
+    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_summary">Sync caffeine data to Health Connect</string>
+    <string name="settings_my_data_title">My Data</string>
+    <string name="settings_my_data_summary">Export and import your data</string>
+    <string name="settings_notifications_title">Notifications</string>
+    <string name="settings_notifications_summary">Daily reminders and inactivity alerts</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_whats_new_title">What\'s New</string>
+    <string name="settings_whats_new_summary">See what\'s new in v%s</string>
+    <string name="settings_about_version">v%s</string>
+    <string name="settings_about_github_cd">GitHub repository</string>
+
+    <!-- Appearance settings -->
+    <string name="appearance_theme_label">Theme</string>
+    <string name="appearance_theme_mode_system">System</string>
+    <string name="appearance_theme_mode_light">Light</string>
+    <string name="appearance_theme_mode_dark">Dark</string>
+    <string name="appearance_dynamic_color_label">Dynamic Color</string>
+    <string name="appearance_dynamic_color_summary">Adapt theme from your wallpaper</string>
+
+    <!-- Date and time settings -->
+    <string name="date_time_24h_label">Use 24-hour format</string>
+    <string name="date_time_24h_summary">13:00 instead of 1:00 PM</string>
+    <string name="date_time_date_format_label">Date format</string>
+    <string name="date_time_date_format_sheet_description">Choose how dates should appear anywhere the app shows them.</string>
+    <string name="date_time_timezone_label">Timezone</string>
+    <string name="date_time_timezone_sheet_description">Pick the timezone the app should use for charts, bedtime calculations, and your day boundaries.</string>
+    <string name="date_time_timezone_search_label">Search timezone</string>
+
+    <!-- Language settings -->
+    <string name="language_section_title">Language</string>
+    <string name="language_selected_cd">Selected</string>
+
+    <!-- Common actions reused across screens -->
+    <string name="action_yes">Yes</string>
+    <string name="action_no">No</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_add">Add</string>
+    <string name="action_expand">Expand</string>
+    <string name="action_collapse">Collapse</string>
+
+    <!-- Caffeine profile snapshot -->
+    <string name="profile_estimated_half_life">Estimated half-life</string>
+    <string name="profile_half_life_value_modified">%1$d hr (base %2$d hr)</string>
+    <string name="profile_half_life_value">%1$d hr</string>
+    <string name="profile_half_life_description_modified">Adjusted for your genetic and hormonal modifiers.</string>
+    <string name="profile_half_life_description_default">How long caffeine tends to linger in your system.</string>
+    <string name="profile_typical_bedtime">Typical bedtime</string>
+    <string name="profile_typical_bedtime_description">Used for the bedtime marker and sleep prediction.</string>
+    <string name="profile_sleep_threshold">Sleep threshold</string>
+    <string name="profile_sleep_threshold_value">%1$d mg</string>
+    <string name="profile_sleep_threshold_description">The active-caffeine target the sleep guidance compares against.</string>
+
+    <!-- Caffeine profile re-adjust card -->
+    <string name="profile_re_adjust_title">Re-Adjust Caffeine Health Profile</string>
+    <string name="profile_re_adjust_description">Fine-tune your half-life, sleep settings, and metabolism factors.</string>
+    <string name="profile_redo_onboarding">Redo onboarding</string>
+    <string name="profile_redo_onboarding_description">Walk through the profile setup again without deleting any logged drinks or history.</string>
+
+    <!-- Caffeine profile editors -->
+    <string name="profile_caffeine_half_life">Caffeine Half-Life</string>
+    <string name="profile_caffeine_half_life_supporting">Average is around 5 hours, but you can make it more personal here.</string>
+    <string name="profile_caffeine_half_life_hint">Adjust in 1-hour steps</string>
+    <string name="profile_sleep_threshold_supporting">Keep this lower if caffeine affects your sleep easily, higher if your usual cutoff is more forgiving.</string>
+    <string name="profile_sleep_threshold_hint">Adjust in 5 mg steps</string>
+    <string name="profile_health_section">Health Profile</string>
+    <string name="profile_age_range">Age range</string>
+    <string name="profile_age_range_description">Caffeine may linger longer for older adults.</string>
+    <string name="profile_weight">Weight</string>
+    <string name="profile_sleep_sensitivity">Sleep sensitivity</string>
+    <string name="profile_sleep_sensitivity_description">If insomnia is part of the picture, the threshold stays more conservative.</string>
+    <string name="profile_smoking_habit">Smoking habit</string>
+    <string name="profile_smoking_habit_description">Smoking can speed up caffeine clearance by inducing CYP1A2.</string>
+    <string name="profile_heavy_alcohol">Heavy alcohol use</string>
+    <string name="profile_heavy_alcohol_description">Heavy alcohol use can slow clearance and lower your effective threshold.</string>
+    <string name="profile_high_caffeine">High daily caffeine</string>
+    <string name="profile_high_caffeine_description">Frequent high intake may increase tolerance.</string>
+    <string name="profile_liver_context">Liver context</string>
+    <string name="profile_liver_context_description">Liver disease can substantially slow caffeine clearance.</string>
+    <string name="profile_medications">Medications</string>
+    <string name="profile_medications_description">Pick any that may slow caffeine clearance. Select None if none apply.</string>
+    <string name="stepper_decrease_cd">Decrease %1$s</string>
+    <string name="stepper_increase_cd">Increase %1$s</string>
+
+    <!-- Advanced metabolism card -->
+    <string name="profile_advanced_metabolism">Advanced Metabolism</string>
+    <string name="profile_advanced_metabolism_description">Optional genetic and hormonal factors that fine-tune your half-life estimate.</string>
+    <string name="profile_advanced_metabolism_intro">If you know your CYP1A2 or AHR genotype (e.g. from 23andMe or similar), you can enter it here. These are entirely optional.</string>
+    <string name="profile_cyp1a2">CYP1A2 rs762551</string>
+    <string name="profile_cyp1a2_description">Controls caffeine metabolism speed. A/A is the fast-metabolizer reference.</string>
+    <string name="profile_ahr">AHR rs2066853</string>
+    <string name="profile_ahr_description">Affects CYP1A2 expression level. G/G is normal.</string>
+    <string name="profile_hormonal_status">Hormonal status</string>
+    <string name="profile_hormonal_status_description">Pregnancy and oral contraceptives can substantially slow caffeine clearance.</string>
+    <string name="profile_effective_half_life">Effective half-life: %1$d hr %2$d min</string>
+    <string name="profile_clearance_factor_explanation">Base %1$d hr adjusted by a combined clearance factor of %2$s.</string>
+
+    <!-- Health Connect settings -->
+    <string name="health_connect_no_permissions_granted">No Health Connect permissions were granted</string>
+    <string name="health_connect_not_installed">Health Connect is not installed on this device</string>
+    <string name="health_connect_sync_label">Sync with Health Connect</string>
+    <string name="health_connect_grant_access">Grant access to caffeine and sleep data</string>
+    <string name="health_connect_caffeine_and_sleep_active">Caffeine sync and sleep data active</string>
+    <string name="health_connect_caffeine_active">Caffeine sync active</string>
+    <string name="health_connect_sleep_active">Sleep data active</string>
+    <string name="health_connect_description"><![CDATA[Syncs your <b>caffeine intake</b> and if sleep access is granted libs<b>auto-sets your bedtime</b> from Health Connect.]]></string>
+    <string name="health_connect_no_sleep_warning">No sleep data found in Health Connect. Your manual bedtime is used until sleep sessions are recorded.</string>
+    <string name="health_connect_bedtime_source">Bedtime source</string>
+    <string name="health_connect_last_night">Last night\'s sleep</string>
+    <string name="health_connect_bedtime_reading">Bedtime reading: %1$s</string>
+    <string name="health_connect_uses_recent_session">Uses the most recent sleep session</string>
+    <string name="health_connect_seven_day_avg">7-day average</string>
+    <string name="health_connect_seven_day_avg_description">Averages bedtime across the past week</string>
+
+    <!-- Notifications settings -->
+    <string name="notifications_inactivity_section">Inactivity Reminders</string>
+    <string name="notifications_no_log_title">No Log Reminder</string>
+    <string name="notifications_no_log_description">Remind me if I haven\'t logged caffeine in 5 days</string>
+    <string name="notifications_daily_section">Daily Reminders</string>
+    <string name="notifications_remove_reminder_cd">Remove reminder</string>
+    <string name="notifications_add_reminder">Add Reminder</string>
+    <string name="notifications_add_daily_dialog_title">Add Daily Reminder</string>
+
+    <!-- My Data settings -->
+    <string name="my_data_export_title">Export data</string>
+    <string name="my_data_export_description">Save a backup of your history, profile, and custom drinks</string>
+    <string name="my_data_import_title">Import data</string>
+    <string name="my_data_import_description">Restore from a previous backup file</string>
+    <string name="my_data_import_dialog_text">Merge adds imported entries alongside your current data. Replace wipes all existing history and settings before restoring.</string>
+    <string name="my_data_import_merge">Merge</string>
+    <string name="my_data_import_replace">Replace</string>
+    <string name="my_data_export_failed">Export failed: %1$s</string>
+    <string name="my_data_export_error_unknown">Unknown error</string>
+    <string name="my_data_import_could_not_read">Could not read file</string>
+
+    <!-- Save action (reused) -->
+    <string name="action_save">Save</string>
+
+    <!-- Caffeine units -->
+    <string name="unit_mg">mg</string>
+    <string name="caffeine_mg_compact">%1$dmg</string>
+    <string name="caffeine_mg">%1$d mg</string>
+
+    <!-- Home screen -->
+    <string name="home_title">Home</string>
+    <string name="home_my_consumptions">My Consumptions</string>
+    <string name="home_no_consumptions">No consumptions logged yet</string>
+    <string name="home_started_meta">Started %1$s</string>
+    <string name="home_action_edit">Edit</string>
+    <string name="home_action_duplicate">Duplicate</string>
+    <string name="home_action_delete">Delete</string>
+    <string name="home_adds_now">Adds %1$s now</string>
+    <string name="home_drink_contribution_title">Drink contribution to caffeine levels</string>
+    <string name="home_at_peak">At peak (%1$s)</string>
+    <string name="home_now">Now</string>
+    <string name="home_in_total_over_time">In total (over time)</string>
+    <string name="home_edit_drink">Edit %1$s</string>
+    <string name="home_serving">Serving</string>
+    <string name="home_serving_unavailable">Serving options are unavailable for this entry.</string>
+
+    <!-- Sleep forecast (HomeScreen card) -->
+    <string name="sleep_forecast_title">Sleep Forecast</string>
+    <string name="sleep_forecast_safe">Safe to sleep at %1$s</string>
+    <string name="sleep_forecast_may_affect">May affect sleep (%1$dmg at bedtime)</string>
+    <string name="sleep_forecast_disruption">Sleep disruption likely (%1$dmg)</string>
+
+    <!-- Add screen -->
+    <string name="add_title">Add a drink</string>
+    <string name="add_create_custom_cd">Create custom drink</string>
+    <string name="add_search_placeholder">Search drinks…</string>
+    <string name="add_search_cd">Search</string>
+    <string name="add_clear_search_cd">Clear search</string>
+    <string name="add_filter_all">All</string>
+    <string name="add_recent_servings">Recent servings</string>
+    <string name="add_logged_toast">Logged %1$s</string>
+    <string name="add_log_serving_of">Log %1$s of</string>
+    <string name="add_no_serving_options">No serving options are available for this drink yet.</string>
+    <string name="add_choose_unit">Choose a unit</string>
+    <string name="add_total_caffeine">Total caffeine</string>
+    <string name="add_bedtime_warning">By bedtime, ~%1$d mg will still be active — above your %2$d mg sleep threshold.</string>
+    <string name="add_entry">Add entry</string>
+
+    <!-- Add screen empty results -->
+    <string name="add_empty_no_drinks_found">No drinks found</string>
+    <string name="add_empty_no_drinks_available">No drinks available</string>
+    <string name="add_empty_message_filter_search">No drinks match \"%1$s\" in %2$s.</string>
+    <string name="add_empty_message_filter">No drinks are available in %1$s right now.</string>
+    <string name="add_empty_message_search">No drinks match \"%1$s\".</string>
+    <string name="add_empty_message_default">Add some presets to see drinks here.</string>
+    <string name="add_create_custom_drink_button">Create Custom Drink</string>
+    <string name="add_clear_filters">Clear filters</string>
+
+    <!-- Custom drink sheet -->
+    <string name="custom_drink_image_picker_cd">Tap to pick image</string>
+    <string name="custom_drink_new">New custom drink</string>
+    <string name="custom_drink_name_label">Drink name</string>
+    <string name="custom_drink_emoji_label">Emoji</string>
+    <string name="custom_drink_pick_image">Pick image</string>
+    <string name="custom_drink_change_image">Change</string>
+    <string name="custom_drink_remove">Remove</string>
+    <string name="custom_drink_category">Category</string>
+    <string name="custom_drink_serving_unit">Serving unit</string>
+    <string name="custom_drink_caffeine_per_serving">Caffeine per serving</string>
+    <string name="custom_drink_amount_label">Amount</string>
+    <string name="custom_drink_save">Save custom drink</string>
+
+    <!-- Common reused -->
+    <string name="action_ok">OK</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_settings">Settings</string>
+    <string name="main_add_consumption">Add Consumption</string>
+
+    <!-- Notification channels -->
+    <string name="notification_channel_daily">Daily Reminders</string>
+    <string name="notification_channel_daily_description">Daily caffeine logging reminders</string>
+    <string name="notification_channel_inactivity">Inactivity Reminders</string>
+    <string name="notification_channel_inactivity_description">Reminder when you haven\'t logged caffeine in a while</string>
+
+    <!-- Notification messages -->
+    <string name="notification_daily_title">Caffeine Check-in</string>
+    <string name="notification_daily_morning">Time to log your morning coffee or tea. Stay on top of your caffeine intake today.</string>
+    <string name="notification_daily_afternoon">Time to log your afternoon caffeine. Keep your tracker up to date.</string>
+    <string name="notification_daily_evening">Time to log your evening caffeine. Get accurate bedtime predictions.</string>
+    <string name="notification_inactivity_title">Miss your caffeine log?</string>
+    <string name="notification_inactivity_body">It has been 5 days since you logged. Open the app to keep your tracker accurate.</string>
+
+    <!-- Widgets (in-content text) -->
+    <string name="widget_caffeine_now_inline_label">Caffeine Now</string>
+    <string name="widget_refresh_cd">Refresh</string>
+    <string name="widget_quick_log_toast">Consumption has been added!</string>
+
+    <!-- Analytics screen -->
+    <string name="analytics_title">Analytics</string>
+    <string name="analytics_caffeine_by_source">Caffeine by Source</string>
+    <string name="analytics_caffeine_by_source_summary">Where your caffeine came from over this period.</string>
+    <string name="analytics_bedtime_impact">Bedtime impact</string>
+    <string name="analytics_bedtime_impact_summary">How much caffeine is still active by the time you sleep.</string>
+    <string name="analytics_bedtime_card_supporting">Average caffeine still active by bedtime for each period.</string>
+    <string name="analytics_when_you_drink">When you drink caffeine</string>
+    <string name="analytics_when_you_drink_summary">How your intake is spread across the day.</string>
+    <string name="analytics_total_caffeine_logged">Total caffeine logged in this range</string>
+    <string name="analytics_average_per_day">Average/day</string>
+    <string name="analytics_safe_nights">Safe nights</string>
+    <string name="analytics_safe_nights_value">%1$d / %2$d</string>
+    <string name="analytics_top_source">Top source</string>
+    <string name="analytics_sleep_threshold">Sleep threshold</string>
+    <string name="analytics_value_mg">%1$d mg</string>
+
+    <!-- Range button labels (short — used in toggle buttons) -->
+    <string name="analytics_range_today">Today</string>
+    <string name="analytics_range_yesterday">Yesterday</string>
+    <string name="analytics_range_30_days">30 Days</string>
+    <string name="analytics_range_90_days">90 Days</string>
+    <string name="analytics_range_custom">Custom</string>
+
+    <!-- Headline labels (long — used in summary card) -->
+    <string name="analytics_headline_today">Today</string>
+    <string name="analytics_headline_yesterday">Yesterday</string>
+    <string name="analytics_headline_last_30">Last 30 days</string>
+    <string name="analytics_headline_last_90">Last 90 days</string>
+    <string name="analytics_headline_custom">Custom range</string>
+
+    <!-- Range bottom sheet -->
+    <string name="analytics_change_range_cd">Change range</string>
+    <string name="analytics_quick_select">Quick select</string>
+    <string name="analytics_custom_range_section">Custom range</string>
+    <string name="analytics_from">From</string>
+    <string name="analytics_to">To</string>
+    <string name="analytics_apply_custom_range">Apply custom range</string>
+    <string name="analytics_custom_range_format">%1$s – %2$s</string>
+
+    <!-- Empty state -->
+    <string name="analytics_nothing_to_chart">Nothing to chart yet</string>
+    <string name="analytics_empty_body">Log a few drinks and this %1$s view will fill in with trends, sleep impact, and intake timing.</string>
+
+    <!-- By Source page -->
+    <string name="analytics_view_category">Category</string>
+    <string name="analytics_view_item">Item</string>
+    <string name="analytics_source_breakdown">Source breakdown</string>
+    <string name="analytics_source_breakdown_supporting">Total caffeine by category for the selected period.</string>
+    <string name="analytics_categories">Categories</string>
+    <string name="analytics_recent_consumptions">Recent Consumptions</string>
+    <string name="analytics_servings_one">%1$d serving</string>
+    <string name="analytics_servings_other">%1$d servings</string>
+    <string name="analytics_full_percent" formatted="false">100%</string>
+
+    <!-- Time-of-day buckets -->
+    <string name="analytics_bucket_night">Night</string>
+    <string name="analytics_bucket_night_range">7pm – 5am</string>
+    <string name="analytics_bucket_morning">Morning</string>
+    <string name="analytics_bucket_morning_range">5am – 12pm</string>
+    <string name="analytics_bucket_afternoon">Afternoon</string>
+    <string name="analytics_bucket_afternoon_range">12pm – 3pm</string>
+    <string name="analytics_bucket_evening">Evening</string>
+    <string name="analytics_bucket_evening_range">3pm – 7pm</string>
+
+    <!-- Common reused -->
+    <string name="action_close">Close</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_skip">Skip</string>
+    <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Onboarding intro -->
+    <string name="onboarding_brand_logo_cd">Caffeine Health Logo</string>
+    <string name="onboarding_welcome_kicker">WELCOME</string>
+    <string name="onboarding_intro_line_1">Know your\n</string>
+    <string name="onboarding_intro_line_2">caffeine.</string>
+    <string name="onboarding_intro_line_3">\nProtect\nyour sleep.</string>
+    <string name="onboarding_intro_subtitle">A live look at what\'s still in your system and whether tonight\'s espresso will cost you sleep.</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_takes_a_minute">Takes about a minute · No account needed</string>
+
+    <!-- Onboarding scaffolding -->
+    <string name="onboarding_step_format">STEP %1$d OF %2$d</string>
+    <string name="onboarding_skip_for_now">Skip for now</string>
+    <string name="onboarding_default_disabled_hint">Answer this section to continue.</string>
+
+    <!-- Basic info -->
+    <string name="onboarding_basic_info_title">Set your baseline</string>
+    <string name="onboarding_basic_info_subtitle">Pick your age range and leave the default weight alone unless you want to tune it now.</string>
+    <string name="onboarding_basic_info_disabled_hint">Choose your age range to continue.</string>
+    <string name="onboarding_basic_info_enabled_hint">Weight starts at 60 kg and can be adjusted later.</string>
+    <string name="onboarding_age_range_section">Age range</string>
+    <string name="onboarding_age_range_supporting">This keeps the estimate conservative when caffeine may linger longer.</string>
+    <string name="onboarding_weight_section">Weight</string>
+    <string name="onboarding_weight_supporting">Use the stepper if you want to adjust the default starting weight.</string>
+
+    <!-- Sleep -->
+    <string name="onboarding_sleep_title">Map your sleep window</string>
+    <string name="onboarding_sleep_subtitle">Pick your usual bedtime. We\'ll let you know when caffeine may still be active.</string>
+    <string name="onboarding_sleep_disabled_hint">Tell us if sleep is sensitive for you.</string>
+    <string name="onboarding_sleep_enabled_hint">This powers the bedtime forecast and threshold line.</string>
+    <string name="onboarding_sleep_sensitivity_supporting">If insomnia is already part of the picture, we keep the bedtime target more conservative.</string>
+
+    <!-- Lifestyle -->
+    <string name="onboarding_lifestyle_title">Add the real-life context</string>
+    <string name="onboarding_lifestyle_subtitle">These habits change how quickly caffeine clears and how careful bedtime guidance should stay.</string>
+    <string name="onboarding_lifestyle_disabled_hint">Tell us about smoking, alcohol, and daily caffeine.</string>
+    <string name="onboarding_lifestyle_enabled_hint">We blend these with your baseline before the final profile.</string>
+    <string name="onboarding_smoking_info">Smoking can speed up caffeine clearance for some people by affecting CYP1A2 activity.</string>
+    <string name="onboarding_alcohol_info">Heavy alcohol use can slow clearance and lower your effective bedtime threshold.</string>
+    <string name="onboarding_caffeine_info">Frequent high intake may increase tolerance even when bedtime guidance should still stay conservative.</string>
+
+    <!-- Medical -->
+    <string name="onboarding_medical_title">Keep the estimate responsible</string>
+    <string name="onboarding_medical_subtitle">A little health context keeps the first-day profile from being overly optimistic.</string>
+    <string name="onboarding_medical_continue_label">See my profile</string>
+    <string name="onboarding_medical_disabled_hint">Pick liver context and any medicines that matter here.</string>
+    <string name="onboarding_medical_enabled_hint">This only sets a safer starting profile.</string>
+    <string name="onboarding_medications_section">Medicines that may slow caffeine clearance</string>
+    <string name="onboarding_medications_supporting">Pick any that apply. If none do, select None.</string>
+    <string name="onboarding_medications_info">Some CYP1A2 inhibitors can make caffeine hang around much longer than usual.</string>
+
+    <!-- Profile ready -->
+    <string name="onboarding_profile_ready_title">Profile ready</string>
+    <string name="onboarding_profile_ready_subtitle">Here\'s the starting profile Caffeine will use for your live curve and bedtime forecast.</string>
+    <string name="onboarding_profile_ready_continue_label">Review legal bits</string>
+    <string name="onboarding_profile_ready_enabled_hint">You can fine-tune these values later in Settings.</string>
+    <string name="onboarding_metric_half_life_description">How long it takes your body to clear half of the caffeine you consume.</string>
+    <string name="onboarding_metric_sleep_threshold_description">A conservative bedtime target for how much active caffeine may still be in your system.</string>
+    <string name="onboarding_metric_bedtime_description">Used to project the sleep forecast card and chart markers each day.</string>
+
+    <!-- Profile info dialogs -->
+    <string name="onboarding_dialog_half_life_body">Half-life is the estimated time it takes your body to clear half of the caffeine still active in your system. A longer half-life means caffeine may linger later into the day.</string>
+    <string name="onboarding_dialog_sleep_threshold_body">This is a conservative bedtime target for how much active caffeine may still be in your system before sleep is more likely to be affected.</string>
+    <string name="onboarding_dialog_bedtime_body">Bedtime powers the chart marker and the sleep forecast card so the app can estimate how much caffeine may still be active when you try to sleep.</string>
+
+    <!-- Onboarding components -->
+    <string name="onboarding_source_label">Source</string>
+    <string name="onboarding_bedtime_aware">Bedtime-aware from the first cup</string>
+    <string name="onboarding_lower_weight_cd">Lower weight</string>
+    <string name="onboarding_raise_weight_cd">Raise weight</string>
+    <string name="onboarding_enter_weight">Enter weight</string>
+    <string name="onboarding_weight_field_label">Weight (%1$s)</string>
+    <string name="onboarding_weight_range_format">Range: %1$d–%2$d %3$s</string>
+    <string name="onboarding_default_bedtime_hint">Starts at 11 PM. Adjust only if yours is different.</string>
+    <string name="onboarding_pick_bedtime">Pick your usual bedtime</string>
+    <string name="onboarding_about_format">About %1$s</string>
+    <string name="onboarding_legal_title">Legal stuff</string>
+    <string name="onboarding_legal_subtitle">One quick acknowledgement before you start tracking.</string>
+    <string name="onboarding_medical_disclaimer_title">Medical disclaimer</string>
+    <string name="onboarding_medical_disclaimer_body">Caffeine is for general wellness tracking only. It is not medical advice, diagnosis, or treatment. If you have health concerns, take medicines that affect caffeine, or notice severe symptoms, please talk to a clinician.</string>
+    <string name="onboarding_legal_acknowledgement">I understand this app offers estimates for personal tracking only and should not replace medical guidance.</string>
+    <string name="onboarding_saving_profile">Saving profile…</string>
+    <string name="onboarding_lets_start_tracking">Let\'s start tracking</string>
+    <string name="onboarding_typical_bedtime_section">Typical bedtime</string>
+    <string name="onboarding_bedtime_axis_label">BEDTIME</string>
+    <string name="onboarding_clock_6_am">6 AM</string>
+    <string name="onboarding_clock_noon">NOON</string>
+    <string name="onboarding_clock_11_pm">11 PM</string>
+
+    <!-- Half-life format -->
+    <string name="onboarding_half_life_hours_only">%1$d h</string>
+    <string name="onboarding_half_life_hours_minutes">%1$d h %2$d m</string>
+
+    <!-- Bedtime dot slider labels -->
+    <string name="bedtime_label_9_pm">9 PM</string>
+    <string name="bedtime_label_10_pm">10 PM</string>
+    <string name="bedtime_label_11_pm">11 PM</string>
+    <string name="bedtime_label_12_am">12 AM</string>
+    <string name="bedtime_label_1_am">1 AM</string>
+
+    <!-- Onboarding enum labels -->
+    <string name="age_under_65">Under 65</string>
+    <string name="age_65_or_older">65 or older</string>
+    <string name="weight_unit_kg">kg</string>
+    <string name="weight_unit_lb">lb</string>
+    <string name="smoking_none">None</string>
+    <string name="smoking_some_days">Some days</string>
+    <string name="smoking_occasional">Occasional</string>
+    <string name="smoking_daily">Daily</string>
+    <string name="smoking_heavy">Heavy</string>
+    <string name="liver_no_disease">No liver disease</string>
+    <string name="liver_compensated">Compensated</string>
+    <string name="liver_decompensated">Decompensated</string>
+    <string name="medication_none">None</string>
+    <string name="medication_cimetidine">Cimetidine</string>
+    <string name="medication_oral_contraceptives">Hormonal contraceptives</string>
+    <string name="medication_ciprofloxacin">Ciprofloxacin</string>
+    <string name="medication_fluvoxamine">Fluvoxamine</string>
+    <string name="medication_other_cyp1a2">Other CYP1A2 inhibitor</string>
+
+    <!-- Health Connect hints in profile (deferred from batch 2) -->
+    <string name="health_connect_sleep_hint_active">Health Connect is providing this value</string>
+    <string name="health_connect_sleep_hint_no_data">No sleep data in Health Connect yet — your setting is used as fallback</string>
+
+    <!-- What's New changelog sheet -->
+    <string name="whats_new_title">What\'s New</string>
+    <string name="whats_new_version_badge">v2.0</string>
+    <string name="whats_new_got_it">Got it</string>
+    <string name="whats_new_widgets_title">Home Screen Widgets</string>
+    <string name="whats_new_widgets_body">Track your caffeine level and log drinks right from your home screen. No app tap needed.</string>
+    <string name="whats_new_language_title">Language Selection</string>
+    <string name="whats_new_language_body">Hindi is now supported. Switch in Settings → Language, and the app is now open for community translations.</string>
+    <string name="whats_new_ui_title">Polished Interface</string>
+    <string name="whats_new_ui_body">Refreshed cards, smoother animations, and expressive icon shapes throughout the app.</string>
+
+    <!-- Completion celebration -->
+    <string name="celebration_profile_saved">Profile saved.</string>
+    <string name="celebration_subtitle">Caffeine Health is ready when you are.</string>
+    <string name="celebration_next_log">Next: log your first cup</string>
+    <string name="celebration_next_log_supporting">One tap from your home screen. The curve fills in from there.</string>
+    <string name="celebration_take_me_home">Take me home</string>
 </resources>

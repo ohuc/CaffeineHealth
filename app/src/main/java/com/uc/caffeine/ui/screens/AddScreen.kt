@@ -75,6 +75,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
@@ -84,6 +85,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.lifecycleScope
 import com.uc.caffeine.LocalSnackbarHostState
+import com.uc.caffeine.R
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.data.model.DrinkPreset
@@ -153,7 +155,7 @@ fun AddScreen(
             when (event) {
                 is AddScreenUiEvent.DrinkLogged -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
-                    val message = "Logged ${event.drinkName}"
+                    val message = context.getString(R.string.add_logged_toast, event.drinkName)
                     activity?.lifecycleScope?.launch {
                         snackbarHostState.showSnackbar(
                             message = message,
@@ -170,11 +172,11 @@ fun AddScreen(
     }
 
     CaffeineScreenScaffold(
-        title = "Add a drink",
+        title = stringResource(R.string.add_title),
         headerBottomSpacing = 0.dp,
         actions = {
             FilledIconButton(onClick = { showCustomDrinkSheet = true }) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = "Create custom drink")
+                Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.add_create_custom_cd))
             }
         }
     ) { bottomPadding ->
@@ -186,11 +188,11 @@ fun AddScreen(
                     onSearch = { focusManager.clearFocus() },
                     expanded = false,
                     onExpandedChange = { },
-                    placeholder = { Text("Search drinks...") },
+                    placeholder = { Text(stringResource(R.string.add_search_placeholder)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Filled.Search,
-                            contentDescription = "Search"
+                            contentDescription = stringResource(R.string.add_search_cd)
                         )
                     },
                     trailingIcon = {
@@ -202,7 +204,7 @@ fun AddScreen(
                             }) {
                                 Icon(
                                     imageVector = Icons.Filled.Clear,
-                                    contentDescription = "Clear search"
+                                    contentDescription = stringResource(R.string.add_clear_search_cd)
                                 )
                             }
                         }
@@ -225,7 +227,8 @@ fun AddScreen(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
         ) {
-            val allOptions = listOf("All") + categories
+            val allLabel = stringResource(R.string.add_filter_all)
+            val allOptions = listOf(allLabel) + categories
 
             allOptions.forEachIndexed { index, _ ->
                 val isAllButton = index == 0
@@ -262,7 +265,7 @@ fun AddScreen(
                     )
                     Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
                     Text(
-                        text = if (isAllButton) "All" else CategoryUtils.getCategoryButtonLabel(category!!),
+                        text = if (isAllButton) allLabel else CategoryUtils.getCategoryButtonLabel(category!!),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -275,7 +278,7 @@ fun AddScreen(
 
         if (showRecentServings) {
             Text(
-                text = "Recent servings",
+                text = stringResource(R.string.add_recent_servings),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -322,7 +325,7 @@ fun AddScreen(
                 },
                 trailingContent = { recent ->
                     Text(
-                        text = "${recent.caffeineMg}mg",
+                        text = stringResource(R.string.caffeine_mg_compact, recent.caffeineMg),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
@@ -535,7 +538,7 @@ private fun AddDrinkServingSheet(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Log $servingSummary of",
+                    text = stringResource(R.string.add_log_serving_of, servingSummary),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -562,20 +565,21 @@ private fun AddDrinkServingSheet(
                 quantity = quantity,
                 onDecrement = { quantity = (quantity - 1).coerceAtLeast(1) },
                 onIncrement = { quantity += 1 },
+                onQuantitySet = { quantity = it },
             )
 
             HorizontalDivider()
 
             if (units.isNullOrEmpty()) {
                 Text(
-                    text = "No serving options are available for this drink yet.",
+                    text = stringResource(R.string.add_no_serving_options),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Choose a unit",
+                        text = stringResource(R.string.add_choose_unit),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     ServingUnitSelector(
@@ -594,12 +598,12 @@ private fun AddDrinkServingSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Total caffeine",
+                    text = stringResource(R.string.add_total_caffeine),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 RollingNumberText(
-                    text = "$totalCaffeineMg mg",
+                    text = stringResource(R.string.caffeine_mg, totalCaffeineMg),
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -647,7 +651,11 @@ private fun AddDrinkServingSheet(
                             modifier = Modifier.size(20.dp),
                         )
                         Text(
-                            text = "By bedtime, ~${caffeineAtBedtimeMg.roundToInt()} mg will still be active — above your ${userSettings.sleepThresholdMg} mg sleep threshold.",
+                            text = stringResource(
+                                R.string.add_bedtime_warning,
+                                caffeineAtBedtimeMg.roundToInt(),
+                                userSettings.sleepThresholdMg,
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                         )
@@ -676,7 +684,7 @@ private fun AddDrinkServingSheet(
                     .fillMaxWidth()
                     .height(56.dp),
             ) {
-                Text("Add entry")
+                Text(stringResource(R.string.add_entry))
             }
         }
 
@@ -693,16 +701,18 @@ private fun EmptyDrinkResultsState(
 ) {
     val hasSearchQuery = searchQuery.isNotBlank()
     val hasActiveFilters = selectedFilter != null || hasSearchQuery
-    val title = if (hasActiveFilters) "No drinks found" else "No drinks available"
+    val title = stringResource(
+        if (hasActiveFilters) R.string.add_empty_no_drinks_found else R.string.add_empty_no_drinks_available
+    )
     val message = when {
         selectedFilter != null && hasSearchQuery ->
-            "No drinks match \"$searchQuery\" in $selectedFilter."
+            stringResource(R.string.add_empty_message_filter_search, searchQuery, selectedFilter)
         selectedFilter != null ->
-            "No drinks are available in $selectedFilter right now."
+            stringResource(R.string.add_empty_message_filter, selectedFilter)
         hasSearchQuery ->
-            "No drinks match \"$searchQuery\"."
+            stringResource(R.string.add_empty_message_search, searchQuery)
         else ->
-            "Add some presets to see drinks here."
+            stringResource(R.string.add_empty_message_default)
     }
 
     Box(
@@ -737,11 +747,11 @@ private fun EmptyDrinkResultsState(
                         modifier = Modifier.size(ButtonDefaults.IconSize),
                     )
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text("Create Custom Drink")
+                    Text(stringResource(R.string.add_create_custom_drink_button))
                 }
             } else if (hasActiveFilters) {
                 TextButton(onClick = onClearFilters) {
-                    Text("Clear filters")
+                    Text(stringResource(R.string.add_clear_filters))
                 }
             }
         }
@@ -820,7 +830,7 @@ private fun SegmentedDrinkListItem(
         },
         trailingContent = {
             Text(
-                text = "${drink.defaultCaffeineMg}mg",
+                text = stringResource(R.string.caffeine_mg_compact, drink.defaultCaffeineMg),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
@@ -887,7 +897,7 @@ private fun CreateCustomDrinkSheet(
                     DrinkIcon(
                         imageName = imageUri,
                         emoji = emoji.ifBlank { "☕" },
-                        contentDescription = "Tap to pick image",
+                        contentDescription = stringResource(R.string.custom_drink_image_picker_cd),
                         modifier = Modifier.size(48.dp),
                         emojiSize = MaterialTheme.typography.headlineLarge.fontSize,
                     )
@@ -898,7 +908,7 @@ private fun CreateCustomDrinkSheet(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = "New custom drink",
+                    text = stringResource(R.string.custom_drink_new),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -914,7 +924,7 @@ private fun CreateCustomDrinkSheet(
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Drink name") },
+            label = { Text(stringResource(R.string.custom_drink_name_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -927,7 +937,7 @@ private fun CreateCustomDrinkSheet(
             OutlinedTextField(
                 value = emoji,
                 onValueChange = { emoji = it },
-                label = { Text("Emoji") },
+                label = { Text(stringResource(R.string.custom_drink_emoji_label)) },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
@@ -938,11 +948,11 @@ private fun CreateCustomDrinkSheet(
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(Modifier.size(6.dp))
-                Text(if (imageUri.isBlank()) "Pick image" else "Change")
+                Text(stringResource(if (imageUri.isBlank()) R.string.custom_drink_pick_image else R.string.custom_drink_change_image))
             }
             if (imageUri.isNotBlank()) {
                 TextButton(onClick = { imageUri = "" }) {
-                    Text("Remove")
+                    Text(stringResource(R.string.custom_drink_remove))
                 }
             }
         }
@@ -950,7 +960,7 @@ private fun CreateCustomDrinkSheet(
         HorizontalDivider()
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Category", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.custom_drink_category), style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
@@ -979,7 +989,7 @@ private fun CreateCustomDrinkSheet(
         HorizontalDivider()
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Serving unit", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.custom_drink_serving_unit), style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
@@ -1006,12 +1016,12 @@ private fun CreateCustomDrinkSheet(
         HorizontalDivider()
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Caffeine per serving", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.custom_drink_caffeine_per_serving), style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(
                 value = caffeineText,
                 onValueChange = { caffeineText = it.filter { c -> c.isDigit() || c == '.' } },
-                label = { Text("Amount") },
-                suffix = { Text("mg") },
+                label = { Text(stringResource(R.string.custom_drink_amount_label)) },
+                suffix = { Text(stringResource(R.string.unit_mg)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
@@ -1037,7 +1047,7 @@ private fun CreateCustomDrinkSheet(
                 .fillMaxWidth()
                 .height(56.dp),
         ) {
-            Text("Save custom drink")
+            Text(stringResource(R.string.custom_drink_save))
         }
 
         Spacer(Modifier.height(8.dp))

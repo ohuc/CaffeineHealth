@@ -16,8 +16,8 @@ android {
         applicationId = "com.uc.caffeine"
         minSdk = 31
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.5"
+        versionCode = 3
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,6 +37,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     dependenciesInfo {
         includeInApk = false
@@ -96,6 +97,13 @@ dependencies {
 
     // Graphics Shapes — smooth shape morphing animations
     implementation(libs.androidx.graphics.shapes)
+
+    // Glance — Compose-style home screen widgets
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+
+    // WorkManager — reliable periodic widget refresh
+    implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

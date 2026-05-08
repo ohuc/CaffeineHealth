@@ -9,11 +9,26 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white" alt="Platform" />
-  <img src="https://img.shields.io/badge/Min%20SDK-31-brightgreen" alt="Min SDK" />
-  <img src="https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin" />
-  <img src="https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpack-compose&logoColor=white" alt="Compose" />
-  <img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License" />
+  <a href="https://github.com/ohuc/CaffeineHealth/releases/latest">
+    <img src="https://img.shields.io/github/v/release/ohuc/CaffeineHealth?logo=github&labelColor=1a1a1a" alt="GitHub release" />
+  </a>
+  <a href="https://f-droid.org/packages/com.uc.caffeine">
+    <img src="https://img.shields.io/f-droid/v/com.uc.caffeine?logo=f-droid&labelColor=1a1a1a" alt="F-Droid" />
+  </a>
+  <a href="https://github.com/ohuc/CaffeineHealth/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/ohuc/CaffeineHealth?logo=gnu&color=blue&labelColor=1a1a1a" alt="License" />
+  </a>
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white&labelColor=1a1a1a" alt="Platform" />
+  <img src="https://img.shields.io/badge/Min%20SDK-31-brightgreen&labelColor=1a1a1a" alt="Min SDK" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/ohuc/CaffeineHealth/releases/latest">
+    <img src="https://raw.githubusercontent.com/rubenpgrady/get-it-on-github/refs/heads/main/get-it-on-github.png" alt="Get it on GitHub" width="200" />
+  </a>
+  <a href="https://f-droid.org/packages/com.uc.caffeine">
+    <img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" width="200" />
+  </a>
 </p>
 
 ---

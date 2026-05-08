@@ -33,10 +33,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uc.caffeine.LocalAppScaffoldPadding
+import com.uc.caffeine.R
 import com.uc.caffeine.data.ImportMode
 import com.uc.caffeine.ui.components.SettingsPageScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
@@ -63,6 +65,10 @@ internal fun MyDataSettingsScreen(
 
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
     var showImportModeDialog by remember { mutableStateOf(false) }
+
+    val unknownErrorText = stringResource(R.string.my_data_export_error_unknown)
+    val exportFailedTemplate = stringResource(R.string.my_data_export_failed, "%1\$s")
+    val couldNotReadFileText = stringResource(R.string.my_data_import_could_not_read)
 
     LaunchedEffect(myDataState) {
         when (val state = myDataState) {
@@ -92,7 +98,7 @@ internal fun MyDataSettingsScreen(
                     }
                     viewModel.onExportSuccess()
                 } catch (e: Exception) {
-                    viewModel.onExportError("Export failed: ${e.message ?: "Unknown error"}")
+                    viewModel.onExportError(exportFailedTemplate.format(e.message ?: unknownErrorText))
                 }
             }
         }
@@ -115,7 +121,7 @@ internal fun MyDataSettingsScreen(
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        viewModel.onExportError("Could not read file")
+                        viewModel.onExportError(couldNotReadFileText)
                     }
                 }
             }
@@ -174,7 +180,7 @@ private fun MyDataSettingsContent(
     onBack: () -> Unit,
 ) {
     SettingsPageScaffold(
-        title = "My Data",
+        title = stringResource(R.string.settings_my_data_title),
         showBackButton = true,
         onBack = onBack,
     ) { bottomPadding ->
@@ -195,12 +201,12 @@ private fun MyDataSettingsContent(
                     },
                     content = {
                         Text(
-                            text = "Export data",
+                            text = stringResource(R.string.my_data_export_title),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     },
                     supportingContent = {
-                        Text("Save a backup of your history, profile, and custom drinks")
+                        Text(stringResource(R.string.my_data_export_description))
                     },
                     shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
                     colors = ListItemDefaults.colors(
@@ -215,12 +221,12 @@ private fun MyDataSettingsContent(
                     },
                     content = {
                         Text(
-                            text = "Import data",
+                            text = stringResource(R.string.my_data_import_title),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     },
                     supportingContent = {
-                        Text("Restore from a previous backup file")
+                        Text(stringResource(R.string.my_data_import_description))
                     },
                     shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
                     colors = ListItemDefaults.colors(
@@ -240,18 +246,15 @@ private fun ImportModeDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Import data") },
+        title = { Text(stringResource(R.string.my_data_import_title)) },
         text = {
-            Text(
-                "Merge adds imported entries alongside your current data. " +
-                "Replace wipes all existing history and settings before restoring."
-            )
+            Text(stringResource(R.string.my_data_import_dialog_text))
         },
         confirmButton = {
-            TextButton(onClick = onMerge) { Text("Merge") }
+            TextButton(onClick = onMerge) { Text(stringResource(R.string.my_data_import_merge)) }
         },
         dismissButton = {
-            TextButton(onClick = onReplace) { Text("Replace") }
+            TextButton(onClick = onReplace) { Text(stringResource(R.string.my_data_import_replace)) }
         },
     )
 }

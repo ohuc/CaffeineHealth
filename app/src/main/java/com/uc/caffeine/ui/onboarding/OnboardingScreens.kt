@@ -88,14 +88,14 @@ internal fun IntroScreen(
                         modifier = Modifier.size(36.dp),
                     )
                     Text(
-                        text = "Caffeine Health",
+                        text = stringResource(R.string.brand_caffeine_health),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                         ),
                     )
                 }
                 TextButton(onClick = { haptics.toggle(); onSkip() }) {
-                    Text("Skip")
+                    Text(stringResource(R.string.action_skip))
                 }
             }
 
@@ -120,7 +120,7 @@ internal fun IntroScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "WELCOME",
+                text = stringResource(R.string.onboarding_welcome_kicker),
                 style = MaterialTheme.typography.labelMedium.copy(
                     letterSpacing = 3.sp,
                 ),
@@ -131,16 +131,16 @@ internal fun IntroScreen(
 
             Text(
                 text = buildAnnotatedString {
-                    append("Know your\n")
+                    append(stringResource(R.string.onboarding_intro_line_1))
                     withStyle(
                         SpanStyle(
                             color = MaterialTheme.colorScheme.primary,
                             fontStyle = FontStyle.Italic,
                         ),
                     ) {
-                        append("caffeine.")
+                        append(stringResource(R.string.onboarding_intro_line_2))
                     }
-                    append("\nProtect\nyour sleep.")
+                    append(stringResource(R.string.onboarding_intro_line_3))
                 },
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontWeight = FontWeight.Bold,
@@ -152,7 +152,7 @@ internal fun IntroScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "A live look at what's still in your system and whether tonight's espresso will cost you sleep.",
+                text = stringResource(R.string.onboarding_intro_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -181,12 +181,12 @@ internal fun IntroScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = "Get started",
+                        text = stringResource(R.string.onboarding_get_started),
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
                 Text(
-                    text = "Takes about a minute · No account needed",
+                    text = stringResource(R.string.onboarding_takes_a_minute),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -207,28 +207,29 @@ internal fun BasicInfoScreen(
     onWeightUnitSelected: (WeightUnit) -> Unit,
     onWeightChanged: (Int) -> Unit = {},
 ) {
+    val ageBucketLabels = AgeBucket.entries.associateWith { stringResource(it.labelRes) }
     OnboardingScaffold(
-        title = "Set your baseline",
-        subtitle = "Pick your age range and leave the default weight alone unless you want to tune it now.",
+        title = stringResource(R.string.onboarding_basic_info_title),
+        subtitle = stringResource(R.string.onboarding_basic_info_subtitle),
         currentStep = OnboardingDestination.BasicInfo.stepNumber,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
         onSkip = onSkip,
-        continueLabel = "Continue",
+        continueLabel = stringResource(R.string.action_continue),
         continueEnabled = uiState.answers.isBasicInfoComplete(),
         onContinue = onContinue,
-        disabledHint = "Choose your age range to continue.",
-        enabledHint = "Weight starts at 60 kg and can be adjusted later.",
+        disabledHint = stringResource(R.string.onboarding_basic_info_disabled_hint),
+        enabledHint = stringResource(R.string.onboarding_basic_info_enabled_hint),
     ) {
         OnboardingSection(
-            title = "Age range",
-            supportingText = "This keeps the estimate conservative when caffeine may linger longer.",
+            title = stringResource(R.string.onboarding_age_range_section),
+            supportingText = stringResource(R.string.onboarding_age_range_supporting),
         ) {
             ConnectedChoiceButtonGroup(
                 options = AgeBucket.entries,
                 selectedOption = uiState.answers.ageBucket,
-                labelFor = { ageBucket -> ageBucket.label },
+                labelFor = { ageBucket -> ageBucketLabels[ageBucket] ?: "" },
                 onOptionSelected = onAgeBucketSelected,
             )
         }
@@ -236,8 +237,8 @@ internal fun BasicInfoScreen(
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
 
         OnboardingSection(
-            title = "Weight",
-            supportingText = "Use the stepper if you want to adjust the default starting weight.",
+            title = stringResource(R.string.onboarding_weight_section),
+            supportingText = stringResource(R.string.onboarding_weight_supporting),
         ) {
             WeightStepperCard(
                 weightValue = uiState.answers.weightValue,
@@ -261,19 +262,21 @@ internal fun SleepScreen(
     onSleepTimeChanged: (java.time.LocalTime) -> Unit,
     onInsomniaChanged: (Boolean) -> Unit,
 ) {
+    val yesLabel = stringResource(R.string.action_yes)
+    val noLabel = stringResource(R.string.action_no)
     OnboardingScaffold(
-        title = "Map your sleep window",
-        subtitle = "Pick your usual bedtime. We'll let you know when caffeine may still be active.",
+        title = stringResource(R.string.onboarding_sleep_title),
+        subtitle = stringResource(R.string.onboarding_sleep_subtitle),
         currentStep = OnboardingDestination.Sleep.stepNumber,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
         onSkip = onSkip,
-        continueLabel = "Continue",
+        continueLabel = stringResource(R.string.action_continue),
         continueEnabled = uiState.answers.isSleepComplete(),
         onContinue = onContinue,
-        disabledHint = "Tell us if sleep is sensitive for you.",
-        enabledHint = "This powers the bedtime forecast and threshold line.",
+        disabledHint = stringResource(R.string.onboarding_sleep_disabled_hint),
+        enabledHint = stringResource(R.string.onboarding_sleep_enabled_hint),
     ) {
         BedtimeWheel(
             selected = Bedtime.from(uiState.answers.sleepTime),
@@ -290,13 +293,13 @@ internal fun SleepScreen(
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
 
         OnboardingSection(
-            title = "Sleep sensitivity",
-            supportingText = "If insomnia is already part of the picture, we keep the bedtime target more conservative.",
+            title = stringResource(R.string.profile_sleep_sensitivity),
+            supportingText = stringResource(R.string.onboarding_sleep_sensitivity_supporting),
         ) {
             ConnectedChoiceButtonGroup(
                 options = listOf(true, false),
                 selectedOption = uiState.answers.hasInsomnia,
-                labelFor = { if (it) "Yes" else "No" },
+                labelFor = { if (it) yesLabel else noLabel },
                 onOptionSelected = onInsomniaChanged,
             )
         }
@@ -313,43 +316,46 @@ internal fun LifestyleScreen(
     onHeavyAlcoholChanged: (Boolean) -> Unit,
     onHeavyCaffeineChanged: (Boolean) -> Unit,
 ) {
+    val yesLabel = stringResource(R.string.action_yes)
+    val noLabel = stringResource(R.string.action_no)
+    val smokingHabitLabels = SmokingHabit.entries.associateWith { stringResource(it.buttonLabelRes()) }
     OnboardingScaffold(
-        title = "Add the real-life context",
-        subtitle = "These habits change how quickly caffeine clears and how careful bedtime guidance should stay.",
+        title = stringResource(R.string.onboarding_lifestyle_title),
+        subtitle = stringResource(R.string.onboarding_lifestyle_subtitle),
         currentStep = OnboardingDestination.Lifestyle.stepNumber,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
         onSkip = onSkip,
-        continueLabel = "Continue",
+        continueLabel = stringResource(R.string.action_continue),
         continueEnabled = uiState.answers.isLifestyleComplete(),
         onContinue = onContinue,
-        disabledHint = "Tell us about smoking, alcohol, and daily caffeine.",
-        enabledHint = "We blend these with your baseline before the final profile.",
+        disabledHint = stringResource(R.string.onboarding_lifestyle_disabled_hint),
+        enabledHint = stringResource(R.string.onboarding_lifestyle_enabled_hint),
     ) {
-        OnboardingSection(title = "Smoking habit") {
+        OnboardingSection(title = stringResource(R.string.profile_smoking_habit)) {
             GridSingleSelectButtonGroup(
                 options = SmokingHabit.entries,
                 selectedOption = uiState.answers.smokingHabit,
-                labelFor = { smokingHabit -> smokingHabit.buttonLabel() },
+                labelFor = { smokingHabit -> smokingHabitLabels[smokingHabit] ?: "" },
                 onOptionSelected = onSmokingHabitChanged,
             )
         }
 
-        OnboardingSection(title = "Heavy alcohol use") {
+        OnboardingSection(title = stringResource(R.string.profile_heavy_alcohol)) {
             ConnectedChoiceButtonGroup(
                 options = listOf(true, false),
                 selectedOption = uiState.answers.heavyAlcohol,
-                labelFor = { if (it) "Yes" else "No" },
+                labelFor = { if (it) yesLabel else noLabel },
                 onOptionSelected = onHeavyAlcoholChanged,
             )
         }
 
-        OnboardingSection(title = "High daily caffeine") {
+        OnboardingSection(title = stringResource(R.string.profile_high_caffeine)) {
             ConnectedChoiceButtonGroup(
                 options = listOf(true, false),
                 selectedOption = uiState.answers.heavyCaffeine,
-                labelFor = { if (it) "Yes" else "No" },
+                labelFor = { if (it) yesLabel else noLabel },
                 onOptionSelected = onHeavyCaffeineChanged,
             )
         }
@@ -357,15 +363,15 @@ internal fun LifestyleScreen(
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
 
         InfoTextWithSource(
-            text = "Smoking can speed up caffeine clearance for some people by affecting CYP1A2 activity.",
+            text = stringResource(R.string.onboarding_smoking_info),
             sourceUrl = stringResource(R.string.onboarding_smoking_source_url),
         )
         InfoTextWithSource(
-            text = "Heavy alcohol use can slow clearance and lower your effective bedtime threshold.",
+            text = stringResource(R.string.onboarding_alcohol_info),
             sourceUrl = stringResource(R.string.onboarding_alcohol_source_url),
         )
         InfoTextWithSource(
-            text = "Frequent high intake may increase tolerance even when bedtime guidance should still stay conservative.",
+            text = stringResource(R.string.onboarding_caffeine_info),
             sourceUrl = stringResource(R.string.onboarding_caffeine_source_url),
         )
     }
@@ -380,41 +386,43 @@ internal fun MedicalScreen(
     onLiverDiseaseChanged: (LiverDisease) -> Unit,
     onMedicationToggled: (Medication) -> Unit,
 ) {
+    val liverDiseaseLabels = LiverDisease.entries.associateWith { stringResource(it.buttonLabelRes()) }
+    val medicationLabels = Medication.entries.associateWith { stringResource(it.buttonLabelRes()) }
     OnboardingScaffold(
-        title = "Keep the estimate responsible",
-        subtitle = "A little health context keeps the first-day profile from being overly optimistic.",
+        title = stringResource(R.string.onboarding_medical_title),
+        subtitle = stringResource(R.string.onboarding_medical_subtitle),
         currentStep = OnboardingDestination.Medical.stepNumber,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
         onSkip = onSkip,
-        continueLabel = "See my profile",
+        continueLabel = stringResource(R.string.onboarding_medical_continue_label),
         continueEnabled = uiState.answers.isMedicalComplete(),
         onContinue = onContinue,
-        disabledHint = "Pick liver context and any medicines that matter here.",
-        enabledHint = "This only sets a safer starting profile.",
+        disabledHint = stringResource(R.string.onboarding_medical_disabled_hint),
+        enabledHint = stringResource(R.string.onboarding_medical_enabled_hint),
     ) {
-        OnboardingSection(title = "Liver context") {
+        OnboardingSection(title = stringResource(R.string.profile_liver_context)) {
             GridSingleSelectButtonGroup(
                 options = LiverDisease.entries,
                 selectedOption = uiState.answers.liverDisease,
-                labelFor = { liverDisease -> liverDisease.buttonLabel() },
+                labelFor = { liverDisease -> liverDiseaseLabels[liverDisease] ?: "" },
                 onOptionSelected = onLiverDiseaseChanged,
             )
         }
 
         OnboardingSection(
-            title = "Medicines that may slow caffeine clearance",
-            supportingText = "Pick any that apply. If none do, select None.",
+            title = stringResource(R.string.onboarding_medications_section),
+            supportingText = stringResource(R.string.onboarding_medications_supporting),
         ) {
             GridMultiSelectButtonGroup(
                 options = Medication.entries,
                 selectedOptions = uiState.answers.medications,
-                labelFor = { medication -> medication.buttonLabel() },
+                labelFor = { medication -> medicationLabels[medication] ?: "" },
                 onOptionToggled = onMedicationToggled,
             )
             InfoTextWithSource(
-                text = "Some CYP1A2 inhibitors can make caffeine hang around much longer than usual.",
+                text = stringResource(R.string.onboarding_medications_info),
                 sourceUrl = stringResource(R.string.onboarding_medication_source_url),
             )
         }
@@ -435,16 +443,16 @@ internal fun ProfileReadyScreen(
     var infoDialog by rememberSaveable { mutableStateOf<ProfileInfoDialog?>(null) }
 
     OnboardingScaffold(
-        title = "Profile ready",
-        subtitle = "Here’s the starting profile Caffeine will use for your live curve and bedtime forecast.",
+        title = stringResource(R.string.onboarding_profile_ready_title),
+        subtitle = stringResource(R.string.onboarding_profile_ready_subtitle),
         currentStep = OnboardingDestination.ProfileReady.stepNumber,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = false,
-        continueLabel = "Review legal bits",
+        continueLabel = stringResource(R.string.onboarding_profile_ready_continue_label),
         continueEnabled = true,
         onContinue = onOpenLegalSheet,
-        enabledHint = "You can fine-tune these values later in Settings.",
+        enabledHint = stringResource(R.string.onboarding_profile_ready_enabled_hint),
     ) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
@@ -456,27 +464,27 @@ internal fun ProfileReadyScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ProfileMetricRow(
-                    title = "Estimated half-life",
+                    title = stringResource(R.string.profile_estimated_half_life),
                     value = formatHalfLife(profile.halfLifeMinutes),
-                    description = "How long it takes your body to clear half of the caffeine you consume.",
+                    description = stringResource(R.string.onboarding_metric_half_life_description),
                     onInfoClick = { infoDialog = ProfileInfoDialog.HalfLife },
                 )
                 HorizontalDivider()
                 ProfileMetricRow(
-                    title = "Sleep threshold",
-                    value = "${profile.sleepThresholdMg} mg",
-                    description = "A conservative bedtime target for how much active caffeine may still be in your system.",
+                    title = stringResource(R.string.profile_sleep_threshold),
+                    value = stringResource(R.string.profile_sleep_threshold_value, profile.sleepThresholdMg),
+                    description = stringResource(R.string.onboarding_metric_sleep_threshold_description),
                     onInfoClick = { infoDialog = ProfileInfoDialog.SleepThreshold },
                 )
                 HorizontalDivider()
                 ProfileMetricRow(
-                    title = "Typical bedtime",
+                    title = stringResource(R.string.profile_typical_bedtime),
                     value = formatTimeOfDay(
                         hour = profile.sleepTimeHour,
                         minute = profile.sleepTimeMinute,
                         settings = displaySettings,
                     ),
-                    description = "Used to project the sleep forecast card and chart markers each day.",
+                    description = stringResource(R.string.onboarding_metric_bedtime_description),
                     onInfoClick = { infoDialog = ProfileInfoDialog.Bedtime },
                 )
             }
@@ -498,33 +506,33 @@ internal fun ProfileReadyScreen(
             onDismissRequest = { infoDialog = null },
             confirmButton = {
                 TextButton(onClick = { infoDialog = null }) {
-                    Text("Close")
+                    Text(stringResource(R.string.action_close))
                 }
             },
             title = {
-                Text(dialog.title)
+                Text(stringResource(dialog.titleRes))
             },
             text = {
-                Text(dialog.body)
+                Text(stringResource(dialog.bodyRes))
             },
         )
     }
 }
 
 internal enum class ProfileInfoDialog(
-    val title: String,
-    val body: String,
+    val titleRes: Int,
+    val bodyRes: Int,
 ) {
     HalfLife(
-        title = "Estimated half-life",
-        body = "Half-life is the estimated time it takes your body to clear half of the caffeine still active in your system. A longer half-life means caffeine may linger later into the day.",
+        titleRes = R.string.profile_estimated_half_life,
+        bodyRes = R.string.onboarding_dialog_half_life_body,
     ),
     SleepThreshold(
-        title = "Sleep threshold",
-        body = "This is a conservative bedtime target for how much active caffeine may still be in your system before sleep is more likely to be affected.",
+        titleRes = R.string.profile_sleep_threshold,
+        bodyRes = R.string.onboarding_dialog_sleep_threshold_body,
     ),
     Bedtime(
-        title = "Typical bedtime",
-        body = "Bedtime powers the chart marker and the sleep forecast card so the app can estimate how much caffeine may still be active when you try to sleep.",
+        titleRes = R.string.profile_typical_bedtime,
+        bodyRes = R.string.onboarding_dialog_bedtime_body,
     ),
 }

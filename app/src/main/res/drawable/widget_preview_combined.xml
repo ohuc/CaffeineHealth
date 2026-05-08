@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="600dp"
+    android:height="200dp"
+    android:viewportWidth="600"
+    android:viewportHeight="200">
+
+    <!-- Dark espresso background -->
+    <path
+        android:fillColor="#2F2824"
+        android:pathData="M16,0 L584,0 Q600,0 600,16 L600,184 Q600,200 584,200 L16,200 Q0,200 0,184 L0,16 Q0,0 16,0 Z"/>
+
+    <!-- ── LEFT PANEL — chart + caffeine info ── -->
+
+    <!-- Chart gradient fill -->
+    <path
+        android:fillColor="#28DDB892"
+        android:pathData="M0,160 C40,155 70,80 110,50 C150,22 180,55 230,100 C270,135 310,155 380,162 L380,200 L0,200 Z"/>
+
+    <!-- Chart curve line -->
+    <path
+        android:strokeColor="#70DDB892"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:pathData="M0,160 C40,155 70,80 110,50 C150,22 180,55 230,100 C270,135 310,155 380,162"/>
+
+    <!-- App icon circle -->
+    <path
+        android:fillColor="#DDB892"
+        android:pathData="M22,22 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0"/>
+    <path
+        android:fillColor="#2F2824"
+        android:pathData="M22,22 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"/>
+
+    <!-- "Caffeine Now" label bar -->
+    <path
+        android:fillColor="#60B09A8E"
+        android:pathData="M38,16 L145,16 Q148,16 148,19 L148,26 Q148,29 145,29 L38,29 Q35,29 35,26 L35,19 Q35,16 38,16 Z"/>
+
+    <!-- Main number -->
+    <path
+        android:fillColor="#EDE0D8"
+        android:pathData="M14,42 L108,42 Q111,42 111,45 L111,80 Q111,83 108,83 L14,83 Q11,83 11,80 L11,45 Q11,42 14,42 Z"/>
+    <!-- "mg" label -->
+    <path
+        android:fillColor="#C0EDE0D8"
+        android:pathData="M115,62 L148,62 Q151,62 151,65 L151,78 Q151,81 148,81 L115,81 Q112,81 112,78 L112,65 Q112,62 115,62 Z"/>
+
+    <!-- Bedtime bar -->
+    <path
+        android:fillColor="#80AAB897"
+        android:pathData="M14,90 L130,90 Q133,90 133,93 L133,100 Q133,103 130,103 L14,103 Q11,103 11,100 L11,93 Q11,90 14,90 Z"/>
+
+    <!-- ── RIGHT PANEL — quick add rows ── -->
+
+    <!-- Row 1: icon box -->
+    <path
+        android:fillColor="#3D3530"
+        android:pathData="M392,42 L444,42 Q450,42 450,48 L450,96 Q450,102 444,102 L392,102 Q386,102 386,96 L386,48 Q386,42 392,42 Z"/>
+    <path
+        android:fillColor="#DDB892"
+        android:pathData="M402,56 L434,56 Q437,56 437,59 L437,86 Q437,89 434,89 L402,89 Q399,89 399,86 L399,59 Q399,56 402,56 Z"/>
+    <path
+        android:fillColor="#3D3530"
+        android:pathData="M406,61 L430,61 L430,82 L406,82 Z"/>
+
+    <!-- Row 1: name + subtitle -->
+    <path
+        android:fillColor="#EDE0D8"
+        android:pathData="M460,50 L555,50 Q558,50 558,53 L558,62 Q558,65 555,65 L460,65 Q457,65 457,62 L457,53 Q457,50 460,50 Z"/>
+    <path
+        android:fillColor="#60B09A8E"
+        android:pathData="M460,70 L530,70 Q533,70 533,73 L533,81 Q533,84 530,84 L460,84 Q457,84 457,81 L457,73 Q457,70 460,70 Z"/>
+
+    <!-- Row 1: + button -->
+    <path
+        android:fillColor="#DDB892"
+        android:pathData="M574,72 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0"/>
+    <path
+        android:strokeColor="#2F2824"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M574,63 L574,81 M565,72 L583,72"/>
+
+    <!-- Row 2: icon box -->
+    <path
+        android:fillColor="#3D3530"
+        android:pathData="M392,112 L444,112 Q450,112 450,118 L450,162 Q450,168 444,168 L392,168 Q386,168 386,162 L386,118 Q386,112 392,112 Z"/>
+    <path
+        android:fillColor="#8C7B6E"
+        android:pathData="M400,122 L436,122 Q439,122 439,125 L439,155 Q439,158 436,158 L400,158 Q397,158 397,155 L397,125 Q397,122 400,122 Z"/>
+
+    <!-- Row 2: name + subtitle -->
+    <path
+        android:fillColor="#EDE0D8"
+        android:pathData="M460,120 L550,120 Q553,120 553,123 L553,132 Q553,135 550,135 L460,135 Q457,135 457,132 L457,123 Q457,120 460,120 Z"/>
+    <path
+        android:fillColor="#60B09A8E"
+        android:pathData="M460,140 L520,140 Q523,140 523,143 L523,151 Q523,154 520,154 L460,154 Q457,154 457,151 L457,143 Q457,140 460,140 Z"/>
+
+    <!-- Row 2: + button -->
+    <path
+        android:fillColor="#DDB892"
+        android:pathData="M574,140 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0"/>
+    <path
+        android:strokeColor="#2F2824"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M574,131 L574,149 M565,140 L583,140"/>
+</vector>

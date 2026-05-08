@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -63,6 +64,7 @@ import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.data.ExtraStore
+import com.uc.caffeine.R
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 import com.uc.caffeine.util.AnalyticsRange
 import kotlin.math.min
@@ -108,7 +110,7 @@ internal fun AnalyticsRangePicker(
                     ),
                 ) {
                     Text(
-                        text = range.label,
+                        text = stringResource(range.labelRes),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
@@ -137,7 +139,7 @@ internal fun AnalyticsRangePicker(
                     ),
                 ) {
                     Text(
-                        text = range.label,
+                        text = stringResource(range.labelRes),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
@@ -155,9 +157,9 @@ internal fun AnalyticsRangeButton(
 ) {
     val label = if (selectedRange == AnalyticsRange.CUSTOM && customStartDate != null && customEndDate != null) {
         val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d")
-        "${customStartDate.format(formatter)} – ${customEndDate.format(formatter)}"
+        stringResource(R.string.analytics_custom_range_format, customStartDate.format(formatter), customEndDate.format(formatter))
     } else {
-        selectedRange.label
+        stringResource(selectedRange.labelRes)
     }
 
     ElevatedCard(
@@ -179,7 +181,7 @@ internal fun AnalyticsRangeButton(
             )
             Icon(
                 imageVector = Icons.Rounded.KeyboardArrowDown,
-                contentDescription = "Change range",
+                contentDescription = stringResource(R.string.analytics_change_range_cd),
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -225,7 +227,7 @@ internal fun AnalyticsRangeBottomSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "Quick select",
+                text = stringResource(R.string.analytics_quick_select),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
             )
@@ -250,7 +252,7 @@ internal fun AnalyticsRangeBottomSheet(
                             },
                             colors = quickSelectColors,
                         ) {
-                            Text(text = range.label, style = MaterialTheme.typography.labelLarge)
+                            Text(text = stringResource(range.labelRes), style = MaterialTheme.typography.labelLarge)
                         }
                     }
             }
@@ -281,7 +283,7 @@ internal fun AnalyticsRangeBottomSheet(
                             },
                             colors = quickSelectColors,
                         ) {
-                            Text(text = range.label, style = MaterialTheme.typography.labelLarge)
+                            Text(text = stringResource(range.labelRes), style = MaterialTheme.typography.labelLarge)
                         }
                     }
             }
@@ -289,22 +291,20 @@ internal fun AnalyticsRangeBottomSheet(
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             Text(
-                text = "Custom range",
+                text = stringResource(R.string.analytics_custom_range_section),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 4.dp),
             )
 
-            // From date field
             RangePickerDateField(
-                label = "From",
+                label = stringResource(R.string.analytics_from),
                 date = customStart,
                 formatter = dateFormatter,
                 onClick = { showStartPicker = true },
             )
 
-            // To date field
             RangePickerDateField(
-                label = "To",
+                label = stringResource(R.string.analytics_to),
                 date = customEnd,
                 formatter = dateFormatter,
                 onClick = { showEndPicker = true },
@@ -317,7 +317,7 @@ internal fun AnalyticsRangeBottomSheet(
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Apply custom range")
+                Text(stringResource(R.string.analytics_apply_custom_range))
             }
         }
     }
@@ -333,10 +333,10 @@ internal fun AnalyticsRangeBottomSheet(
                             .toLocalDate()
                     }
                     showStartPicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showStartPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showStartPicker = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         ) {
             DatePicker(state = startPickerState)
@@ -354,10 +354,10 @@ internal fun AnalyticsRangeBottomSheet(
                             .toLocalDate()
                     }
                     showEndPicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showEndPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showEndPicker = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         ) {
             DatePicker(state = endPickerState)
@@ -435,13 +435,13 @@ internal fun AnalyticsEmptyState(
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = "Nothing to chart yet",
+                text = stringResource(R.string.analytics_nothing_to_chart),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "Log a few drinks and this ${selectedRange.label.lowercase()} view will fill in with trends, sleep impact, and intake timing.",
+                text = stringResource(R.string.analytics_empty_body, stringResource(selectedRange.labelRes).lowercase()),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -637,11 +637,12 @@ internal fun rememberSleepThresholdDecoration(
         ),
     )
 
-    return remember(thresholdLevel, line, labelComponent) {
+    val sleepThresholdLabel = stringResource(R.string.analytics_sleep_threshold)
+    return remember(thresholdLevel, line, labelComponent, sleepThresholdLabel) {
         DashedHorizontalThresholdDecoration(
             y = { thresholdLevel },
             line = line,
-            label = "Sleep threshold",
+            label = sleepThresholdLabel,
             labelComponent = labelComponent,
         )
     }

@@ -1,5 +1,7 @@
 package com.uc.caffeine.util
 
+import androidx.annotation.StringRes
+import com.uc.caffeine.R
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DrinkPreset
@@ -12,12 +14,12 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
-enum class AnalyticsRange(val label: String) {
-    TODAY("Today"),
-    YESTERDAY("Yesterday"),
-    LAST_30_DAYS("30 Days"),
-    LAST_90_DAYS("90 Days"),
-    CUSTOM("Custom"),
+enum class AnalyticsRange(@param:StringRes val labelRes: Int) {
+    TODAY(R.string.analytics_range_today),
+    YESTERDAY(R.string.analytics_range_yesterday),
+    LAST_30_DAYS(R.string.analytics_range_30_days),
+    LAST_90_DAYS(R.string.analytics_range_90_days),
+    CUSTOM(R.string.analytics_range_custom),
 }
 
 data class SourceItemEntry(

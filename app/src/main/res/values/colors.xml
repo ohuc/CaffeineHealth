@@ -7,4 +7,17 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Activity window background. Matches CaffeineBackgroundLight so transitions
+         that briefly expose the window (e.g. scale-in cross-fades, edge-to-edge insets)
+         don't flash white over the themed content. -->
+    <color name="window_background">#FFF8F4</color>
+    <!-- Widget colors (light / default) -->
+    <color name="widget_surface">#F0E1D8</color>
+    <color name="widget_on_surface">#201A17</color>
+    <color name="widget_on_surface_variant">#50453D</color>
+    <color name="widget_icon_container">#E8D7CD</color>
+    <color name="widget_primary">#6B4B2B</color>
+    <color name="widget_on_primary">#FFFFFF</color>
+    <color name="widget_tertiary">#50653F</color>
+    <color name="widget_divider">#D1C5BB</color>
 </resources>

@@ -28,8 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.uc.caffeine.R
 import com.uc.caffeine.data.AppDateFormat
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.SettingsPageScaffold
@@ -51,7 +53,7 @@ internal fun DateTimeSettingsScreen(
     var showTimeZoneSheet by rememberSaveable { mutableStateOf(false) }
 
     SettingsPageScaffold(
-        title = "Date and Time",
+        title = stringResource(R.string.settings_date_time_title),
         showBackButton = true,
         onBack = onBack,
     ) { bottomPadding ->
@@ -70,10 +72,10 @@ internal fun DateTimeSettingsScreen(
                         onUse24HourClockChange(!userSettings.use24HourClock)
                     },
                     content = {
-                        Text(text = "Use 24-hour format")
+                        Text(text = stringResource(R.string.date_time_24h_label))
                     },
                     supportingContent = {
-                        Text(text = "13:00 instead of 1:00 PM")
+                        Text(text = stringResource(R.string.date_time_24h_summary))
                     },
                     trailingContent = {
                         Switch(
@@ -101,7 +103,7 @@ internal fun DateTimeSettingsScreen(
                         showDateFormatSheet = true
                     },
                     content = {
-                        Text(text = "Date format")
+                        Text(text = stringResource(R.string.date_time_date_format_label))
                     },
                     supportingContent = {
                         Text(text = userSettings.dateFormat.displayLabel)
@@ -129,7 +131,7 @@ internal fun DateTimeSettingsScreen(
                         showTimeZoneSheet = true
                     },
                     content = {
-                        Text(text = "Timezone")
+                        Text(text = stringResource(R.string.date_time_timezone_label))
                     },
                     supportingContent = {
                         Text(text = formatTimeZoneName(userSettings.timeZoneId))
@@ -195,7 +197,7 @@ private fun AppDateFormatBottomSheet(
         ) {
             item {
                 Text(
-                    text = "Date format",
+                    text = stringResource(R.string.date_time_date_format_label),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
@@ -203,7 +205,7 @@ private fun AppDateFormatBottomSheet(
 
             item {
                 Text(
-                    text = "Choose how dates should appear anywhere the app shows them.",
+                    text = stringResource(R.string.date_time_date_format_sheet_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp),
@@ -269,7 +271,7 @@ private fun TimeZoneBottomSheet(
         ) {
             item {
                 Text(
-                    text = "Timezone",
+                    text = stringResource(R.string.date_time_timezone_label),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
@@ -277,7 +279,7 @@ private fun TimeZoneBottomSheet(
 
             item {
                 Text(
-                    text = "Pick the timezone the app should use for charts, bedtime calculations, and your day boundaries.",
+                    text = stringResource(R.string.date_time_timezone_sheet_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp),
@@ -292,7 +294,7 @@ private fun TimeZoneBottomSheet(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
                     singleLine = true,
-                    label = { Text("Search timezone") },
+                    label = { Text(stringResource(R.string.date_time_timezone_search_label)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.Search,

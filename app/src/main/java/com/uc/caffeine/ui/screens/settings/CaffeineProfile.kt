@@ -38,8 +38,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.uc.caffeine.R
 import com.uc.caffeine.data.AhrGenotype
 import com.uc.caffeine.data.Cyp1a2Genotype
 import com.uc.caffeine.data.HormonalStatus
@@ -57,7 +59,7 @@ import com.uc.caffeine.ui.onboarding.SleepTimePickerCard
 import com.uc.caffeine.ui.onboarding.SmokingHabit
 import com.uc.caffeine.ui.onboarding.WeightStepperCard
 import com.uc.caffeine.ui.onboarding.WeightUnit
-import com.uc.caffeine.ui.onboarding.buttonLabel
+import com.uc.caffeine.ui.onboarding.buttonLabelRes
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.util.formatTimeOfDay
 import java.time.LocalTime
@@ -94,7 +96,7 @@ internal fun CaffeineProfileSettingsScreen(
     }.toSet()
 
     SettingsPageScaffold(
-        title = "Caffeine Profile",
+        title = stringResource(R.string.settings_caffeine_profile_title),
         showBackButton = true,
         onBack = onBack,
     ) { bottomPadding ->
@@ -116,21 +118,29 @@ internal fun CaffeineProfileSettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     ProfileSnapshotMetric(
-                        title = "Estimated half-life",
-                        value = if (hasModifiers) "$effectiveHalfLifeHours hr (base $halfLifeHours hr)" else "$halfLifeHours hr",
-                        description = if (hasModifiers) "Adjusted for your genetic and hormonal modifiers." else "How long caffeine tends to linger in your system.",
+                        title = stringResource(R.string.profile_estimated_half_life),
+                        value = if (hasModifiers) {
+                            stringResource(R.string.profile_half_life_value_modified, effectiveHalfLifeHours, halfLifeHours)
+                        } else {
+                            stringResource(R.string.profile_half_life_value, halfLifeHours)
+                        },
+                        description = if (hasModifiers) {
+                            stringResource(R.string.profile_half_life_description_modified)
+                        } else {
+                            stringResource(R.string.profile_half_life_description_default)
+                        },
                     )
                     HorizontalDivider()
                     ProfileSnapshotMetric(
-                        title = "Typical bedtime",
+                        title = stringResource(R.string.profile_typical_bedtime),
                         value = bedtime,
-                        description = "Used for the bedtime marker and sleep prediction.",
+                        description = stringResource(R.string.profile_typical_bedtime_description),
                     )
                     HorizontalDivider()
                     ProfileSnapshotMetric(
-                        title = "Sleep threshold",
-                        value = "${userSettings.sleepThresholdMg} mg",
-                        description = "The active-caffeine target the sleep guidance compares against.",
+                        title = stringResource(R.string.profile_sleep_threshold),
+                        value = stringResource(R.string.profile_sleep_threshold_value, userSettings.sleepThresholdMg),
+                        description = stringResource(R.string.profile_sleep_threshold_description),
                     )
                 }
             }
@@ -167,11 +177,11 @@ internal fun CaffeineProfileSettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
-                        text = "Redo onboarding",
+                        text = stringResource(R.string.profile_redo_onboarding),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = "Walk through the profile setup again without deleting any logged drinks or history.",
+                        text = stringResource(R.string.profile_redo_onboarding_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -181,7 +191,7 @@ internal fun CaffeineProfileSettingsScreen(
                             contentDescription = null,
                         )
                         Text(
-                            text = "Redo onboarding",
+                            text = stringResource(R.string.profile_redo_onboarding),
                             modifier = Modifier.padding(start = 8.dp),
                         )
                     }
@@ -244,19 +254,19 @@ private fun ReAdjustHealthProfileCard(
                             modifier = Modifier.size(20.dp),
                         )
                         Text(
-                            text = "Re-Adjust Caffeine Health Profile",
+                            text = stringResource(R.string.profile_re_adjust_title),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }
                     Text(
-                        text = "Fine-tune your half-life, sleep settings, and metabolism factors.",
+                        text = stringResource(R.string.profile_re_adjust_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
                 )
             }
 
@@ -265,12 +275,18 @@ private fun ReAdjustHealthProfileCard(
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut(),
             ) {
+                val yesLabel = stringResource(R.string.action_yes)
+                val noLabel = stringResource(R.string.action_no)
+                val ageBucketLabels = AgeBucket.entries.associateWith { stringResource(it.labelRes) }
+                val smokingHabitLabels = SmokingHabit.entries.associateWith { stringResource(it.buttonLabelRes()) }
+                val liverDiseaseLabels = LiverDisease.entries.associateWith { stringResource(it.buttonLabelRes()) }
+                val medicationLabels = Medication.entries.associateWith { stringResource(it.buttonLabelRes()) }
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     ExpressiveStepperCard(
-                        title = "Caffeine Half-Life",
-                        value = "$halfLifeHours hr",
-                        supportingText = "Average is around 5 hours, but you can make it more personal here.",
-                        hint = "Adjust in 1-hour steps",
+                        title = stringResource(R.string.profile_caffeine_half_life),
+                        value = stringResource(R.string.profile_half_life_value, halfLifeHours),
+                        supportingText = stringResource(R.string.profile_caffeine_half_life_supporting),
+                        hint = stringResource(R.string.profile_caffeine_half_life_hint),
                         onDecrease = { viewModel.updateHalfLife((halfLifeHours - 1).coerceIn(2, 12)) },
                         onIncrease = { viewModel.updateHalfLife((halfLifeHours + 1).coerceIn(2, 12)) },
                         decreaseEnabled = halfLifeHours > 2,
@@ -291,18 +307,18 @@ private fun ReAdjustHealthProfileCard(
                         enabled = !(userSettings.hcSleepEnabled && userSettings.hcSleepTimeHour != null),
                         hint = when {
                             userSettings.hcSleepEnabled && userSettings.hcSleepTimeHour != null ->
-                                "Health Connect is providing this value"
+                                stringResource(R.string.health_connect_sleep_hint_active)
                             userSettings.hcSleepEnabled ->
-                                "No sleep data in Health Connect yet — your setting is used as fallback"
+                                stringResource(R.string.health_connect_sleep_hint_no_data)
                             else -> null
                         },
                     )
 
                     ExpressiveStepperCard(
-                        title = "Sleep Threshold",
-                        value = "${userSettings.sleepThresholdMg} mg",
-                        supportingText = "Keep this lower if caffeine affects your sleep easily, higher if your usual cutoff is more forgiving.",
-                        hint = "Adjust in 5 mg steps",
+                        title = stringResource(R.string.profile_sleep_threshold),
+                        value = stringResource(R.string.profile_sleep_threshold_value, userSettings.sleepThresholdMg),
+                        supportingText = stringResource(R.string.profile_sleep_threshold_supporting),
+                        hint = stringResource(R.string.profile_sleep_threshold_hint),
                         onDecrease = { viewModel.updateSleepThreshold((userSettings.sleepThresholdMg - 5).coerceIn(20, 200)) },
                         onIncrease = { viewModel.updateSleepThreshold((userSettings.sleepThresholdMg + 5).coerceIn(20, 200)) },
                         decreaseEnabled = userSettings.sleepThresholdMg > 20,
@@ -312,26 +328,26 @@ private fun ReAdjustHealthProfileCard(
                     HorizontalDivider()
 
                     Text(
-                        text = "Health Profile",
+                        text = stringResource(R.string.profile_health_section),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary,
                     )
 
                     SelectorField(
-                        title = "Age range",
-                        description = "Caffeine may linger longer for older adults.",
+                        title = stringResource(R.string.profile_age_range),
+                        description = stringResource(R.string.profile_age_range_description),
                     ) {
                         ConnectedChoiceButtonGroup(
                             options = AgeBucket.entries,
                             selectedOption = currentAgeBucket,
-                            labelFor = { it.label },
+                            labelFor = { ageBucketLabels[it] ?: "" },
                             onOptionSelected = { viewModel.updateProfileAgeBucket(it) },
                         )
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "Weight",
+                            text = stringResource(R.string.profile_weight),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -346,73 +362,73 @@ private fun ReAdjustHealthProfileCard(
                     }
 
                     SelectorField(
-                        title = "Sleep sensitivity",
-                        description = "If insomnia is part of the picture, the threshold stays more conservative.",
+                        title = stringResource(R.string.profile_sleep_sensitivity),
+                        description = stringResource(R.string.profile_sleep_sensitivity_description),
                     ) {
                         ConnectedChoiceButtonGroup(
                             options = listOf(true, false),
                             selectedOption = factors.hasInsomnia,
-                            labelFor = { if (it) "Yes" else "No" },
+                            labelFor = { if (it) yesLabel else noLabel },
                             onOptionSelected = { viewModel.updateProfileInsomnia(it) },
                         )
                     }
 
                     SelectorField(
-                        title = "Smoking habit",
-                        description = "Smoking can speed up caffeine clearance by inducing CYP1A2.",
+                        title = stringResource(R.string.profile_smoking_habit),
+                        description = stringResource(R.string.profile_smoking_habit_description),
                     ) {
                         GridSingleSelectButtonGroup(
                             options = SmokingHabit.entries,
                             selectedOption = currentSmokingHabit,
-                            labelFor = { it.buttonLabel() },
+                            labelFor = { smokingHabitLabels[it] ?: "" },
                             onOptionSelected = { viewModel.updateProfileSmokingHabit(it) },
                         )
                     }
 
                     SelectorField(
-                        title = "Heavy alcohol use",
-                        description = "Heavy alcohol use can slow clearance and lower your effective threshold.",
+                        title = stringResource(R.string.profile_heavy_alcohol),
+                        description = stringResource(R.string.profile_heavy_alcohol_description),
                     ) {
                         ConnectedChoiceButtonGroup(
                             options = listOf(true, false),
                             selectedOption = factors.heavyAlcohol,
-                            labelFor = { if (it) "Yes" else "No" },
+                            labelFor = { if (it) yesLabel else noLabel },
                             onOptionSelected = { viewModel.updateProfileHeavyAlcohol(it) },
                         )
                     }
 
                     SelectorField(
-                        title = "High daily caffeine",
-                        description = "Frequent high intake may increase tolerance.",
+                        title = stringResource(R.string.profile_high_caffeine),
+                        description = stringResource(R.string.profile_high_caffeine_description),
                     ) {
                         ConnectedChoiceButtonGroup(
                             options = listOf(true, false),
                             selectedOption = factors.heavyCaffeine,
-                            labelFor = { if (it) "Yes" else "No" },
+                            labelFor = { if (it) yesLabel else noLabel },
                             onOptionSelected = { viewModel.updateProfileHeavyCaffeine(it) },
                         )
                     }
 
                     SelectorField(
-                        title = "Liver context",
-                        description = "Liver disease can substantially slow caffeine clearance.",
+                        title = stringResource(R.string.profile_liver_context),
+                        description = stringResource(R.string.profile_liver_context_description),
                     ) {
                         GridSingleSelectButtonGroup(
                             options = LiverDisease.entries,
                             selectedOption = currentLiverDisease,
-                            labelFor = { it.buttonLabel() },
+                            labelFor = { liverDiseaseLabels[it] ?: "" },
                             onOptionSelected = { viewModel.updateProfileLiverDisease(it) },
                         )
                     }
 
                     SelectorField(
-                        title = "Medications",
-                        description = "Pick any that may slow caffeine clearance. Select None if none apply.",
+                        title = stringResource(R.string.profile_medications),
+                        description = stringResource(R.string.profile_medications_description),
                     ) {
                         GridMultiSelectButtonGroup(
                             options = Medication.entries,
                             selectedOptions = currentMedications,
-                            labelFor = { it.buttonLabel() },
+                            labelFor = { medicationLabels[it] ?: "" },
                             onOptionToggled = { viewModel.toggleProfileMedication(it) },
                         )
                     }
@@ -501,7 +517,7 @@ private fun ExpressiveStepperCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Remove,
-                        contentDescription = "Decrease $title",
+                        contentDescription = stringResource(R.string.stepper_decrease_cd, title),
                     )
                 }
 
@@ -537,7 +553,7 @@ private fun ExpressiveStepperCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
-                        contentDescription = "Increase $title",
+                        contentDescription = stringResource(R.string.stepper_increase_cd, title),
                     )
                 }
             }
@@ -614,19 +630,19 @@ private fun AdvancedMetabolismCard(
                             modifier = Modifier.size(20.dp),
                         )
                         Text(
-                            text = "Advanced Metabolism",
+                            text = stringResource(R.string.profile_advanced_metabolism),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }
                     Text(
-                        text = "Optional genetic and hormonal factors that fine-tune your half-life estimate.",
+                        text = stringResource(R.string.profile_advanced_metabolism_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
                 )
             }
 
@@ -637,14 +653,14 @@ private fun AdvancedMetabolismCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(
-                        text = "If you know your CYP1A2 or AHR genotype (e.g. from 23andMe or similar), you can enter it here. These are entirely optional.",
+                        text = stringResource(R.string.profile_advanced_metabolism_intro),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
                     SelectorField(
-                        title = "CYP1A2 rs762551",
-                        description = "Controls caffeine metabolism speed. A/A is the fast-metabolizer reference.",
+                        title = stringResource(R.string.profile_cyp1a2),
+                        description = stringResource(R.string.profile_cyp1a2_description),
                     ) {
                         GridSingleSelectButtonGroup(
                             options = Cyp1a2Genotype.entries,
@@ -655,8 +671,8 @@ private fun AdvancedMetabolismCard(
                     }
 
                     SelectorField(
-                        title = "AHR rs2066853",
-                        description = "Affects CYP1A2 expression level. G/G is normal.",
+                        title = stringResource(R.string.profile_ahr),
+                        description = stringResource(R.string.profile_ahr_description),
                     ) {
                         GridSingleSelectButtonGroup(
                             options = AhrGenotype.entries,
@@ -667,8 +683,8 @@ private fun AdvancedMetabolismCard(
                     }
 
                     SelectorField(
-                        title = "Hormonal status",
-                        description = "Pregnancy and oral contraceptives can substantially slow caffeine clearance.",
+                        title = stringResource(R.string.profile_hormonal_status),
+                        description = stringResource(R.string.profile_hormonal_status_description),
                     ) {
                         GridSingleSelectButtonGroup(
                             options = HormonalStatus.entries,
@@ -688,12 +704,20 @@ private fun AdvancedMetabolismCard(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 Text(
-                                    text = "Effective half-life: ${userSettings.effectiveHalfLifeMinutes / 60} hr ${userSettings.effectiveHalfLifeMinutes % 60} min",
+                                    text = stringResource(
+                                        R.string.profile_effective_half_life,
+                                        userSettings.effectiveHalfLifeMinutes / 60,
+                                        userSettings.effectiveHalfLifeMinutes % 60,
+                                    ),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 )
                                 Text(
-                                    text = "Base ${userSettings.halfLifeMinutes / 60} hr adjusted by a combined clearance factor of ${"%.2f".format(userSettings.clearanceFactor)}.",
+                                    text = stringResource(
+                                        R.string.profile_clearance_factor_explanation,
+                                        userSettings.halfLifeMinutes / 60,
+                                        "%.2f".format(userSettings.clearanceFactor),
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
                                 )

@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Caffeine" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Caffeine" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+
+    <style name="Glance.AppWidget.List" parent="">
+        <item name="android:scrollbars">none</item>
+        <item name="android:fadeScrollbars">true</item>
+        <item name="android:overScrollMode">never</item>
+    </style>
 </resources>

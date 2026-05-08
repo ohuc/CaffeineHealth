@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
@@ -55,6 +56,7 @@ import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
+import com.uc.caffeine.R
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.util.AnalyticsRange
@@ -80,7 +82,7 @@ internal fun AnalyticsMainPage(
     val haptics = rememberAppHaptics()
 
     CaffeineScreenScaffold(
-        title = "Analytics",
+        title = stringResource(R.string.analytics_title),
     ) { bottomPadding ->
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
@@ -135,20 +137,20 @@ private fun AnalyticsNavCard(
 ) {
     val items = listOf(
         AnalyticsNavItem(
-            title = "Caffeine by Source",
-            summary = "Where your caffeine came from over this period.",
+            title = stringResource(R.string.analytics_caffeine_by_source),
+            summary = stringResource(R.string.analytics_caffeine_by_source_summary),
             icon = Icons.Filled.PieChart,
             onClick = onSourcesClick,
         ),
         AnalyticsNavItem(
-            title = "Bedtime Impact",
-            summary = "How much caffeine is still active by the time you sleep.",
+            title = stringResource(R.string.analytics_bedtime_impact),
+            summary = stringResource(R.string.analytics_bedtime_impact_summary),
             icon = Icons.Filled.Bedtime,
             onClick = onBedtimeClick,
         ),
         AnalyticsNavItem(
-            title = "When You Drink Caffeine",
-            summary = "How your intake is spread across the day.",
+            title = stringResource(R.string.analytics_when_you_drink),
+            summary = stringResource(R.string.analytics_when_you_drink_summary),
             icon = Icons.Filled.Schedule,
             onClick = onTimeOfDayClick,
         ),
@@ -218,18 +220,18 @@ private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = analyticsHeadlineForRange(uiState.selectedRange),
+                        text = stringResource(headlineResForRange(uiState.selectedRange)),
                         style = MaterialTheme.typography.labelLarge,
                         color = contentColor.copy(alpha = 0.8f),
                     )
                     Text(
-                        text = "${uiState.totalCaffeineMg} mg",
+                        text = stringResource(R.string.analytics_value_mg, uiState.totalCaffeineMg),
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Bold,
                         color = contentColor,
                     )
                     Text(
-                        text = "Total caffeine logged in this range",
+                        text = stringResource(R.string.analytics_total_caffeine_logged),
                         style = MaterialTheme.typography.bodyMedium,
                         color = contentColor.copy(alpha = 0.82f),
                     )
@@ -240,14 +242,14 @@ private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     SummaryMetric(
-                        label = "Average/day",
-                        value = "${uiState.averageCaffeinePerDayMg} mg",
+                        label = stringResource(R.string.analytics_average_per_day),
+                        value = stringResource(R.string.analytics_value_mg, uiState.averageCaffeinePerDayMg),
                         modifier = Modifier.weight(1f),
                         contentColor = contentColor,
                     )
                     SummaryMetric(
-                        label = "Safe nights",
-                        value = "${uiState.safeNights} / ${uiState.totalNights}",
+                        label = stringResource(R.string.analytics_safe_nights),
+                        value = stringResource(R.string.analytics_safe_nights_value, uiState.safeNights, uiState.totalNights),
                         modifier = Modifier.weight(1f),
                         contentColor = contentColor,
                     )
@@ -258,14 +260,14 @@ private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     SummaryMetric(
-                        label = "Top source",
+                        label = stringResource(R.string.analytics_top_source),
                         value = uiState.topSourceLabel,
                         modifier = Modifier.weight(1f),
                         contentColor = contentColor,
                     )
                     SummaryMetric(
-                        label = "Sleep threshold",
-                        value = "${uiState.sleepThresholdMg.roundToInt()} mg",
+                        label = stringResource(R.string.analytics_sleep_threshold),
+                        value = stringResource(R.string.analytics_value_mg, uiState.sleepThresholdMg.roundToInt()),
                         modifier = Modifier.weight(1f),
                         contentColor = contentColor,
                     )
@@ -441,11 +443,11 @@ private fun buildMorphPath(
     return path
 }
 
-private fun analyticsHeadlineForRange(range: AnalyticsRange): String = when (range) {
-    AnalyticsRange.TODAY -> "Today"
-    AnalyticsRange.YESTERDAY -> "Yesterday"
-    AnalyticsRange.LAST_30_DAYS -> "Last 30 days"
-    AnalyticsRange.LAST_90_DAYS -> "Last 90 days"
-    AnalyticsRange.CUSTOM -> "Custom range"
+private fun headlineResForRange(range: AnalyticsRange): Int = when (range) {
+    AnalyticsRange.TODAY -> R.string.analytics_headline_today
+    AnalyticsRange.YESTERDAY -> R.string.analytics_headline_yesterday
+    AnalyticsRange.LAST_30_DAYS -> R.string.analytics_headline_last_30
+    AnalyticsRange.LAST_90_DAYS -> R.string.analytics_headline_last_90
+    AnalyticsRange.CUSTOM -> R.string.analytics_headline_custom
 }
 

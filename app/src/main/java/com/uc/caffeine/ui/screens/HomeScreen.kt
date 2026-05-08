@@ -19,14 +19,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CardDefaults
@@ -57,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uc.caffeine.LocalSnackbarHostState
+import com.uc.caffeine.R
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DrinkUnit
@@ -78,6 +81,7 @@ import com.uc.caffeine.ui.components.RollingNumberText
 import com.uc.caffeine.ui.components.ServingQuantityStepper
 import com.uc.caffeine.ui.components.ServingUnitSelector
 import com.uc.caffeine.ui.components.rememberAppHaptics
+import com.uc.caffeine.ui.components.WhatsNewSheet
 import com.uc.caffeine.ui.components.shimmerEffect
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
@@ -97,7 +101,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.material3.IconButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
@@ -126,9 +133,9 @@ fun HomeScreen(
     val isConsumptionEntriesLoading by viewModel.isConsumptionEntriesLoading.collectAsStateWithLifecycle()
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val groupedConsumptionEntries by viewModel.groupedConsumptionEntries.collectAsStateWithLifecycle()
+    val showWhatsNew by viewModel.showWhatsNew.collectAsStateWithLifecycle()
 
     var selectedEntry by remember { mutableStateOf<ConsumptionEntry?>(null) }
-    var showEditDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val haptics = rememberAppHaptics()
 
@@ -137,7 +144,6 @@ fun HomeScreen(
             if (sheetState.isVisible) {
                 sheetState.hide()
             }
-            showEditDialog = false
             selectedEntry = null
             snackbarHostState.currentSnackbarData?.dismiss()
 
@@ -153,7 +159,7 @@ fun HomeScreen(
     }
 
     CaffeineScreenScaffold(
-        title = "Home"
+        title = stringResource(R.string.home_title)
     ) { bottomPadding ->
         ElevatedCard(
             modifier = Modifier
@@ -188,7 +194,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "My Consumptions",
+            text = stringResource(R.string.home_my_consumptions),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -222,7 +228,7 @@ fun HomeScreen(
             } else if (groupedConsumptionEntries.isEmpty()) {
                 item(key = "history-empty") {
                     Text(
-                        text = "No consumptions logged yet",
+                        text = stringResource(R.string.home_no_consumptions),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp),
@@ -310,42 +316,59 @@ fun HomeScreen(
             }
         }
 
+        var isEditing by remember(entry.id) { mutableStateOf(false) }
+
         ModalBottomSheet(
-            onDismissRequest = {
-                showEditDialog = false
-                selectedEntry = null
-            },
+            onDismissRequest = { selectedEntry = null },
             sheetState = sheetState,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            ConsumptionLogDetailSheet(
-                entry = entry,
-                detail = detail,
-                canRevealDetailContent = canRevealDetailContent,
-                userSettings = userSettings,
-                onEdit = { showEditDialog = true },
-                onDuplicate = { viewModel.duplicateLoggedEntry(entry) },
-                onDelete = { viewModel.deleteLoggedEntry(entry) }
-            )
-        }
-
-        if (showEditDialog) {
-            EditConsumptionEntryDialog(
-                entry = entry,
-                viewModel = viewModel,
-                userSettings = userSettings,
-                onDismiss = { showEditDialog = false },
-                onSave = { quantity, unit, startedAtMillis, durationMinutes ->
-                    viewModel.updateLoggedEntry(
+            AnimatedContent(
+                targetState = isEditing,
+                transitionSpec = {
+                    if (targetState) {
+                        slideInHorizontally { it } + fadeIn() togetherWith
+                            slideOutHorizontally { -it } + fadeOut()
+                    } else {
+                        slideInHorizontally { -it } + fadeIn() togetherWith
+                            slideOutHorizontally { it } + fadeOut()
+                    }
+                },
+                label = "edit-mode-transition",
+            ) { editing ->
+                if (editing) {
+                    EditConsumptionEntrySheet(
                         entry = entry,
-                        quantity = quantity,
-                        unit = unit,
-                        startedAtMillis = startedAtMillis,
-                        durationMinutes = durationMinutes,
+                        viewModel = viewModel,
+                        userSettings = userSettings,
+                        onBack = { isEditing = false },
+                        onSave = { quantity, unit, startedAtMillis, durationMinutes ->
+                            viewModel.updateLoggedEntry(
+                                entry = entry,
+                                quantity = quantity,
+                                unit = unit,
+                                startedAtMillis = startedAtMillis,
+                                durationMinutes = durationMinutes,
+                            )
+                        }
+                    )
+                } else {
+                    ConsumptionLogDetailSheet(
+                        entry = entry,
+                        detail = detail,
+                        canRevealDetailContent = canRevealDetailContent,
+                        userSettings = userSettings,
+                        onEdit = { isEditing = true },
+                        onDuplicate = { viewModel.duplicateLoggedEntry(entry) },
+                        onDelete = { viewModel.deleteLoggedEntry(entry) }
                     )
                 }
-            )
+            }
         }
+    }
+
+    if (showWhatsNew) {
+        WhatsNewSheet(onDismiss = { viewModel.markWhatsNewSeen() })
     }
 }
 
@@ -395,7 +418,7 @@ private fun ConsumptionHistoryListItem(
         },
         trailingContent = {
             Text(
-                text = "${entry.caffeineMg}mg",
+                text = stringResource(R.string.caffeine_mg_compact, entry.caffeineMg),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
@@ -446,18 +469,18 @@ private fun SleepForecastCard(
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Sleep Forecast",
+                    text = stringResource(R.string.sleep_forecast_title),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
                     text = when {
                         caffeineAtBedtimeMg < userSettings.sleepThresholdMg ->
-                            "Safe to sleep at ${formatBedtime(userSettings)}"
+                            stringResource(R.string.sleep_forecast_safe, formatBedtime(userSettings))
                         caffeineAtBedtimeMg < userSettings.sleepThresholdMg * 1.5 ->
-                            "May affect sleep (${caffeineAtBedtimeMg.toInt()}mg at bedtime)"
+                            stringResource(R.string.sleep_forecast_may_affect, caffeineAtBedtimeMg.toInt())
                         else ->
-                            "Sleep disruption likely (${caffeineAtBedtimeMg.toInt()}mg)"
+                            stringResource(R.string.sleep_forecast_disruption, caffeineAtBedtimeMg.toInt())
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -517,7 +540,7 @@ private fun ConsumptionLogDetailSheet(
                         style = MaterialTheme.typography.headlineSmall
                     )
                     Text(
-                        text = "Started ${buildLoggedEntryMetaText(entry, userSettings)}",
+                        text = stringResource(R.string.home_started_meta, buildLoggedEntryMetaText(entry, userSettings)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -541,7 +564,7 @@ private fun ConsumptionLogDetailSheet(
                             SkeletonSummaryLine()
                         } else {
                             Text(
-                                text = "Adds ${formatPreciseMg(targetDetail.currentContributionMg)} now",
+                                text = stringResource(R.string.home_adds_now, formatPreciseMg(targetDetail.currentContributionMg)),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
@@ -586,7 +609,7 @@ private fun ConsumptionLogDetailSheet(
                 index = 0,
                 count = 3,
                 icon = Icons.Default.Edit,
-                label = "Edit",
+                label = stringResource(R.string.home_action_edit),
                 enabled = presentedDetail != null,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 onClick = {
@@ -599,7 +622,7 @@ private fun ConsumptionLogDetailSheet(
                 index = 1,
                 count = 3,
                 icon = Icons.Default.ContentCopy,
-                label = "Duplicate",
+                label = stringResource(R.string.home_action_duplicate),
                 onClick = {
                     haptics.navigation()
                     onDuplicate()
@@ -610,7 +633,7 @@ private fun ConsumptionLogDetailSheet(
                 index = 2,
                 count = 3,
                 icon = Icons.Default.Delete,
-                label = "Delete",
+                label = stringResource(R.string.home_action_delete),
                 tint = MaterialTheme.colorScheme.error,
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 onClick = {
@@ -649,31 +672,20 @@ private fun ConsumptionLogDetailSheetBody(
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                text = "Drink contribution to caffeine levels",
+                text = stringResource(R.string.home_drink_contribution_title),
                 style = MaterialTheme.typography.titleMedium
             )
             ContributionStatRow(
-                label = "Serving",
-                value = formatLoggedServing(entry)
-            )
-            ContributionStatRow(
-                label = "Started at",
-                value = formatLoggedTime(entry.startedAtMillis, userSettings)
-            )
-            ContributionStatRow(
-                label = "Time to finish",
-                value = formatDurationMinutes(entry.normalizedDurationMinutes)
-            )
-            ContributionStatRow(
-                label = "At peak (${formatLoggedTime(detail.peakTimestampMillis, userSettings)})",
+                label = stringResource(R.string.home_at_peak, formatLoggedTime(detail.peakTimestampMillis, userSettings)),
                 value = formatPreciseMg(detail.peakContributionMg)
             )
             ContributionStatRow(
-                label = "Now",
+                label = stringResource(R.string.home_now),
                 value = formatPreciseMg(detail.currentContributionMg)
             )
+            HorizontalDivider()
             ContributionStatRow(
-                label = "In total (over time)",
+                label = stringResource(R.string.home_in_total_over_time),
                 value = formatPreciseMg(detail.totalContributionMg)
             )
         }
@@ -866,11 +878,11 @@ private fun SheetActionButton(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditConsumptionEntryDialog(
+private fun EditConsumptionEntrySheet(
     entry: ConsumptionEntry,
     viewModel: CaffeineViewModel,
     userSettings: UserSettings,
-    onDismiss: () -> Unit,
+    onBack: () -> Unit,
     onSave: (Int, DrinkUnit, Long, Int) -> Unit
 ) {
     val availableUnits by produceState<List<DrinkUnit>?>(initialValue = null, key1 = entry.id, key2 = entry.presetItemId) {
@@ -925,91 +937,104 @@ private fun EditConsumptionEntryDialog(
         selectedUnit?.let { calculateServingTotalCaffeine(quantity, it.caffeineMg) } ?: entry.caffeineMg
     }
     val isSaveEnabled = selectedUnit != null
+    val haptics = rememberAppHaptics()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text("Edit ${entry.drinkName}")
-        },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                if (availableUnits == null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        ContainedLoadingIndicator()
-                    }
-                } else {
-                    Text(
-                        text = "Serving",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    ServingQuantityStepper(
-                        quantity = quantity,
-                        onDecrement = { quantity = (quantity - 1).coerceAtLeast(1) },
-                        onIncrement = { quantity += 1 },
-                    )
-                    RollingNumberText(
-                        text = "$totalCaffeineMg mg",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
-                        labelPrefix = "edit_entry_total",
-                    )
-                    if (displayedUnits.isEmpty()) {
-                        Text(
-                            text = "Serving options are unavailable for this entry.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    } else {
-                        ServingUnitSelector(
-                            units = displayedUnits,
-                            selectedUnit = selectedUnit,
-                            onUnitSelected = { selectedUnitKey = it.unitKey },
-                        )
-                    }
-                }
-                ConsumptionTimingSection(
-                    startedAtMillis = startedAtMillis,
-                    durationMinutes = durationMinutes,
-                    settings = userSettings,
-                    onStartedAtChange = { startedAtMillis = it },
-                    onDurationChange = { durationMinutes = it },
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = {
+                haptics.navigation()
+                onBack()
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.action_back),
                 )
             }
-        },
-        confirmButton = {
+            Text(
+                text = stringResource(R.string.home_edit_drink, entry.drinkName),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             TextButton(
                 enabled = isSaveEnabled,
                 onClick = {
                     selectedUnit?.let { unit ->
-                        onSave(
-                            quantity,
-                            unit,
-                            startedAtMillis,
-                            durationMinutes,
-                        )
+                        haptics.navigation()
+                        onSave(quantity, unit, startedAtMillis, durationMinutes)
                     }
                 }
             ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_save))
             }
         }
-    )
+
+        if (availableUnits == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                ContainedLoadingIndicator()
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.home_serving),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                ServingQuantityStepper(
+                    quantity = quantity,
+                    onDecrement = { quantity = (quantity - 1).coerceAtLeast(1) },
+                    onIncrement = { quantity += 1 },
+                    onQuantitySet = { quantity = it },
+                )
+                RollingNumberText(
+                    text = stringResource(R.string.caffeine_mg, totalCaffeineMg),
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    ),
+                    labelPrefix = "edit_entry_total",
+                )
+                if (displayedUnits.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.home_serving_unavailable),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    ServingUnitSelector(
+                        units = displayedUnits,
+                        selectedUnit = selectedUnit,
+                        onUnitSelected = { selectedUnitKey = it.unitKey },
+                    )
+                }
+            }
+        }
+
+        ConsumptionTimingSection(
+            startedAtMillis = startedAtMillis,
+            durationMinutes = durationMinutes,
+            settings = userSettings,
+            onStartedAtChange = { startedAtMillis = it },
+            onDurationChange = { durationMinutes = it },
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+    }
 }
 
 private fun formatBedtime(settings: UserSettings): String {

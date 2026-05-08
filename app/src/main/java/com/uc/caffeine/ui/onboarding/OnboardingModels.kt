@@ -1,6 +1,8 @@
 package com.uc.caffeine.ui.onboarding
 
+import androidx.annotation.StringRes
 import androidx.navigation3.runtime.NavKey
+import com.uc.caffeine.R
 import com.uc.caffeine.data.DerivedOnboardingProfile
 import java.time.LocalTime
 import kotlin.math.roundToInt
@@ -16,14 +18,14 @@ enum class OnboardingDestination(
     ProfileReady(5),
 }
 
-enum class AgeBucket(val label: String) {
-    Under65("Under 65"),
-    Over65("65 or older"),
+enum class AgeBucket(@StringRes val labelRes: Int) {
+    Under65(R.string.age_under_65),
+    Over65(R.string.age_65_or_older),
 }
 
-enum class WeightUnit(val label: String) {
-    Kilograms("kg"),
-    Pounds("lb"),
+enum class WeightUnit(@StringRes val labelRes: Int) {
+    Kilograms(R.string.weight_unit_kg),
+    Pounds(R.string.weight_unit_lb),
     ;
 
     fun clamp(value: Int): Int = value.coerceIn(minSelectable(), maxSelectable())
@@ -55,29 +57,29 @@ enum class WeightUnit(val label: String) {
     }
 }
 
-enum class SmokingHabit(val label: String) {
-    None("None"),
-    Occasional("Occasional"),
-    Daily("Daily"),
-    Heavy("Heavy"),
+enum class SmokingHabit(@StringRes val labelRes: Int) {
+    None(R.string.smoking_none),
+    Occasional(R.string.smoking_occasional),
+    Daily(R.string.smoking_daily),
+    Heavy(R.string.smoking_heavy),
 }
 
-enum class LiverDisease(val label: String) {
-    None("No liver disease"),
-    Compensated("Compensated"),
-    Decompensated("Decompensated"),
+enum class LiverDisease(@StringRes val labelRes: Int) {
+    None(R.string.liver_no_disease),
+    Compensated(R.string.liver_compensated),
+    Decompensated(R.string.liver_decompensated),
 }
 
 enum class Medication(
-    val label: String,
+    @StringRes val labelRes: Int,
     val halfLifeDeltaMinutes: Int,
 ) {
-    None("None", 0),
-    Cimetidine("Cimetidine", 45),
-    OralContraceptives("Hormonal contraceptives", 0),
-    Ciprofloxacin("Ciprofloxacin", 120),
-    Fluvoxamine("Fluvoxamine", 180),
-    OtherCyp1A2Inhibitor("Other CYP1A2 inhibitor", 60),
+    None(R.string.medication_none, 0),
+    Cimetidine(R.string.medication_cimetidine, 45),
+    OralContraceptives(R.string.medication_oral_contraceptives, 0),
+    Ciprofloxacin(R.string.medication_ciprofloxacin, 120),
+    Fluvoxamine(R.string.medication_fluvoxamine, 180),
+    OtherCyp1A2Inhibitor(R.string.medication_other_cyp1a2, 60),
 }
 
 data class OnboardingAnswers(
@@ -173,25 +175,14 @@ data class OnboardingUiState(
     }
 }
 
-internal fun SmokingHabit.buttonLabel(): String {
-    return when (this) {
-        SmokingHabit.Occasional -> "Some days"
-        else -> label
-    }
+@StringRes
+internal fun SmokingHabit.buttonLabelRes(): Int = when (this) {
+    SmokingHabit.Occasional -> R.string.smoking_some_days
+    else -> labelRes
 }
 
-internal fun LiverDisease.buttonLabel(): String {
-    return when (this) {
-        LiverDisease.None -> "No liver disease"
-        LiverDisease.Compensated -> "Compensated"
-        LiverDisease.Decompensated -> "Decompensated"
-    }
-}
+@StringRes
+internal fun LiverDisease.buttonLabelRes(): Int = labelRes
 
-internal fun Medication.buttonLabel(): String {
-    return when (this) {
-        Medication.OralContraceptives -> "Hormonal contraceptives"
-        Medication.OtherCyp1A2Inhibitor -> "Other CYP1A2 inhibitor"
-        else -> label
-    }
-}
+@StringRes
+internal fun Medication.buttonLabelRes(): Int = labelRes

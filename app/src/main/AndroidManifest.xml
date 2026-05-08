@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.health.WRITE_NUTRITION"/>
     <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
@@ -16,6 +18,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:enableOnBackInvokedCallback="true"
+        android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Caffeine">
@@ -23,6 +26,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:configChanges="locale|layoutDirection"
             android:theme="@style/Theme.Caffeine">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,6 +34,59 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".util.notifications.NotificationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.uc.caffeine.NOTIFICATION_ALARM"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".util.notifications.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+        <!-- Widgets -->
+        <receiver
+            android:name=".widget.CaffeineNowWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_caffeine_now_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_caffeine_now_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.QuickAddWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_quick_add_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_add_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.CombinedWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_combined_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_combined_info" />
+        </receiver>
 
         <activity-alias
             android:name="ViewPermissionUsageActivity"

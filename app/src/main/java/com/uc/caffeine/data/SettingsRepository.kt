@@ -8,10 +8,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.ZoneId
 import java.util.Locale
@@ -39,6 +41,10 @@ object SettingsKeys {
     val HC_SLEEP_MODE = stringPreferencesKey("hc_sleep_mode")
     val HC_SLEEP_TIME_HOUR = intPreferencesKey("hc_sleep_time_hour")
     val HC_SLEEP_TIME_MINUTE = intPreferencesKey("hc_sleep_time_minute")
+    val INACTIVITY_REMINDER_ENABLED = booleanPreferencesKey("inactivity_reminder_enabled")
+    val DAILY_REMINDER_TIMES = stringSetPreferencesKey("daily_reminder_times")
+    val LAST_APP_OPENED_AT = longPreferencesKey("last_app_opened_at")
+    val WHATS_NEW_LAST_SEEN_VERSION = intPreferencesKey("whats_new_last_seen_version")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -213,6 +219,36 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateInactivityReminderEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.INACTIVITY_REMINDER_ENABLED] = enabled
+        }
+    }
+
+    suspend fun updateDailyReminderTimes(times: Set<String>) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.DAILY_REMINDER_TIMES] = times
+        }
+    }
+
+    suspend fun markWhatsNewSeen(versionCode: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.WHATS_NEW_LAST_SEEN_VERSION] = versionCode
+        }
+    }
+
+    suspend fun recordAppOpened() {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.LAST_APP_OPENED_AT] = System.currentTimeMillis()
+        }
+    }
+
+    suspend fun getLastAppOpenedAt(): Long {
+        return context.dataStore.data.map { prefs ->
+            prefs[SettingsKeys.LAST_APP_OPENED_AT] ?: 0L
+        }.first()
+    }
+
     suspend fun importSettings(settings: UserSettings) {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.HALF_LIFE_MINUTES] = settings.halfLifeMinutes
@@ -269,6 +305,9 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         hcSleepMode = HcSleepMode.fromStorage(this[SettingsKeys.HC_SLEEP_MODE]),
         hcSleepTimeHour = this[SettingsKeys.HC_SLEEP_TIME_HOUR],
         hcSleepTimeMinute = this[SettingsKeys.HC_SLEEP_TIME_MINUTE],
+        inactivityReminderEnabled = this[SettingsKeys.INACTIVITY_REMINDER_ENABLED] ?: true,
+        dailyReminderTimes = this[SettingsKeys.DAILY_REMINDER_TIMES] ?: setOf("11:00", "14:00"),
+        whatsNewLastSeenVersion = this[SettingsKeys.WHATS_NEW_LAST_SEEN_VERSION] ?: 0,
     )
 }
 

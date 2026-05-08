@@ -7,6 +7,9 @@ local.properties
 .idea/
 .vscode/
 .github/
+.claude/
+
+CLAUDE.md
 
 # Kotlin compiler errors
 .kotlin/
@@ -22,6 +25,9 @@ app/build/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Generated Gradle toolchain file (uses Foojay API URLs, not needed at build time)
+gradle/gradle-daemon-jvm.properties
 
 # Temp / dev artifacts
 tmp_vico/

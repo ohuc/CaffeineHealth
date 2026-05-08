@@ -22,7 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.uc.caffeine.R
 import com.uc.caffeine.data.ThemeMode
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.SettingsPageScaffold
@@ -42,13 +44,13 @@ internal fun AppearanceSettingsScreen(
 ) {
     val haptics = rememberAppHaptics()
     val themeModes = listOf(
-        ThemeMode.SYSTEM to "System",
-        ThemeMode.LIGHT to "Light",
-        ThemeMode.DARK to "Dark",
+        ThemeMode.SYSTEM to stringResource(R.string.appearance_theme_mode_system),
+        ThemeMode.LIGHT to stringResource(R.string.appearance_theme_mode_light),
+        ThemeMode.DARK to stringResource(R.string.appearance_theme_mode_dark),
     )
 
     SettingsPageScaffold(
-        title = "Appearance",
+        title = stringResource(R.string.settings_appearance_title),
         showBackButton = true,
         onBack = onBack,
     ) { bottomPadding ->
@@ -73,7 +75,7 @@ internal fun AppearanceSettingsScreen(
                     },
                     content = {
                         Text(
-                            text = "Theme",
+                            text = stringResource(R.string.appearance_theme_label),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     },
@@ -124,10 +126,10 @@ internal fun AppearanceSettingsScreen(
                         )
                     },
                     content = {
-                        Text(text = "Dynamic Color")
+                        Text(text = stringResource(R.string.appearance_dynamic_color_label))
                     },
                     supportingContent = {
-                        Text(text = "Adapt theme from your wallpaper")
+                        Text(text = stringResource(R.string.appearance_dynamic_color_summary))
                     },
                     trailingContent = {
                         Switch(

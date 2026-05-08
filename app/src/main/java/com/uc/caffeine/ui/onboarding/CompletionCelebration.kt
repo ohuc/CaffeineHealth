@@ -40,8 +40,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.uc.caffeine.R
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -151,7 +153,7 @@ fun CompletionCelebration(
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = "Profile saved.",
+                text = stringResource(R.string.celebration_profile_saved),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                 ),
@@ -165,7 +167,7 @@ fun CompletionCelebration(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Caffeine Health is ready when you are.",
+                text = stringResource(R.string.celebration_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 modifier = Modifier.graphicsLayer { alpha = subtitleAlpha.value },
@@ -200,13 +202,13 @@ fun CompletionCelebration(
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "Next: log your first cup",
+                            text = stringResource(R.string.celebration_next_log),
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.SemiBold,
                             ),
                         )
                         Text(
-                            text = "One tap from your home screen. The curve fills in from there.",
+                            text = stringResource(R.string.celebration_next_log_supporting),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -229,7 +231,7 @@ fun CompletionCelebration(
                     .graphicsLayer { alpha = subtitleAlpha.value },
             ) {
                 Text(
-                    text = "Take me home",
+                    text = stringResource(R.string.celebration_take_me_home),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }

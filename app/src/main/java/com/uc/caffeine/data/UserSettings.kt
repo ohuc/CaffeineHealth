@@ -161,6 +161,9 @@ data class UserSettings(
     val hcSleepMode: HcSleepMode = HcSleepMode.PREVIOUS_DAY,
     val hcSleepTimeHour: Int? = null,
     val hcSleepTimeMinute: Int? = null,
+    val inactivityReminderEnabled: Boolean = true,
+    val dailyReminderTimes: Set<String> = setOf("11:00", "14:00"),
+    val whatsNewLastSeenVersion: Int = 0,
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.

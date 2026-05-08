@@ -43,6 +43,7 @@ import com.uc.caffeine.util.groupConsumptionEntriesByLocalDate
 import com.uc.caffeine.util.nextStartOfDayMillis
 import com.uc.caffeine.util.resolvedZoneId
 import com.uc.caffeine.util.startOfDayMillis
+import com.uc.caffeine.widget.CaffeineWidgetUpdater
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
@@ -99,6 +100,18 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             started = SharingStarted.Eagerly,
             initialValue = false
         )
+
+    val showWhatsNew: StateFlow<Boolean> = settingsRepo.settingsFlow
+        .map { it.isOnboardingComplete && it.whatsNewLastSeenVersion < com.uc.caffeine.BuildConfig.VERSION_CODE }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
+
+    fun markWhatsNewSeen() {
+        viewModelScope.launch { settingsRepo.markWhatsNewSeen(com.uc.caffeine.BuildConfig.VERSION_CODE) }
+    }
 
     // Fast ticker — 1-second interval for the live caffeine counter.
     // WhileSubscribed stops it when the app is backgrounded.
@@ -449,6 +462,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
             )
             logDao.logDrink(entry)
+            triggerWidgetRefresh()
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = java.time.ZoneId.of(settings.timeZoneId)
@@ -473,6 +487,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 durationMinutes = durationMinutes,
             )
             logDao.logDrink(entry)
+            triggerWidgetRefresh()
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(preset.name))
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
@@ -499,6 +514,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 durationMinutes = recent.durationMinutes,
             )
             logDao.logDrink(entry)
+            triggerWidgetRefresh()
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(recent.drinkName))
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
@@ -536,6 +552,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 startedAtMillis = startedAtMillis,
                 durationMinutes = durationMinutes.coerceAtLeast(1),
             )
+            triggerWidgetRefresh()
             homeScreenEventsChannel.send(
                 HomeScreenUiEvent.LogActionCompleted("Updated ${entry.drinkName}")
             )
@@ -550,15 +567,23 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     startedAtMillis = System.currentTimeMillis()
                 )
             )
+            triggerWidgetRefresh()
             homeScreenEventsChannel.send(
                 HomeScreenUiEvent.LogActionCompleted("Logged ${entry.drinkName} again")
             )
         }
     }
 
+    private fun triggerWidgetRefresh() {
+        viewModelScope.launch {
+            CaffeineWidgetUpdater.update(getApplication<Application>())
+        }
+    }
+
     fun deleteLoggedEntry(entry: ConsumptionEntry) {
         viewModelScope.launch {
             logDao.deleteEntryById(entry.id)
+            triggerWidgetRefresh()
             homeScreenEventsChannel.send(
                 HomeScreenUiEvent.LogActionCompleted("Deleted ${entry.drinkName}")
             )
@@ -573,6 +598,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     zoneId = userSettings.value.resolvedZoneId()
                 )
             )
+            triggerWidgetRefresh()
         }
     }
 
@@ -703,6 +729,36 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             settingsRepo.updateHcSleepMode(mode)
             if (userSettings.value.hcSleepEnabled) refreshHcSleepData()
+        }
+    }
+
+    fun updateInactivityReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateInactivityReminderEnabled(enabled)
+            val app = getApplication<Application>()
+            if (enabled) {
+                com.uc.caffeine.util.notifications.NotificationScheduler.scheduleInactivityReminder(app)
+            } else {
+                com.uc.caffeine.util.notifications.NotificationScheduler.cancelInactivityReminder(app)
+            }
+        }
+    }
+
+    fun updateDailyReminderTimes(newTimes: Set<String>) {
+        viewModelScope.launch {
+            val oldTimes = userSettings.value.dailyReminderTimes
+            settingsRepo.updateDailyReminderTimes(newTimes)
+            com.uc.caffeine.util.notifications.NotificationScheduler.syncDailyReminders(getApplication(), oldTimes, newTimes)
+        }
+    }
+
+    fun onAppOpened() {
+        viewModelScope.launch {
+            settingsRepo.recordAppOpened()
+            val settings = userSettings.value
+            if (settings.inactivityReminderEnabled) {
+                com.uc.caffeine.util.notifications.NotificationScheduler.scheduleInactivityReminder(getApplication())
+            }
         }
     }
 

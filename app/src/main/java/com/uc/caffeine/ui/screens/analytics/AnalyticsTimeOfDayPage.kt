@@ -16,8 +16,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.uc.caffeine.R
 import com.uc.caffeine.ui.components.SettingsPageScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.util.AnalyticsRange
@@ -26,10 +28,10 @@ import java.time.LocalDate
 import androidx.compose.material3.Text
 
 private val timeOfDayBucketDetails = listOf(
-    "Night" to "7pm – 5am",
-    "Morning" to "5am – 12pm",
-    "Afternoon" to "12pm – 3pm",
-    "Evening" to "3pm – 7pm",
+    R.string.analytics_bucket_night to R.string.analytics_bucket_night_range,
+    R.string.analytics_bucket_morning to R.string.analytics_bucket_morning_range,
+    R.string.analytics_bucket_afternoon to R.string.analytics_bucket_afternoon_range,
+    R.string.analytics_bucket_evening to R.string.analytics_bucket_evening_range,
 )
 
 @Composable
@@ -43,7 +45,7 @@ internal fun AnalyticsTimeOfDayPage(
     val haptics = rememberAppHaptics()
     var showRangeSheet by remember { mutableStateOf(false) }
 
-    SettingsPageScaffold(title = "When you drink caffeine", showBackButton = true, onBack = onBack) { bottomPadding ->
+    SettingsPageScaffold(title = stringResource(R.string.analytics_when_you_drink), showBackButton = true, onBack = onBack) { bottomPadding ->
         LazyColumn(
             contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -60,8 +62,8 @@ internal fun AnalyticsTimeOfDayPage(
             if (uiState.hasData) {
                 item {
                     AnalyticsChartCard(
-                        title = "When you drink caffeine",
-                        supportingText = "How your intake is spread across the day.",
+                        title = stringResource(R.string.analytics_when_you_drink),
+                        supportingText = stringResource(R.string.analytics_when_you_drink_summary),
                     ) {
                         AnalyticsColumnChart(
                             axisLabels = uiState.timeOfDayAxisLabels,
@@ -88,18 +90,18 @@ internal fun AnalyticsTimeOfDayPage(
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            timeOfDayBucketDetails.forEach { (name, range) ->
+                            timeOfDayBucketDetails.forEach { (nameRes, rangeRes) ->
                                 Column(
                                     modifier = Modifier.weight(1f),
                                     verticalArrangement = Arrangement.spacedBy(2.dp),
                                 ) {
                                     Text(
-                                        text = name,
+                                        text = stringResource(nameRes),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
-                                        text = range,
+                                        text = stringResource(rangeRes),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )

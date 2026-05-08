@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -14,10 +16,12 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,9 +30,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.data.UserSettings
+import com.uc.caffeine.util.combineDatePickerSelectionWithTime
 import com.uc.caffeine.util.combineDateWithTime
 import com.uc.caffeine.util.formatDurationMinutes
-import com.uc.caffeine.util.formatTimestampToTime
+import com.uc.caffeine.util.formatTimestampToDateTime
+import com.uc.caffeine.util.toDatePickerMillis
 import com.uc.caffeine.util.resolvedZoneId
 import kotlin.math.roundToInt
 
@@ -44,31 +50,30 @@ fun ConsumptionTimingSection(
     onDurationChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var showTimePicker by remember { mutableStateOf(false) }
+    var showDateTimePicker by remember { mutableStateOf(false) }
     var showDurationPicker by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        LabeledPickerRow(label = "Started drinking", onClick = { showTimePicker = true }) {
-            Text(formatTimestampToTime(startedAtMillis, settings))
+        LabeledPickerRow(label = "Started drinking", onClick = { showDateTimePicker = true }) {
+            Text(formatTimestampToDateTime(startedAtMillis, settings))
         }
         LabeledPickerRow(label = "Time to finish", onClick = { showDurationPicker = true }) {
             Text(formatDurationMinutes(durationMinutes))
         }
     }
 
-    if (showTimePicker) {
-        ClockTimePickerDialog(
-            is24HourClock = settings.use24HourClock,
+    if (showDateTimePicker) {
+        DateTimePickerDialog(
             currentTimestampMillis = startedAtMillis,
             settings = settings,
-            onTimeSelected = { hour, minute ->
-                onStartedAtChange(combineDateWithTime(startedAtMillis, hour, minute, settings))
-                showTimePicker = false
+            onDateTimeSelected = { newMillis ->
+                onStartedAtChange(newMillis)
+                showDateTimePicker = false
             },
-            onDismiss = { showTimePicker = false },
+            onDismiss = { showDateTimePicker = false },
         )
     }
 
@@ -102,6 +107,60 @@ private fun LabeledPickerRow(
             
         )
         OutlinedButton(onClick = onClick, content = content)
+    }
+}
+
+private enum class DateTimePickerStep { Date, Time }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateTimePickerDialog(
+    currentTimestampMillis: Long,
+    settings: UserSettings,
+    onDateTimeSelected: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var step by remember { mutableStateOf(DateTimePickerStep.Date) }
+    var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = toDatePickerMillis(currentTimestampMillis, settings),
+    )
+
+    when (step) {
+        DateTimePickerStep.Date -> {
+            DatePickerDialog(
+                onDismissRequest = onDismiss,
+                confirmButton = {
+                    TextButton(
+                        enabled = datePickerState.selectedDateMillis != null,
+                        onClick = {
+                            selectedDateMillis = datePickerState.selectedDateMillis
+                            step = DateTimePickerStep.Time
+                        }
+                    ) { Text("Next") }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                },
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
+        DateTimePickerStep.Time -> {
+            val pickedDateMillis = selectedDateMillis ?: return
+            ClockTimePickerDialog(
+                is24HourClock = settings.use24HourClock,
+                currentTimestampMillis = currentTimestampMillis,
+                settings = settings,
+                onTimeSelected = { hour, minute ->
+                    onDateTimeSelected(
+                        combineDatePickerSelectionWithTime(pickedDateMillis, hour, minute, settings)
+                    )
+                },
+                onDismiss = { step = DateTimePickerStep.Date },
+            )
+        }
     }
 }
 
@@ -145,19 +204,21 @@ fun ClockTimePickerDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DurationPickerDialog(
     currentDurationMinutes: Int,
     onDurationSelected: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val initialClamped = currentDurationMinutes.coerceIn(MIN_DURATION_MINUTES, MAX_DURATION_MINUTES)
     var selectedDuration by remember(currentDurationMinutes) {
-        mutableFloatStateOf(
-            currentDurationMinutes
-                .coerceIn(MIN_DURATION_MINUTES, MAX_DURATION_MINUTES)
-                .toFloat()
-        )
+        mutableFloatStateOf(initialClamped.toFloat())
     }
+    var lastHapticStep by remember(currentDurationMinutes) {
+        mutableIntStateOf(initialClamped)
+    }
+    val haptics = rememberAppHaptics()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -188,7 +249,14 @@ fun DurationPickerDialog(
                 )
                 Slider(
                     value = selectedDuration,
-                    onValueChange = { selectedDuration = it },
+                    onValueChange = { value ->
+                        selectedDuration = value
+                        val step = value.roundToInt()
+                        if (step != lastHapticStep) {
+                            haptics.tick()
+                            lastHapticStep = step
+                        }
+                    },
                     valueRange = MIN_DURATION_MINUTES.toFloat()..MAX_DURATION_MINUTES.toFloat(),
                     steps = MAX_DURATION_MINUTES - MIN_DURATION_MINUTES - 1,
                 )

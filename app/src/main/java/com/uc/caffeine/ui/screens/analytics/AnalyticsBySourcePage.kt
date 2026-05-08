@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +59,7 @@ import com.patrykandpatrick.vico.compose.pie.data.PieValueFormatter
 import com.patrykandpatrick.vico.compose.pie.rememberPieChart
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
+import com.uc.caffeine.R
 import com.uc.caffeine.ui.components.DrinkIcon
 import com.uc.caffeine.ui.components.ExpressiveIconBadge
 import com.uc.caffeine.ui.components.SettingsPageScaffold
@@ -68,9 +70,9 @@ import com.uc.caffeine.util.AnalyticsUiState
 import com.uc.caffeine.util.SourceItemEntry
 import kotlin.math.roundToInt
 
-private enum class SourceView(val label: String) {
-    CATEGORY("Category"),
-    ITEM("Item"),
+private enum class SourceView {
+    CATEGORY,
+    ITEM,
 }
 
 internal const val AnalyticsSingleSliceChartTag = "analytics_single_slice_chart"
@@ -117,7 +119,7 @@ internal fun AnalyticsBySourcePage(
         valueFormatter = percentFormatter,
     )
 
-    SettingsPageScaffold(title = "Caffeine by Source", showBackButton = true, onBack = onBack) { bottomPadding ->
+    SettingsPageScaffold(title = stringResource(R.string.analytics_caffeine_by_source), showBackButton = true, onBack = onBack) { bottomPadding ->
         LazyColumn(
             contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -126,9 +128,9 @@ internal fun AnalyticsBySourcePage(
                 val rangeLabel = if (uiState.selectedRange == AnalyticsRange.CUSTOM &&
                     uiState.customStartDate != null && uiState.customEndDate != null) {
                     val fmt = java.time.format.DateTimeFormatter.ofPattern("MMM d")
-                    "${uiState.customStartDate.format(fmt)} – ${uiState.customEndDate.format(fmt)}"
+                    stringResource(R.string.analytics_custom_range_format, uiState.customStartDate.format(fmt), uiState.customEndDate.format(fmt))
                 } else {
-                    uiState.selectedRange.label
+                    stringResource(uiState.selectedRange.labelRes)
                 }
 
                 ElevatedCard(
@@ -164,7 +166,7 @@ internal fun AnalyticsBySourcePage(
                                 )
                                 Icon(
                                     imageVector = Icons.Rounded.KeyboardArrowDown,
-                                    contentDescription = "Change range",
+                                    contentDescription = stringResource(R.string.analytics_change_range_cd),
                                     modifier = Modifier.size(16.dp),
                                 )
                             }
@@ -192,7 +194,7 @@ internal fun AnalyticsBySourcePage(
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
                                         Icon(Icons.Outlined.DonutLarge, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Text("Category", style = MaterialTheme.typography.labelMedium)
+                                        Text(stringResource(R.string.analytics_view_category), style = MaterialTheme.typography.labelMedium)
                                     }
                                 }
                                 ToggleButton(
@@ -210,7 +212,7 @@ internal fun AnalyticsBySourcePage(
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
                                         Icon(Icons.Outlined.LocalCafe, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Text("Item", style = MaterialTheme.typography.labelMedium)
+                                        Text(stringResource(R.string.analytics_view_item), style = MaterialTheme.typography.labelMedium)
                                     }
                                 }
                             }
@@ -239,11 +241,11 @@ internal fun AnalyticsBySourcePage(
                                 ) {
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(
-                                            text = "Source breakdown",
+                                            text = stringResource(R.string.analytics_source_breakdown),
                                             style = MaterialTheme.typography.titleLarge,
                                         )
                                         Text(
-                                            text = "Total caffeine by category for the selected period.",
+                                            text = stringResource(R.string.analytics_source_breakdown_supporting),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
@@ -281,7 +283,7 @@ internal fun AnalyticsBySourcePage(
                                     verticalArrangement = Arrangement.spacedBy(10.dp),
                                 ) {
                                     Text(
-                                        text = "Categories",
+                                        text = stringResource(R.string.analytics_categories),
                                         style = MaterialTheme.typography.titleMedium,
                                     )
                                     uiState.sourceAxisLabels.forEachIndexed { index, label ->
@@ -303,7 +305,7 @@ internal fun AnalyticsBySourcePage(
                                                 modifier = Modifier.weight(1f),
                                             )
                                             Text(
-                                                text = "${value.roundToInt()} mg",
+                                                text = stringResource(R.string.analytics_value_mg, value.roundToInt()),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
@@ -366,7 +368,7 @@ private fun SingleCategoryPieFallback(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "100%",
+                text = stringResource(R.string.analytics_full_percent),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -517,7 +519,7 @@ private fun SourceItemList(items: List<SourceItemEntry>) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            text = "Recent Consumptions",
+            text = stringResource(R.string.analytics_recent_consumptions),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 4.dp),
@@ -551,13 +553,16 @@ private fun SourceItemList(items: List<SourceItemEntry>) {
                     },
                     supportingContent = {
                         Text(
-                            text = "${item.count} serving${if (item.count != 1) "s" else ""}",
+                            text = stringResource(
+                                if (item.count == 1) R.string.analytics_servings_one else R.string.analytics_servings_other,
+                                item.count,
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                         )
                     },
                     trailingContent = {
                         Text(
-                            text = "${item.totalCaffeineMg} mg",
+                            text = stringResource(R.string.analytics_value_mg, item.totalCaffeineMg),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
