@@ -31,6 +31,12 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://hosted.weblate.org/engage/caffeine-health/">
+    <img src="https://hosted.weblate.org/widget/caffeine-health/strings/287x66-grey.png" alt="Translation status" />
+  </a>
+</p>
+
 ---
 
 Caffeine Health is a beautifully designed Android app that helps you understand how your caffeine intake affects your body throughout the day, and whether that late-afternoon espresso might cost you sleep tonight.
@@ -113,7 +119,7 @@ The app follows a **single-activity MVVM** pattern:
 | Layer | Responsibility |
 |---|---|
 | **View** | Jetpack Compose screens + reusable components |
-| **ViewModel** | `CaffeineViewModel` — shared state, actions, caffeine math orchestration |
+| **ViewModel** | `CaffeineViewModel` - shared state, actions, caffeine math orchestration |
 | **Data** | Room database for drinks & entries, DataStore for user settings |
 | **Util** | Pure calculation logic (pharmacokinetics, chart data generation) |
 
@@ -171,7 +177,7 @@ cd CaffeineHealth
 ./gradlew installDebug
 ```
 
-> **Note:** The app requires Android 12 (API 31) or higher. `compileSdk` targets API 36 — use an emulator with API 31+ to run it.
+> **Note:** The app requires Android 12 (API 31) or higher. `compileSdk` targets API 36 - use an emulator with API 31+ to run it.
 
 ### Project Structure
 
@@ -215,9 +221,19 @@ Contributions are welcome! Here's how to get started:
 ### Guidelines
 
 - Follow existing code style and architecture patterns
-- Keep the shared ViewModel pattern — avoid per-screen ViewModels unless there's a strong reason
+- Keep the shared ViewModel pattern - avoid per-screen ViewModels unless there's a strong reason
 - Use Material 3 components and the app's existing design tokens
 - Test on API 31+ emulator before submitting
+
+---
+
+## 🌍 Translation
+
+This project is available on [Hosted Weblate](https://hosted.weblate.org/engage/caffeine-health/) for translation.
+
+You can contribute to this project even if you are not a developer by helping in translating this project into languages you know.
+
+<a href="https://hosted.weblate.org/engage/caffeine-health/"><img src="https://hosted.weblate.org/widget/caffeine-health/strings/287x66-grey.png" alt="Translation status"></a>
 
 ---
 
@@ -235,16 +251,16 @@ Contributions are welcome! Here's how to get started:
 
 ## 📄 License
 
-This project is licensed under the GNU General Public License v3.0 — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- [Vico](https://github.com/patrykandpatrick/vico) — beautiful charting library for Compose
-- [Coil](https://coil-kt.github.io/coil/) — fast image loading for Kotlin
-- [Material 3](https://m3.material.io/) — Google's latest design system
-- [Montserrat](https://fonts.google.com/specimen/Montserrat) — typeface by Julieta Ulanovsky
+- [Vico](https://github.com/patrykandpatrick/vico) - beautiful charting library for Compose
+- [Coil](https://coil-kt.github.io/coil/) - fast image loading for Kotlin
+- [Material 3](https://m3.material.io/) - Google's latest design system
+- [Montserrat](https://fonts.google.com/specimen/Montserrat) - typeface by Julieta Ulanovsky
 
 ---
 

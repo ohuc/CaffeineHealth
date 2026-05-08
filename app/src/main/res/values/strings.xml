@@ -470,4 +470,11 @@
     <string name="celebration_next_log">Next: log your first cup</string>
     <string name="celebration_next_log_supporting">One tap from your home screen. The curve fills in from there.</string>
     <string name="celebration_take_me_home">Take me home</string>
+
+    <!-- Widget preview sample data (shown in widget picker, not at runtime) -->
+    <string name="widget_preview_safe_before_bed">Safe before bed</string>
+    <string name="widget_preview_drink_name_1">Espresso</string>
+    <string name="widget_preview_drink_mg_1">63 mg</string>
+    <string name="widget_preview_drink_name_2">Green Tea</string>
+    <string name="widget_preview_drink_mg_2">30 mg</string>
 </resources>

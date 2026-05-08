@@ -10,6 +10,6 @@
     android:maxResizeWidth="400dp"
     android:maxResizeHeight="200dp"
     android:resizeMode="horizontal|vertical"
-    android:previewImage="@drawable/widget_preview_quick_add"
+    android:previewLayout="@layout/widget_preview_quick_add"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />
