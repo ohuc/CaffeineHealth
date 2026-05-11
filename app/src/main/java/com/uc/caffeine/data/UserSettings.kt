@@ -164,6 +164,7 @@ data class UserSettings(
     val inactivityReminderEnabled: Boolean = true,
     val dailyReminderTimes: Set<String> = setOf("11:00", "14:00"),
     val whatsNewLastSeenVersion: Int = 0,
+    val homeViewMode: HomeViewMode = HomeViewMode.GRAPH,
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.

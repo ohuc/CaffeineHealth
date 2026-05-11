@@ -99,6 +99,7 @@ fun SettingsScreen(
                         userSettings = userSettings,
                         onThemeModeChange = viewModel::updateThemeMode,
                         onDynamicColorChange = viewModel::updateDynamicColor,
+                        onHomeViewModeChange = viewModel::updateHomeViewMode,
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )
 

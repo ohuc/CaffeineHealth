@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DonutLarge
 import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.ButtonGroupDefaults
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.R
+import com.uc.caffeine.data.HomeViewMode
 import com.uc.caffeine.data.ThemeMode
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.SettingsPageScaffold
@@ -40,6 +42,7 @@ internal fun AppearanceSettingsScreen(
     userSettings: UserSettings,
     onThemeModeChange: (ThemeMode) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
+    onHomeViewModeChange: (HomeViewMode) -> Unit,
     onBack: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
@@ -47,6 +50,10 @@ internal fun AppearanceSettingsScreen(
         ThemeMode.SYSTEM to stringResource(R.string.appearance_theme_mode_system),
         ThemeMode.LIGHT to stringResource(R.string.appearance_theme_mode_light),
         ThemeMode.DARK to stringResource(R.string.appearance_theme_mode_dark),
+    )
+    val homeViewModes = listOf(
+        HomeViewMode.GRAPH to stringResource(R.string.appearance_home_view_graph),
+        HomeViewMode.CIRCULAR to stringResource(R.string.appearance_home_view_circular),
     )
 
     SettingsPageScaffold(
@@ -144,6 +151,58 @@ internal fun AppearanceSettingsScreen(
                         index = 1,
                         count = 2,
                     ),
+                    colors = ListItemDefaults.colors(
+                        containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
+                    ),
+                )
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                SegmentedListItem(
+                    onClick = {},
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.DonutLarge,
+                            contentDescription = null,
+                        )
+                    },
+                    content = {
+                        Text(
+                            text = stringResource(R.string.appearance_home_view_label),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    },
+                    supportingContent = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                        ) {
+                            homeViewModes.forEachIndexed { index, (mode, label) ->
+                                ToggleButton(
+                                    modifier = Modifier.weight(1f),
+                                    checked = userSettings.homeViewMode == mode,
+                                    onCheckedChange = { checked ->
+                                        if (checked && userSettings.homeViewMode != mode) {
+                                            haptics.toggle()
+                                            onHomeViewModeChange(mode)
+                                        }
+                                    },
+                                    shapes = when (index) {
+                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                        else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                    },
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),

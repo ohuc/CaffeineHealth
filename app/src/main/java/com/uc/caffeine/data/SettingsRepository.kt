@@ -45,6 +45,7 @@ object SettingsKeys {
     val DAILY_REMINDER_TIMES = stringSetPreferencesKey("daily_reminder_times")
     val LAST_APP_OPENED_AT = longPreferencesKey("last_app_opened_at")
     val WHATS_NEW_LAST_SEEN_VERSION = intPreferencesKey("whats_new_last_seen_version")
+    val HOME_VIEW_MODE = stringPreferencesKey("home_view_mode")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -133,6 +134,12 @@ class SettingsRepository(private val context: Context) {
     suspend fun updateDynamicColor(enabled: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.USE_DYNAMIC_COLOR] = enabled
+        }
+    }
+
+    suspend fun updateHomeViewMode(mode: HomeViewMode) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.HOME_VIEW_MODE] = mode.name
         }
     }
 
@@ -257,6 +264,7 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.SLEEP_TIME_HOUR] = settings.sleepTimeHour
             prefs[SettingsKeys.SLEEP_TIME_MINUTE] = settings.sleepTimeMinute
             prefs[SettingsKeys.THEME_MODE] = settings.themeMode.name
+            prefs[SettingsKeys.HOME_VIEW_MODE] = settings.homeViewMode.name
             prefs[SettingsKeys.USE_DYNAMIC_COLOR] = settings.useDynamicColor
             prefs[SettingsKeys.USE_24_HOUR_CLOCK] = settings.use24HourClock
             prefs[SettingsKeys.DATE_FORMAT] = settings.dateFormat.name
@@ -308,6 +316,7 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         inactivityReminderEnabled = this[SettingsKeys.INACTIVITY_REMINDER_ENABLED] ?: true,
         dailyReminderTimes = this[SettingsKeys.DAILY_REMINDER_TIMES] ?: setOf("11:00", "14:00"),
         whatsNewLastSeenVersion = this[SettingsKeys.WHATS_NEW_LAST_SEEN_VERSION] ?: 0,
+        homeViewMode = HomeViewMode.fromStorage(this[SettingsKeys.HOME_VIEW_MODE]),
     )
 }
 

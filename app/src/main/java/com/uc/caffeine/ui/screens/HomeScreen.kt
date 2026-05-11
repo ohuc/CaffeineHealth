@@ -20,10 +20,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DonutLarge
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonGroupDefaults
@@ -68,10 +70,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uc.caffeine.LocalSnackbarHostState
 import com.uc.caffeine.R
+import com.uc.caffeine.data.HomeViewMode
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.ui.components.CaffeineChart
+import com.uc.caffeine.ui.components.CaffeineCircularView
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
 import com.uc.caffeine.ui.components.ConsumptionContributionChart
 import com.uc.caffeine.ui.components.ConsumptionTimingSection
@@ -176,16 +180,61 @@ fun HomeScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 } else {
-                    CaffeineChart(
-                        chartData = chartData,
-                        modelProducer = viewModel.chartModelProducer,
-                        userSettings = userSettings,
-                        liveNowMillis = liveNowMillis,
-                        currentCaffeineLevel = currentLevel,
-                        predictedBedtimeCaffeineLevel = bedtimeForecast.first,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp)
+                    AnimatedContent(
+                        targetState = userSettings.homeViewMode,
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(220, delayMillis = 90))) togetherWith
+                                fadeOut(animationSpec = tween(90))
+                        },
+                        label = "home_view_mode",
+                    ) { viewMode ->
+                        when (viewMode) {
+                            HomeViewMode.GRAPH -> CaffeineChart(
+                                chartData = chartData,
+                                modelProducer = viewModel.chartModelProducer,
+                                userSettings = userSettings,
+                                liveNowMillis = liveNowMillis,
+                                currentCaffeineLevel = currentLevel,
+                                predictedBedtimeCaffeineLevel = bedtimeForecast.first,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
+                                onEntryClick = { entryId ->
+                                    val entry = groupedConsumptionEntries.values
+                                        .flatten()
+                                        .find { it.id == entryId }
+                                    if (entry != null) {
+                                        haptics.navigation()
+                                        selectedEntry = entry
+                                    }
+                                }
+                            )
+                            HomeViewMode.CIRCULAR -> CaffeineCircularView(
+                                currentMg = currentLevel,
+                                maxMg = userSettings.sleepThresholdMg.toDouble(),
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                    }
+                }
+
+                val isCircular = userSettings.homeViewMode == HomeViewMode.CIRCULAR
+                IconButton(
+                    onClick = {
+                        haptics.toggle()
+                        viewModel.updateHomeViewMode(
+                            if (isCircular) HomeViewMode.GRAPH else HomeViewMode.CIRCULAR
+                        )
+                    },
+                    modifier = Modifier.align(Alignment.TopEnd),
+                ) {
+                    Icon(
+                        imageVector = if (isCircular) Icons.Default.BarChart else Icons.Default.DonutLarge,
+                        contentDescription = stringResource(
+                            if (isCircular) R.string.home_view_toggle_to_graph_cd
+                            else R.string.home_view_toggle_to_circular_cd
+                        ),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

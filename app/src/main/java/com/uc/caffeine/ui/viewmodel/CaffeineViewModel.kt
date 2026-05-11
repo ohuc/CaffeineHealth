@@ -657,6 +657,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateHomeViewMode(mode: com.uc.caffeine.data.HomeViewMode) {
+        viewModelScope.launch {
+            settingsRepo.updateHomeViewMode(mode)
+        }
+    }
+
     fun updateUse24HourClock(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepo.updateUse24HourClock(enabled)
@@ -957,6 +963,39 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             unitDao.insert(
                 DrinkUnit(
                     drinkId = presetId,
+                    unitKey = unitKey,
+                    caffeineMg = caffeineMg,
+                    milliliters = null,
+                    grams = null,
+                    isDefault = true,
+                )
+            )
+        }
+    }
+
+    fun updateCustomDrink(
+        preset: DrinkPreset,
+        name: String,
+        emoji: String,
+        imageUri: String,
+        category: String,
+        unitKey: String,
+        caffeineMg: Double,
+    ) {
+        viewModelScope.launch {
+            val updated = preset.copy(
+                name = name,
+                emoji = emoji,
+                imageName = imageUri,
+                category = category,
+                defaultUnit = unitKey,
+                defaultCaffeineMg = caffeineMg.toInt(),
+            )
+            presetDao.update(updated)
+            unitDao.deleteUnitsForDrink(preset.id)
+            unitDao.insert(
+                DrinkUnit(
+                    drinkId = preset.id,
                     unitKey = unitKey,
                     caffeineMg = caffeineMg,
                     milliliters = null,

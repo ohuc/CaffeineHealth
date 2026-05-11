@@ -231,6 +231,7 @@
     <string name="custom_drink_caffeine_per_serving">Caffeine per serving</string>
     <string name="custom_drink_amount_label">Amount</string>
     <string name="custom_drink_save">Save custom drink</string>
+    <string name="custom_drink_edit_button">Edit custom drink</string>
 
     <!-- Common reused -->
     <string name="action_ok">OK</string>
@@ -479,4 +480,17 @@
     <string name="widget_preview_drink_mg_1">63 mg</string>
     <string name="widget_preview_drink_name_2">Green Tea</string>
     <string name="widget_preview_drink_mg_2">30 mg</string>
+
+    <!-- Home view mode (Appearance settings) -->
+    <string name="appearance_home_view_label">Home view style</string>
+    <string name="appearance_home_view_summary">Choose how caffeine is shown on the home screen</string>
+    <string name="appearance_home_view_graph">Graph</string>
+    <string name="appearance_home_view_circular">Circular</string>
+
+    <!-- Circular caffeine view -->
+    <string name="home_circular_view_cd">Caffeine progress indicator</string>
+    <string name="home_circular_mg_unit">mg</string>
+    <string name="home_circular_threshold_format">of %1$d mg</string>
+    <string name="home_view_toggle_to_circular_cd">Switch to circular view</string>
+    <string name="home_view_toggle_to_graph_cd">Switch to graph view</string>
 </resources>
