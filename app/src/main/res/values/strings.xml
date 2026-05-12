@@ -457,7 +457,7 @@
 
     <!-- What's New changelog sheet -->
     <string name="whats_new_title">What\'s New</string>
-    <string name="whats_new_version_badge">v2.0</string>
+    <string name="whats_new_version_badge">v2.1</string>
     <string name="whats_new_got_it">Got it</string>
     <string name="whats_new_widgets_title">Home Screen Widgets</string>
     <string name="whats_new_widgets_body">Track your caffeine level and log drinks right from your home screen. No app tap needed.</string>
