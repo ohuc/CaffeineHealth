@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
-
     <!-- Widgets -->
     <string name="widget_caffeine_now_label">Kofeiinitaso</string>
     <string name="widget_caffeine_now_description">Näyttää tämänhetkisen aktiivisen kofeiinitasosi yhdellä silmäyksellä.</string>
@@ -12,7 +12,6 @@
     <string name="widget_quick_add_description">Kirjaa viimeisimmät juomasi suoraan aloitusnäytöltä.</string>
     <string name="widget_combined_label">Caffeine-koontinäyttö</string>
     <string name="widget_combined_description">Näe kofeiinitasosi ja kirjaa juomia avaamatta sovellusta.</string>
-
     <!-- Common actions -->
     <string name="action_back">Takaisin</string>
     <string name="action_yes">Kyllä</string>
@@ -26,7 +25,6 @@
     <string name="action_close">Sulje</string>
     <string name="action_continue">Jatka</string>
     <string name="action_skip">Ohita</string>
-
     <!-- Settings -->
     <string name="settings_title">Asetukset</string>
     <string name="settings_caffeine_profile_title">Kofeiiniprofiili</string>
@@ -48,7 +46,6 @@
     <string name="settings_whats_new_summary">Katso mitä uutta versiossa v%s on</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">GitHub-repositorio</string>
-
     <!-- Appearance -->
     <string name="appearance_theme_label">Teema</string>
     <string name="appearance_theme_mode_system">Järjestelmä</string>
@@ -56,7 +53,6 @@
     <string name="appearance_theme_mode_dark">Tumma</string>
     <string name="appearance_dynamic_color_label">Dynaaminen väri</string>
     <string name="appearance_dynamic_color_summary">Mukauta teema taustakuvasi mukaan</string>
-
     <!-- Home -->
     <string name="home_title">Koti</string>
     <string name="home_my_consumptions">Kulutukseni</string>
@@ -73,13 +69,11 @@
     <string name="home_edit_drink">Muokkaa %1$s</string>
     <string name="home_serving">Annos</string>
     <string name="home_serving_unavailable">Annosvaihtoehtoja ei ole saatavilla tälle merkinnälle.</string>
-
     <!-- Sleep forecast -->
     <string name="sleep_forecast_title">Uniarvio</string>
     <string name="sleep_forecast_safe">Turvallista nukkua klo %1$s</string>
     <string name="sleep_forecast_may_affect">Saattaa vaikuttaa uneen (%1$dmg nukkumaan mennessä)</string>
     <string name="sleep_forecast_disruption">Unen häiriintyminen todennäköistä (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">Lisää juoma</string>
     <string name="add_create_custom_cd">Luo mukautettu juoma</string>
@@ -95,26 +89,22 @@
     <string name="add_total_caffeine">Kofeiinia yhteensä</string>
     <string name="add_bedtime_warning">Nukkumaan mennessä noin %1$d mg on yhä aktiivisena, mikä ylittää %2$d mg unirajasi.</string>
     <string name="add_entry">Lisää merkintä</string>
-
     <!-- Navigation -->
     <string name="nav_home">Koti</string>
     <string name="nav_analytics">Analytiikka</string>
     <string name="nav_settings">Asetukset</string>
     <string name="main_add_consumption">Lisää kulutus</string>
-
     <!-- Notifications -->
     <string name="notification_channel_daily">Päivittäiset muistutukset</string>
     <string name="notification_channel_daily_description">Päivittäiset kofeiinin kirjausmuistutukset</string>
     <string name="notification_channel_inactivity">Toimettomuusmuistutukset</string>
     <string name="notification_channel_inactivity_description">Muistutus, kun et ole kirjannut kofeiinia vähään aikaan</string>
-
     <string name="notification_daily_title">Kofeiinitarkistus</string>
     <string name="notification_daily_morning">On aika kirjata aamukahvisi tai -teesi. Pidä kofeiiniseurantasi ajan tasalla tänään.</string>
     <string name="notification_daily_afternoon">On aika kirjata iltapäivän kofeiinisi. Pidä seuranta ajan tasalla.</string>
     <string name="notification_daily_evening">On aika kirjata illan kofeiinisi. Saat tarkempia uniennusteita.</string>
     <string name="notification_inactivity_title">Unohditko kofeiinikirjauksen?</string>
     <string name="notification_inactivity_body">Viimeisestä kirjauksesta on kulunut 5 päivää. Avaa sovellus pitääksesi seurannan tarkkana.</string>
-
     <!-- Analytics -->
     <string name="analytics_title">Analytiikka</string>
     <string name="analytics_caffeine_by_source">Kofeiini lähteittäin</string>
@@ -130,14 +120,12 @@
     <string name="analytics_top_source">Suurin lähde</string>
     <string name="analytics_sleep_threshold">Uniraja</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Range labels -->
     <string name="analytics_range_today">Tänään</string>
     <string name="analytics_range_yesterday">Eilen</string>
     <string name="analytics_range_30_days">30 päivää</string>
     <string name="analytics_range_90_days">90 päivää</string>
     <string name="analytics_range_custom">Mukautettu</string>
-
     <!-- Onboarding -->
     <string name="onboarding_welcome_kicker">TERVETULOA</string>
     <string name="onboarding_intro_line_1">Tunne\n</string>
@@ -146,10 +134,8 @@
     <string name="onboarding_intro_subtitle">Reaaliaikainen näkymä siihen, mitä elimistössäsi on vielä jäljellä ja maksaako tämänillan espresso sinulle unta.</string>
     <string name="onboarding_get_started">Aloita</string>
     <string name="onboarding_takes_a_minute">Vie noin minuutin · Tiliä ei tarvita</string>
-
     <string name="onboarding_step_format">VAIHE %1$d / %2$d</string>
     <string name="onboarding_skip_for_now">Ohita nyt</string>
-
     <!-- Profile -->
     <string name="profile_estimated_half_life">Arvioitu puoliintumisaika</string>
     <string name="profile_half_life_value_modified">%1$d h (perus %2$d h)</string>
@@ -157,7 +143,6 @@
     <string name="profile_typical_bedtime">Tyypillinen nukkumaanmenoaika</string>
     <string name="profile_sleep_threshold">Uniraja</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
-
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
 </resources>
