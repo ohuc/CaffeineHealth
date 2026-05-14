@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
-
     <!-- Widgets -->
     <string name="widget_caffeine_now_label">కాఫీన్ స్థాయి</string>
     <string name="widget_caffeine_now_description">మీ ప్రస్తుత క్రియాశీల కాఫీన్ స్థాయిని ఒక చూపులో చూపిస్తుంది.</string>
@@ -12,7 +12,6 @@
     <string name="widget_quick_add_description">మీ తాజా పానీయాలను హోమ్ స్క్రీన్ నుంచే నమోదు చేయండి.</string>
     <string name="widget_combined_label">Caffeine డాష్‌బోర్డ్</string>
     <string name="widget_combined_description">యాప్ తెరవకుండానే మీ కాఫీన్ స్థాయిని చూసి పానీయాలను నమోదు చేయండి.</string>
-
     <!-- Common actions -->
     <string name="action_back">వెనక్కి</string>
     <string name="action_yes">అవును</string>
@@ -26,7 +25,6 @@
     <string name="action_close">మూసివేయి</string>
     <string name="action_continue">కొనసాగించు</string>
     <string name="action_skip">దాటవేయి</string>
-
     <!-- Settings -->
     <string name="settings_title">సెట్టింగ్స్</string>
     <string name="settings_caffeine_profile_title">కాఫీన్ ప్రొఫైల్</string>
@@ -48,7 +46,6 @@
     <string name="settings_whats_new_summary">v%s లో కొత్తగా ఏముందో చూడండి</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">GitHub రిపోజిటరీ</string>
-
     <!-- Appearance -->
     <string name="appearance_theme_label">థీమ్</string>
     <string name="appearance_theme_mode_system">సిస్టమ్</string>
@@ -56,7 +53,6 @@
     <string name="appearance_theme_mode_dark">డార్క్</string>
     <string name="appearance_dynamic_color_label">డైనమిక్ రంగులు</string>
     <string name="appearance_dynamic_color_summary">మీ వాల్‌పేపర్‌కు అనుగుణంగా థీమ్‌ను మార్చండి</string>
-
     <!-- Home -->
     <string name="home_title">హోమ్</string>
     <string name="home_my_consumptions">నా వినియోగాలు</string>
@@ -73,13 +69,11 @@
     <string name="home_edit_drink">%1$s ను సవరించు</string>
     <string name="home_serving">పరిమాణం</string>
     <string name="home_serving_unavailable">ఈ ఎంట్రీకి పరిమాణ ఎంపికలు అందుబాటులో లేవు.</string>
-
     <!-- Sleep forecast -->
     <string name="sleep_forecast_title">నిద్ర అంచనా</string>
     <string name="sleep_forecast_safe">%1$s సమయంలో నిద్రించడం సురక్షితం</string>
     <string name="sleep_forecast_may_affect">నిద్రపై ప్రభావం చూపవచ్చు (%1$dmg నిద్ర సమయానికి)</string>
     <string name="sleep_forecast_disruption">నిద్ర భంగం కలిగే అవకాశం ఉంది (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">పానీయం జోడించండి</string>
     <string name="add_create_custom_cd">అనుకూల పానీయం సృష్టించు</string>
@@ -95,26 +89,22 @@
     <string name="add_total_caffeine">మొత్తం కాఫీన్</string>
     <string name="add_bedtime_warning">నిద్ర సమయానికి సుమారు %1$d mg ఇంకా క్రియాశీలంగా ఉంటుంది, ఇది మీ %2$d mg నిద్ర పరిమితిని మించిపోయింది.</string>
     <string name="add_entry">ఎంట్రీ జోడించు</string>
-
     <!-- Navigation -->
     <string name="nav_home">హోమ్</string>
     <string name="nav_analytics">విశ్లేషణ</string>
     <string name="nav_settings">సెట్టింగ్స్</string>
     <string name="main_add_consumption">వినియోగాన్ని జోడించు</string>
-
     <!-- Notifications -->
     <string name="notification_channel_daily">రోజువారీ గుర్తింపులు</string>
     <string name="notification_channel_daily_description">కాఫీన్‌ను నమోదు చేయడానికి రోజువారీ గుర్తింపులు</string>
     <string name="notification_channel_inactivity">నిర్వీర్య హెచ్చరికలు</string>
     <string name="notification_channel_inactivity_description">మీరు కొంతకాలంగా కాఫీన్ నమోదు చేయనిప్పుడు గుర్తింపు</string>
-
     <string name="notification_daily_title">కాఫీన్ తనిఖీ</string>
     <string name="notification_daily_morning">మీ ఉదయపు కాఫీ లేదా టీని నమోదు చేసే సమయం వచ్చింది. ఈరోజు మీ కాఫీన్ వినియోగాన్ని ట్రాక్ చేయండి.</string>
     <string name="notification_daily_afternoon">మీ మధ్యాహ్న కాఫీన్‌ను నమోదు చేసే సమయం వచ్చింది. మీ ట్రాకింగ్‌ను నవీకరించండి.</string>
     <string name="notification_daily_evening">మీ సాయంత్రపు కాఫీన్‌ను నమోదు చేసే సమయం వచ్చింది. మరింత ఖచ్చితమైన నిద్ర అంచనాలను పొందండి.</string>
     <string name="notification_inactivity_title">కాఫీన్ నమోదు చేయడం మర్చిపోయారా?</string>
     <string name="notification_inactivity_body">మీ చివరి నమోదుకు 5 రోజులు అయ్యాయి. మీ ట్రాకింగ్ ఖచ్చితంగా ఉండేందుకు యాప్‌ను తెరవండి.</string>
-
     <!-- Analytics -->
     <string name="analytics_title">విశ్లేషణ</string>
     <string name="analytics_caffeine_by_source">మూలం ఆధారంగా కాఫీన్</string>
@@ -130,14 +120,12 @@
     <string name="analytics_top_source">ప్రధాన మూలం</string>
     <string name="analytics_sleep_threshold">నిద్ర పరిమితి</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Analytics ranges -->
     <string name="analytics_range_today">ఈరోజు</string>
     <string name="analytics_range_yesterday">నిన్న</string>
     <string name="analytics_range_30_days">30 రోజులు</string>
     <string name="analytics_range_90_days">90 రోజులు</string>
     <string name="analytics_range_custom">అనుకూలం</string>
-
     <!-- Onboarding -->
     <string name="onboarding_welcome_kicker">స్వాగతం</string>
     <string name="onboarding_intro_line_1">మీ\n</string>
@@ -146,10 +134,8 @@
     <string name="onboarding_intro_subtitle">మీ శరీరంలో ఇంకా ఏమి మిగిలి ఉందో మరియు ఈ రాత్రి తీసుకునే ఎస్ప్రెస్సో మీ నిద్రను ప్రభావితం చేస్తుందో చూపించే ప్రత్యక్ష వీక్షణ.</string>
     <string name="onboarding_get_started">ప్రారంభించండి</string>
     <string name="onboarding_takes_a_minute">సుమారు ఒక నిమిషం పడుతుంది · ఖాతా అవసరం లేదు</string>
-
     <string name="onboarding_step_format">దశ %1$d / %2$d</string>
     <string name="onboarding_skip_for_now">ప్రస్తుతం దాటవేయి</string>
-
     <!-- Profile -->
     <string name="profile_estimated_half_life">అంచనా హాఫ్-లైఫ్</string>
     <string name="profile_half_life_value_modified">%1$d గం (మూలం %2$d గం)</string>
@@ -157,7 +143,6 @@
     <string name="profile_typical_bedtime">సాధారణ నిద్ర సమయం</string>
     <string name="profile_sleep_threshold">నిద్ర పరిమితి</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
-
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
 </resources>
