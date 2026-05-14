@@ -449,6 +449,28 @@ object ChartDataGenerator {
                 )
             }
             .sortedBy { it.xValue }
+            .let { mergeProximateMarkers(it) }
+    }
+
+    // Merge consecutive markers whose icons would visually overlap (within 30 min = 2 domain units).
+    private fun mergeProximateMarkers(
+        markers: List<ChartConsumptionMarker>,
+        proximityUnits: Double = 2.0,
+    ): List<ChartConsumptionMarker> {
+        if (markers.size <= 1) return markers
+        val result = mutableListOf<ChartConsumptionMarker>()
+        var current = markers.first()
+        for (i in 1 until markers.size) {
+            val next = markers[i]
+            if (next.xValue - current.xValue < proximityUnits) {
+                current = current.copy(entries = current.entries + next.entries)
+            } else {
+                result += current
+                current = next
+            }
+        }
+        result += current
+        return result
     }
 
     private fun roundDownToInterval(timestamp: Long, intervalMillis: Long): Long {

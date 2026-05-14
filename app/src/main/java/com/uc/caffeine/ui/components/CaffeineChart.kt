@@ -1193,7 +1193,7 @@ private fun rememberFontRefreshKey(style: TextStyle): Any {
     return resolvedTypeface
 }
 
-private val MarkerImageRadius = 16.dp
+private val MarkerImageRadius = 12.dp
 private val MarkerDotRadius = 4.dp
 private val MarkerImageGap = 6.dp
 private val MarkerBadgeRadius = 7.dp
@@ -1255,6 +1255,14 @@ private class ConsumptionImageDecoration(
             textPaint.textSize = 8.dp.pixels
             emojiPaint.textSize = 13.dp.pixels
 
+            canvas.nativeCanvas.save()
+            canvas.nativeCanvas.clipRect(
+                layerBounds.left,
+                layerBounds.top - imageRadius * 2 - gap,
+                layerBounds.right,
+                layerBounds.bottom + dotRadius * 2,
+            )
+
             for (marker in markers) {
                 val canvasX = xToCanvas(marker.xValue)
                 if (canvasX < layerBounds.left - imageRadius * 2 || canvasX > layerBounds.right + imageRadius * 2) continue
@@ -1309,6 +1317,8 @@ private class ConsumptionImageDecoration(
 
                 onPositionDrawn(marker.xValue, Offset(canvasX, imageCenterY))
             }
+
+            canvas.nativeCanvas.restore()
         }
     }
 }
