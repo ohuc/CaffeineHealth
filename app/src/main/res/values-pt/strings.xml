@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
@@ -10,10 +11,8 @@
     <string name="widget_quick_add_description">Registre suas bebidas recentes diretamente da tela inicial.</string>
     <string name="widget_combined_label">Painel Caffeine</string>
     <string name="widget_combined_description">Veja seu nível de cafeína e registre bebidas sem abrir o app.</string>
-
     <!-- Common actions -->
     <string name="action_back">Voltar</string>
-
     <!-- Settings list -->
     <string name="settings_title">Configurações</string>
     <string name="settings_caffeine_profile_title">Perfil de cafeína</string>
@@ -35,7 +34,6 @@
     <string name="settings_whats_new_summary">Veja o que há de novo na v%s</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">Repositório do GitHub</string>
-
     <!-- Appearance settings -->
     <string name="appearance_theme_label">Tema</string>
     <string name="appearance_theme_mode_system">Sistema</string>
@@ -43,7 +41,6 @@
     <string name="appearance_theme_mode_dark">Escuro</string>
     <string name="appearance_dynamic_color_label">Cor dinâmica</string>
     <string name="appearance_dynamic_color_summary">Adaptar o tema ao seu papel de parede</string>
-
     <!-- Date and time settings -->
     <string name="date_time_24h_label">Usar formato de 24 horas</string>
     <string name="date_time_24h_summary">13:00 em vez de 1:00 PM</string>
@@ -52,13 +49,11 @@
     <string name="date_time_timezone_label">Fuso horário</string>
     <string name="date_time_timezone_sheet_description">Escolha o fuso horário que o app deve usar para gráficos, cálculos de hora de dormir e limites do dia.</string>
     <string name="date_time_timezone_search_label">Buscar fuso horário</string>
-
     <!-- Language settings -->
     <string name="language_section_title">Idioma</string>
     <string name="language_selected_cd">Selecionado</string>
     <string name="language_deferred_title">Localização adiada</string>
     <string name="language_deferred_description">O inglês continuará sendo o idioma ativo nesta versão.</string>
-
     <!-- Common actions reused across screens -->
     <string name="action_yes">Sim</string>
     <string name="action_no">Não</string>
@@ -66,7 +61,6 @@
     <string name="action_add">Adicionar</string>
     <string name="action_expand">Expandir</string>
     <string name="action_collapse">Recolher</string>
-
     <!-- Caffeine profile snapshot -->
     <string name="profile_estimated_half_life">Meia-vida estimada</string>
     <string name="profile_half_life_value_modified">%1$d h (base %2$d h)</string>
@@ -78,13 +72,11 @@
     <string name="profile_sleep_threshold">Limite de sono</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
     <string name="profile_sleep_threshold_description">A meta de cafeína ativa com a qual a orientação de sono é comparada.</string>
-
     <!-- Caffeine profile re-adjust card -->
     <string name="profile_re_adjust_title">Reajustar o perfil de saúde da Caffeine</string>
     <string name="profile_re_adjust_description">Ajuste com precisão a sua meia-vida, as configurações de sono e os fatores de metabolismo.</string>
     <string name="profile_redo_onboarding">Refazer a configuração inicial</string>
     <string name="profile_redo_onboarding_description">Passe pela configuração do perfil novamente sem apagar as bebidas registradas nem o histórico.</string>
-
     <!-- Caffeine profile editors -->
     <string name="profile_caffeine_half_life">Meia-vida da cafeína</string>
     <string name="profile_caffeine_half_life_supporting">A média é de cerca de 5 horas, mas você pode personalizar aqui.</string>
@@ -109,7 +101,6 @@
     <string name="profile_medications_description">Escolha os que possam retardar a eliminação da cafeína. Se nenhum se aplicar, selecione Nenhum.</string>
     <string name="stepper_decrease_cd">Diminuir %1$s</string>
     <string name="stepper_increase_cd">Aumentar %1$s</string>
-
     <!-- Advanced metabolism card -->
     <string name="profile_advanced_metabolism">Metabolismo avançado</string>
     <string name="profile_advanced_metabolism_description">Fatores genéticos e hormonais opcionais que refinam a estimativa da sua meia-vida.</string>
@@ -122,7 +113,6 @@
     <string name="profile_hormonal_status_description">Gravidez e contraceptivos orais podem retardar bastante a eliminação da cafeína.</string>
     <string name="profile_effective_half_life">Meia-vida efetiva: %1$d h %2$d min</string>
     <string name="profile_clearance_factor_explanation">Base %1$d h ajustada por um fator combinado de eliminação de %2$s.</string>
-
     <!-- Health Connect settings -->
     <string name="health_connect_no_permissions_granted">Nenhuma permissão do Health Connect foi concedida</string>
     <string name="health_connect_not_installed">Health Connect não está instalado neste dispositivo</string>
@@ -139,7 +129,6 @@
     <string name="health_connect_uses_recent_session">Usa a sessão de sono mais recente</string>
     <string name="health_connect_seven_day_avg">Média de 7 dias</string>
     <string name="health_connect_seven_day_avg_description">Calcula a média da hora de dormir ao longo da última semana</string>
-
     <!-- Notifications settings -->
     <string name="notifications_inactivity_section">Lembretes de inatividade</string>
     <string name="notifications_no_log_title">Lembrete sem registro</string>
@@ -148,7 +137,6 @@
     <string name="notifications_remove_reminder_cd">Remover lembrete</string>
     <string name="notifications_add_reminder">Adicionar lembrete</string>
     <string name="notifications_add_daily_dialog_title">Adicionar lembrete diário</string>
-
     <!-- My Data settings -->
     <string name="my_data_export_title">Exportar dados</string>
     <string name="my_data_export_description">Salvar um backup do seu histórico, perfil e bebidas personalizadas</string>
@@ -160,15 +148,12 @@
     <string name="my_data_export_failed">Falha na exportação: %1$s</string>
     <string name="my_data_export_error_unknown">Erro desconhecido</string>
     <string name="my_data_import_could_not_read">Não foi possível ler o arquivo</string>
-
     <!-- Save action (reused) -->
     <string name="action_save">Salvar</string>
-
     <!-- Caffeine units -->
     <string name="unit_mg">mg</string>
     <string name="caffeine_mg_compact">%1$dmg</string>
     <string name="caffeine_mg">%1$d mg</string>
-
     <!-- Home screen -->
     <string name="home_title">Início</string>
     <string name="home_my_consumptions">Minhas ingestões</string>
@@ -185,13 +170,11 @@
     <string name="home_edit_drink">Editar %1$s</string>
     <string name="home_serving">Porção</string>
     <string name="home_serving_unavailable">As opções de porção não estão disponíveis para esta entrada.</string>
-
     <!-- Sleep forecast (HomeScreen card) -->
     <string name="sleep_forecast_title">Previsão do sono</string>
     <string name="sleep_forecast_safe">Seguro para dormir às %1$s</string>
     <string name="sleep_forecast_may_affect">Pode afetar o sono (%1$dmg na hora de dormir)</string>
     <string name="sleep_forecast_disruption">Probabilidade alta de prejudicar o sono (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">Adicionar uma bebida</string>
     <string name="add_create_custom_cd">Criar bebida personalizada</string>
@@ -207,7 +190,6 @@
     <string name="add_total_caffeine">Cafeína total</string>
     <string name="add_bedtime_warning">Na hora de dormir, cerca de ~%1$d mg ainda estarão ativos, acima do seu limite de sono de %2$d mg.</string>
     <string name="add_entry">Adicionar entrada</string>
-
     <!-- Add screen empty results -->
     <string name="add_empty_no_drinks_found">Nenhuma bebida encontrada</string>
     <string name="add_empty_no_drinks_available">Nenhuma bebida disponível</string>
@@ -217,7 +199,6 @@
     <string name="add_empty_message_default">Adicione alguns padrões para ver bebidas aqui.</string>
     <string name="add_create_custom_drink_button">Criar bebida personalizada</string>
     <string name="add_clear_filters">Limpar filtros</string>
-
     <!-- Custom drink sheet -->
     <string name="custom_drink_image_picker_cd">Toque para escolher a imagem</string>
     <string name="custom_drink_new">Nova bebida personalizada</string>
@@ -232,22 +213,18 @@
     <string name="custom_drink_amount_label">Quantidade</string>
     <string name="custom_drink_save">Salvar bebida personalizada</string>
     <string name="custom_drink_edit_button">Editar bebida personalizada</string>
-
     <!-- Common reused -->
     <string name="action_ok">OK</string>
-
     <!-- Navigation -->
     <string name="nav_home">Início</string>
     <string name="nav_analytics">Análises</string>
     <string name="nav_settings">Configurações</string>
     <string name="main_add_consumption">Adicionar ingestão</string>
-
     <!-- Notification channels -->
     <string name="notification_channel_daily">Lembretes diários</string>
     <string name="notification_channel_daily_description">Lembretes diários para registrar cafeína</string>
     <string name="notification_channel_inactivity">Lembretes de inatividade</string>
     <string name="notification_channel_inactivity_description">Lembrete quando você não registra cafeína há algum tempo</string>
-
     <!-- Notification messages -->
     <string name="notification_daily_title">Check-in da cafeína</string>
     <string name="notification_daily_morning">Hora de registrar seu café ou chá da manhã. Mantenha seu consumo de cafeína em dia hoje.</string>
@@ -255,12 +232,10 @@
     <string name="notification_daily_evening">Hora de registrar sua cafeína da noite. Obtenha previsões de sono mais precisas.</string>
     <string name="notification_inactivity_title">Esqueceu de registrar sua cafeína?</string>
     <string name="notification_inactivity_body">Já se passaram 5 dias desde o último registro. Abra o app para manter seu rastreamento preciso.</string>
-
     <!-- Widgets (in-content text) -->
     <string name="widget_caffeine_now_inline_label">Cafeína agora</string>
     <string name="widget_refresh_cd">Atualizar</string>
     <string name="widget_quick_log_toast">A ingestão foi adicionada!</string>
-
     <!-- Analytics screen -->
     <string name="analytics_title">Análises</string>
     <string name="analytics_caffeine_by_source">Cafeína por origem</string>
@@ -285,21 +260,18 @@
     <string name="analytics_top_source">Principal origem</string>
     <string name="analytics_sleep_threshold">Limite de sono</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Range button labels (short — used in toggle buttons) -->
     <string name="analytics_range_today">Hoje</string>
     <string name="analytics_range_yesterday">Ontem</string>
     <string name="analytics_range_30_days">30 dias</string>
     <string name="analytics_range_90_days">90 dias</string>
     <string name="analytics_range_custom">Personalizado</string>
-
     <!-- Headline labels (long — used in summary card) -->
     <string name="analytics_headline_today">Hoje</string>
     <string name="analytics_headline_yesterday">Ontem</string>
     <string name="analytics_headline_last_30">Últimos 30 dias</string>
     <string name="analytics_headline_last_90">Últimos 90 dias</string>
     <string name="analytics_headline_custom">Intervalo personalizado</string>
-
     <!-- Range bottom sheet -->
     <string name="analytics_change_range_cd">Alterar intervalo</string>
     <string name="analytics_quick_select">Seleção rápida</string>
@@ -308,11 +280,9 @@
     <string name="analytics_to">Até</string>
     <string name="analytics_apply_custom_range">Aplicar intervalo personalizado</string>
     <string name="analytics_custom_range_format">%1$s – %2$s</string>
-
     <!-- Empty state -->
     <string name="analytics_nothing_to_chart">Ainda não há nada para exibir</string>
     <string name="analytics_empty_body">Registre algumas bebidas e esta visualização de %1$s passará a mostrar tendências, impacto no sono e horários de consumo.</string>
-
     <!-- By Source page -->
     <string name="analytics_view_category">Categoria</string>
     <string name="analytics_view_item">Item</string>
@@ -323,7 +293,6 @@
     <string name="analytics_servings_one">%1$d porção</string>
     <string name="analytics_servings_other">%1$d porções</string>
     <string name="analytics_full_percent" formatted="false">100%</string>
-
     <!-- Time-of-day buckets -->
     <string name="analytics_bucket_night">Noite</string>
     <string name="analytics_bucket_night_range">19h – 5h</string>
@@ -333,13 +302,11 @@
     <string name="analytics_bucket_afternoon_range">12h – 15h</string>
     <string name="analytics_bucket_evening">Fim de tarde</string>
     <string name="analytics_bucket_evening_range">15h – 19h</string>
-
     <!-- Common reused -->
     <string name="action_close">Fechar</string>
     <string name="action_continue">Continuar</string>
     <string name="action_skip">Pular</string>
     <string name="brand_caffeine_health">Caffeine Health</string>
-
     <!-- Onboarding intro -->
     <string name="onboarding_brand_logo_cd">Logotipo do Caffeine Health</string>
     <string name="onboarding_welcome_kicker">BEM-VINDO</string>
@@ -349,12 +316,10 @@
     <string name="onboarding_intro_subtitle">Uma visão em tempo real do que ainda está no seu organismo e se aquele expresso da noite vai custar seu sono.</string>
     <string name="onboarding_get_started">Começar</string>
     <string name="onboarding_takes_a_minute">Leva cerca de um minuto · Não é necessário criar conta</string>
-
     <!-- Onboarding scaffolding -->
     <string name="onboarding_step_format">ETAPA %1$d DE %2$d</string>
     <string name="onboarding_skip_for_now">Pular por agora</string>
     <string name="onboarding_default_disabled_hint">Responda a esta seção para continuar.</string>
-
     <!-- Basic info -->
     <string name="onboarding_basic_info_title">Defina sua linha de base</string>
     <string name="onboarding_basic_info_subtitle">Escolha sua faixa etária e deixe o peso padrão como está, a menos que queira ajustá-lo agora.</string>
@@ -364,14 +329,12 @@
     <string name="onboarding_age_range_supporting">Isso mantém a estimativa conservadora quando a cafeína pode permanecer por mais tempo.</string>
     <string name="onboarding_weight_section">Peso</string>
     <string name="onboarding_weight_supporting">Use o controle se quiser ajustar o peso inicial padrão.</string>
-
     <!-- Sleep -->
     <string name="onboarding_sleep_title">Defina sua janela de sono</string>
     <string name="onboarding_sleep_subtitle">Escolha sua hora de dormir habitual. Vamos avisar quando a cafeína ainda pode estar ativa.</string>
     <string name="onboarding_sleep_disabled_hint">Diga-nos se o sono é sensível para você.</string>
     <string name="onboarding_sleep_enabled_hint">Isso alimenta a previsão de hora de dormir e a linha de limite.</string>
     <string name="onboarding_sleep_sensitivity_supporting">Se a insônia já faz parte do quadro, mantemos a meta de dormir mais conservadora.</string>
-
     <!-- Lifestyle -->
     <string name="onboarding_lifestyle_title">Adicione o contexto da vida real</string>
     <string name="onboarding_lifestyle_subtitle">Esses hábitos mudam a rapidez com que a cafeína é eliminada e o grau de cautela da orientação de sono.</string>
@@ -380,7 +343,6 @@
     <string name="onboarding_smoking_info">Fumar pode acelerar a eliminação da cafeína em algumas pessoas ao afetar a atividade do CYP1A2.</string>
     <string name="onboarding_alcohol_info">O uso intenso de álcool pode retardar a eliminação e reduzir seu limite efetivo para dormir.</string>
     <string name="onboarding_caffeine_info">O consumo frequente e alto pode aumentar a tolerância, mesmo quando a orientação de sono ainda deve continuar conservadora.</string>
-
     <!-- Medical -->
     <string name="onboarding_medical_title">Mantenha a estimativa responsável</string>
     <string name="onboarding_medical_subtitle">Um pouco de contexto de saúde evita que o perfil inicial seja otimista demais.</string>
@@ -390,7 +352,6 @@
     <string name="onboarding_medications_section">Medicamentos que podem retardar a eliminação da cafeína</string>
     <string name="onboarding_medications_supporting">Escolha os que se aplicam. Se nenhum se aplicar, selecione Nenhum.</string>
     <string name="onboarding_medications_info">Alguns inibidores do CYP1A2 podem fazer a cafeína permanecer por muito mais tempo do que o normal.</string>
-
     <!-- Profile ready -->
     <string name="onboarding_profile_ready_title">Perfil pronto</string>
     <string name="onboarding_profile_ready_subtitle">Aqui está o perfil inicial que a Caffeine usará para sua curva ao vivo e previsão de hora de dormir.</string>
@@ -399,12 +360,10 @@
     <string name="onboarding_metric_half_life_description">Quanto tempo seu corpo leva para eliminar metade da cafeína que você consome.</string>
     <string name="onboarding_metric_sleep_threshold_description">Uma meta conservadora para a quantidade de cafeína ativa que ainda pode estar no seu organismo antes de dormir.</string>
     <string name="onboarding_metric_bedtime_description">Usada para projetar o cartão de previsão de sono e os marcadores do gráfico todos os dias.</string>
-
     <!-- Profile info dialogs -->
     <string name="onboarding_dialog_half_life_body">Meia-vida é o tempo estimado que seu corpo leva para eliminar metade da cafeína ainda ativa no organismo. Uma meia-vida maior significa que a cafeína pode permanecer até mais tarde no dia.</string>
     <string name="onboarding_dialog_sleep_threshold_body">Esta é uma meta conservadora para a quantidade de cafeína ativa que ainda pode estar no seu organismo antes que o sono tenha mais chance de ser afetado.</string>
     <string name="onboarding_dialog_bedtime_body">A hora de dormir alimenta o marcador do gráfico e o cartão de previsão de sono para que o app possa estimar quanta cafeína ainda pode estar ativa quando você tentar dormir.</string>
-
     <!-- Onboarding components -->
     <string name="onboarding_source_label">Fonte</string>
     <string name="onboarding_bedtime_aware">Consciência da hora de dormir desde a primeira xícara</string>
@@ -428,18 +387,15 @@
     <string name="onboarding_clock_6_am">6h</string>
     <string name="onboarding_clock_noon">MEIO-DIA</string>
     <string name="onboarding_clock_11_pm">23h</string>
-
     <!-- Half-life format -->
     <string name="onboarding_half_life_hours_only">%1$d h</string>
     <string name="onboarding_half_life_hours_minutes">%1$d h %2$d min</string>
-
     <!-- Bedtime dot slider labels -->
     <string name="bedtime_label_9_pm">21h</string>
     <string name="bedtime_label_10_pm">22h</string>
     <string name="bedtime_label_11_pm">23h</string>
     <string name="bedtime_label_12_am">0h</string>
     <string name="bedtime_label_1_am">1h</string>
-
     <!-- Onboarding enum labels -->
     <string name="age_under_65">Menos de 65</string>
     <string name="age_65_or_older">65 anos ou mais</string>
@@ -459,11 +415,9 @@
     <string name="medication_ciprofloxacin">Ciprofloxacino</string>
     <string name="medication_fluvoxamine">Fluvoxamina</string>
     <string name="medication_other_cyp1a2">Outro inibidor de CYP1A2</string>
-
     <!-- Health Connect hints in profile (deferred from batch 2) -->
     <string name="health_connect_sleep_hint_active">O Health Connect está fornecendo este valor</string>
     <string name="health_connect_sleep_hint_no_data">Ainda não há dados de sono no Health Connect - sua configuração é usada como fallback</string>
-
     <!-- What's New changelog sheet -->
     <string name="whats_new_title">Novidades</string>
     <string name="whats_new_version_badge">v2.2</string>
@@ -474,21 +428,18 @@
     <string name="whats_new_chart_body">Agora a curva de cafeína mostra imagens das bebidas, mais detalhes ao tocar e interações mais suaves com o gráfico.</string>
     <string name="whats_new_fixes_title">Correções e refinamentos</string>
     <string name="whats_new_fixes_body">A sincronização do Health Connect está mais confiável, com vários pequenos ajustes em todo o app.</string>
-
     <!-- Completion celebration -->
     <string name="celebration_profile_saved">Perfil salvo.</string>
     <string name="celebration_subtitle">A Caffeine Health está pronta quando você estiver.</string>
     <string name="celebration_next_log">Próximo: registre sua primeira xícara</string>
     <string name="celebration_next_log_supporting">Apenas um toque da tela inicial. A curva se preenche a partir daí.</string>
     <string name="celebration_take_me_home">Leve-me para o início</string>
-
     <!-- Widget preview sample data (shown in widget picker, not at runtime) -->
     <string name="widget_preview_safe_before_bed">Seguro antes de dormir</string>
     <string name="widget_preview_drink_name_1">Espresso</string>
     <string name="widget_preview_drink_mg_1">63 mg</string>
     <string name="widget_preview_drink_name_2">Chá verde</string>
     <string name="widget_preview_drink_mg_2">30 mg</string>
-
     <!-- Home view mode (Appearance settings) -->
     <string name="appearance_home_view_label">Estilo da tela inicial</string>
     <string name="appearance_home_view_summary">Escolha como a cafeína é mostrada na tela inicial</string>
@@ -500,7 +451,6 @@
     <string name="appearance_color_palette_matcha">Matcha</string>
     <string name="appearance_color_palette_ocean">Oceano</string>
     <string name="appearance_color_palette_sakura">Sakura</string>
-
     <!-- Circular caffeine view -->
     <string name="home_circular_view_cd">Indicador de progresso de cafeína</string>
     <string name="home_circular_mg_unit">mg</string>
