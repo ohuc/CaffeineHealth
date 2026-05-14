@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
-
     <!-- Widgets -->
     <string name="widget_caffeine_now_label">Koffeinspiegel</string>
     <string name="widget_caffeine_now_description">Zeigt deinen aktuellen aktiven Koffeinspiegel auf einen Blick.</string>
@@ -12,7 +12,6 @@
     <string name="widget_quick_add_description">Protokolliere deine letzten Getränke direkt vom Startbildschirm aus.</string>
     <string name="widget_combined_label">Caffeine-Dashboard</string>
     <string name="widget_combined_description">Sieh deinen Koffeinspiegel an und protokolliere Getränke, ohne die App zu öffnen.</string>
-
     <!-- Common actions -->
     <string name="action_back">Zurück</string>
     <string name="action_yes">Ja</string>
@@ -26,7 +25,6 @@
     <string name="action_close">Schließen</string>
     <string name="action_continue">Weiter</string>
     <string name="action_skip">Überspringen</string>
-
     <!-- Settings -->
     <string name="settings_title">Einstellungen</string>
     <string name="settings_caffeine_profile_title">Koffeinprofil</string>
@@ -48,7 +46,6 @@
     <string name="settings_whats_new_summary">Sieh dir an, was neu in v%s ist</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">GitHub-Repository</string>
-
     <!-- Appearance -->
     <string name="appearance_theme_label">Design</string>
     <string name="appearance_theme_mode_system">System</string>
@@ -56,7 +53,6 @@
     <string name="appearance_theme_mode_dark">Dunkel</string>
     <string name="appearance_dynamic_color_label">Dynamische Farben</string>
     <string name="appearance_dynamic_color_summary">Passe das Design an dein Hintergrundbild an</string>
-
     <!-- Home -->
     <string name="home_title">Startseite</string>
     <string name="home_my_consumptions">Meine Einträge</string>
@@ -73,13 +69,11 @@
     <string name="home_edit_drink">%1$s bearbeiten</string>
     <string name="home_serving">Portion</string>
     <string name="home_serving_unavailable">Für diesen Eintrag sind keine Portionsoptionen verfügbar.</string>
-
     <!-- Sleep forecast -->
     <string name="sleep_forecast_title">Schlafprognose</string>
     <string name="sleep_forecast_safe">Sicher schlafen um %1$s</string>
     <string name="sleep_forecast_may_affect">Kann den Schlaf beeinflussen (%1$dmg zur Schlafenszeit)</string>
     <string name="sleep_forecast_disruption">Schlafstörungen wahrscheinlich (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">Getränk hinzufügen</string>
     <string name="add_create_custom_cd">Benutzerdefiniertes Getränk erstellen</string>
@@ -95,26 +89,22 @@
     <string name="add_total_caffeine">Gesamtes Koffein</string>
     <string name="add_bedtime_warning">Zur Schlafenszeit werden noch etwa %1$d mg aktiv sein, über deiner Schlafgrenze von %2$d mg.</string>
     <string name="add_entry">Eintrag hinzufügen</string>
-
     <!-- Navigation -->
     <string name="nav_home">Startseite</string>
     <string name="nav_analytics">Analyse</string>
     <string name="nav_settings">Einstellungen</string>
     <string name="main_add_consumption">Eintrag hinzufügen</string>
-
     <!-- Notifications -->
     <string name="notification_channel_daily">Tägliche Erinnerungen</string>
     <string name="notification_channel_daily_description">Tägliche Erinnerungen zum Protokollieren von Koffein</string>
     <string name="notification_channel_inactivity">Inaktivitätswarnungen</string>
     <string name="notification_channel_inactivity_description">Erinnerung, wenn du längere Zeit kein Koffein protokolliert hast</string>
-
     <string name="notification_daily_title">Koffein-Check</string>
     <string name="notification_daily_morning">Zeit, deinen Morgenkaffee oder Tee zu protokollieren. Behalte deinen Koffeinkonsum heute im Blick.</string>
     <string name="notification_daily_afternoon">Zeit, dein Nachmittagskoffein zu protokollieren. Halte deine Aufzeichnungen aktuell.</string>
     <string name="notification_daily_evening">Zeit, dein Abendkoffein zu protokollieren. Erhalte genauere Schlafprognosen.</string>
     <string name="notification_inactivity_title">Koffeinprotokoll vergessen?</string>
     <string name="notification_inactivity_body">Seit deinem letzten Eintrag sind 5 Tage vergangen. Öffne die App, um deine Aufzeichnungen aktuell zu halten.</string>
-
     <!-- Analytics -->
     <string name="analytics_title">Analyse</string>
     <string name="analytics_caffeine_by_source">Koffein nach Quelle</string>
@@ -130,14 +120,12 @@
     <string name="analytics_top_source">Hauptquelle</string>
     <string name="analytics_sleep_threshold">Schlafgrenze</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Analytics ranges -->
     <string name="analytics_range_today">Heute</string>
     <string name="analytics_range_yesterday">Gestern</string>
     <string name="analytics_range_30_days">30 Tage</string>
     <string name="analytics_range_90_days">90 Tage</string>
     <string name="analytics_range_custom">Benutzerdefiniert</string>
-
     <!-- Onboarding -->
     <string name="onboarding_welcome_kicker">WILLKOMMEN</string>
     <string name="onboarding_intro_line_1">Verstehe dein\n</string>
@@ -146,10 +134,8 @@
     <string name="onboarding_intro_subtitle">Ein Live-Überblick darüber, was sich noch in deinem Körper befindet und ob dich der Espresso am Abend Schlaf kosten wird.</string>
     <string name="onboarding_get_started">Loslegen</string>
     <string name="onboarding_takes_a_minute">Dauert etwa eine Minute · Kein Konto erforderlich</string>
-
     <string name="onboarding_step_format">SCHRITT %1$d VON %2$d</string>
     <string name="onboarding_skip_for_now">Vorerst überspringen</string>
-
     <!-- Profile -->
     <string name="profile_estimated_half_life">Geschätzte Halbwertszeit</string>
     <string name="profile_half_life_value_modified">%1$d Std. (Basis %2$d Std.)</string>
@@ -157,7 +143,6 @@
     <string name="profile_typical_bedtime">Übliche Schlafenszeit</string>
     <string name="profile_sleep_threshold">Schlafgrenze</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
-
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
 </resources>
