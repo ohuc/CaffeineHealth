@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
-
     <!-- Widgets -->
     <string name="widget_caffeine_now_label">Koffeinnivå</string>
     <string name="widget_caffeine_now_description">Viser ditt nåværende aktive koffeinnivå med et raskt blikk.</string>
@@ -12,7 +12,6 @@
     <string name="widget_quick_add_description">Loggfør nylige drikker direkte fra startskjermen.</string>
     <string name="widget_combined_label">Caffeine-oversikt</string>
     <string name="widget_combined_description">Se koffeinnivået ditt og loggfør drikker uten å åpne appen.</string>
-
     <!-- Common actions -->
     <string name="action_back">Tilbake</string>
     <string name="action_yes">Ja</string>
@@ -26,7 +25,6 @@
     <string name="action_close">Lukk</string>
     <string name="action_continue">Fortsett</string>
     <string name="action_skip">Hopp over</string>
-
     <!-- Settings -->
     <string name="settings_title">Innstillinger</string>
     <string name="settings_caffeine_profile_title">Koffeinprofil</string>
@@ -48,7 +46,6 @@
     <string name="settings_whats_new_summary">Se hva som er nytt i v%s</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">GitHub-repositorium</string>
-
     <!-- Appearance -->
     <string name="appearance_theme_label">Tema</string>
     <string name="appearance_theme_mode_system">System</string>
@@ -56,7 +53,6 @@
     <string name="appearance_theme_mode_dark">Mørkt</string>
     <string name="appearance_dynamic_color_label">Dynamiske farger</string>
     <string name="appearance_dynamic_color_summary">Tilpass temaet til bakgrunnsbildet ditt</string>
-
     <!-- Home -->
     <string name="home_title">Hjem</string>
     <string name="home_my_consumptions">Mine inntak</string>
@@ -73,13 +69,11 @@
     <string name="home_edit_drink">Rediger %1$s</string>
     <string name="home_serving">Porsjon</string>
     <string name="home_serving_unavailable">Porsjonsalternativer er ikke tilgjengelige for denne oppføringen.</string>
-
     <!-- Sleep forecast -->
     <string name="sleep_forecast_title">Søvnprognose</string>
     <string name="sleep_forecast_safe">Trygt å sove kl. %1$s</string>
     <string name="sleep_forecast_may_affect">Kan påvirke søvnen (%1$dmg ved leggetid)</string>
     <string name="sleep_forecast_disruption">Søvnforstyrrelse sannsynlig (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">Legg til en drikk</string>
     <string name="add_create_custom_cd">Lag egendefinert drikk</string>
@@ -95,26 +89,22 @@
     <string name="add_total_caffeine">Totalt koffein</string>
     <string name="add_bedtime_warning">Ved leggetid vil omtrent %1$d mg fortsatt være aktivt, over søvngrensen din på %2$d mg.</string>
     <string name="add_entry">Legg til oppføring</string>
-
     <!-- Navigation -->
     <string name="nav_home">Hjem</string>
     <string name="nav_analytics">Analyse</string>
     <string name="nav_settings">Innstillinger</string>
     <string name="main_add_consumption">Legg til inntak</string>
-
     <!-- Notifications -->
     <string name="notification_channel_daily">Daglige påminnelser</string>
     <string name="notification_channel_daily_description">Daglige påminnelser om å loggføre koffein</string>
     <string name="notification_channel_inactivity">Inaktivitetsvarsler</string>
     <string name="notification_channel_inactivity_description">Påminnelse når du ikke har loggført koffein på en stund</string>
-
     <string name="notification_daily_title">Koffeinsjekk</string>
     <string name="notification_daily_morning">Tid for å loggføre morgenkaffen eller teen din. Hold koffeinsporingen oppdatert i dag.</string>
     <string name="notification_daily_afternoon">Tid for å loggføre ettermiddagskoffeinet ditt. Hold sporingen oppdatert.</string>
     <string name="notification_daily_evening">Tid for å loggføre kveldskoffeinet ditt. Få mer nøyaktige søvnprognoser.</string>
     <string name="notification_inactivity_title">Glemt å loggføre koffein?</string>
     <string name="notification_inactivity_body">Det har gått 5 dager siden du sist loggførte. Åpne appen for å holde sporingen nøyaktig.</string>
-
     <!-- Analytics -->
     <string name="analytics_title">Analyse</string>
     <string name="analytics_caffeine_by_source">Koffein etter kilde</string>
@@ -130,14 +120,12 @@
     <string name="analytics_top_source">Største kilde</string>
     <string name="analytics_sleep_threshold">Søvngrense</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Analytics ranges -->
     <string name="analytics_range_today">I dag</string>
     <string name="analytics_range_yesterday">I går</string>
     <string name="analytics_range_30_days">30 dager</string>
     <string name="analytics_range_90_days">90 dager</string>
     <string name="analytics_range_custom">Tilpasset</string>
-
     <!-- Onboarding -->
     <string name="onboarding_welcome_kicker">VELKOMMEN</string>
     <string name="onboarding_intro_line_1">Forstå\n</string>
@@ -146,10 +134,8 @@
     <string name="onboarding_intro_subtitle">En sanntidsoversikt over hva som fortsatt er i kroppen din, og om kveldens espresso kommer til å koste deg søvn.</string>
     <string name="onboarding_get_started">Kom i gang</string>
     <string name="onboarding_takes_a_minute">Tar omtrent ett minutt · Ingen konto nødvendig</string>
-
     <string name="onboarding_step_format">TRINN %1$d AV %2$d</string>
     <string name="onboarding_skip_for_now">Hopp over foreløpig</string>
-
     <!-- Profile -->
     <string name="profile_estimated_half_life">Estimert halveringstid</string>
     <string name="profile_half_life_value_modified">%1$d t (base %2$d t)</string>
@@ -157,7 +143,6 @@
     <string name="profile_typical_bedtime">Vanlig leggetid</string>
     <string name="profile_sleep_threshold">Søvngrense</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
-
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
 </resources>
