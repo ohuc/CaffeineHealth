@@ -472,6 +472,11 @@
     <string name="whats_new_circular_body">A new radial display shows your current caffeine level at a glance, right from the home screen.</string>
     <string name="whats_new_chart_title">Redesigned Chart</string>
     <string name="whats_new_chart_body">The caffeine curve now shows drink images, richer detail on tap, and smoother chart interactions.</string>
+    <!-- Circular home view trend indicator -->
+    <string name="home_trend_rising">Rising</string>
+    <string name="home_trend_steady">Steady</string>
+    <string name="home_trend_falling">Falling</string>
+
     <string name="whats_new_analytics_title">Redesigned Analytics</string>
     <string name="whats_new_analytics_body">Bedtime Impact now shows a full monthly calendar with streaks. When You Drink has cleaner bar charts with time-range filtering.</string>
     <string name="whats_new_languages_title">14 New Languages</string>

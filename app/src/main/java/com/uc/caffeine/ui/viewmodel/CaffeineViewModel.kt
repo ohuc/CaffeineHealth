@@ -72,6 +72,8 @@ sealed interface MyDataUiState {
     data class Error(val message: String) : MyDataUiState
 }
 
+enum class CaffeineTrend { RISING, STEADY, FALLING }
+
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db        = CaffeineDatabase.getDatabase(application)
@@ -357,6 +359,28 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = null
+    )
+
+    val caffeineTrend: StateFlow<CaffeineTrend> = combine(
+        currentCaffeineLevel,
+        allConsumptionEntries,
+        userSettings,
+    ) { currentLevel, allEntries, settings ->
+        val futureLevel = CaffeineCalculator.calculateCurrentLevel(
+            entries = allEntries,
+            currentTimeMillis = System.currentTimeMillis() + 5 * 60 * 1000L,
+            halfLifeMinutes = settings.effectiveHalfLifeMinutes,
+        )
+        when {
+            futureLevel > currentLevel + 1.0 -> CaffeineTrend.RISING
+            futureLevel < currentLevel - 1.0 -> CaffeineTrend.FALLING
+            else -> CaffeineTrend.STEADY
+        }
+    }.flowOn(Dispatchers.Default)
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = CaffeineTrend.STEADY,
     )
 
     // Reactive all-history caffeine curve data for charting

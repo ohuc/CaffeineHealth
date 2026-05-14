@@ -75,18 +75,18 @@ internal fun AnalyticsBedtimePage(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
+                BedtimeStreakCard(
+                    currentStreak = uiState.currentSleepStreak,
+                    sleepThresholdMg = uiState.sleepThresholdMg,
+                )
+            }
+
+            item {
                 BedtimeCalendarCard(
                     displayMonth = displayMonth,
                     dailyStats = uiState.bedtimeDailyStats,
                     onPrevMonth = { haptics.toggle(); displayMonth = displayMonth.minusMonths(1) },
                     onNextMonth = { haptics.toggle(); displayMonth = displayMonth.plusMonths(1) },
-                )
-            }
-
-            item {
-                BedtimeStreakCard(
-                    currentStreak = uiState.currentSleepStreak,
-                    sleepThresholdMg = uiState.sleepThresholdMg,
                 )
             }
         }

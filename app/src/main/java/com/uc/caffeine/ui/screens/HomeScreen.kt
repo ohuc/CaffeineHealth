@@ -88,6 +88,7 @@ import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.components.WhatsNewSheet
 import com.uc.caffeine.ui.components.shimmerEffect
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
+import com.uc.caffeine.ui.viewmodel.CaffeineTrend
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.ui.viewmodel.HomeScreenUiEvent
 import com.uc.caffeine.util.ConsumptionContributionDetail
@@ -139,6 +140,7 @@ fun HomeScreen(
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val groupedConsumptionEntries by viewModel.groupedConsumptionEntries.collectAsStateWithLifecycle()
     val showWhatsNew by viewModel.showWhatsNew.collectAsStateWithLifecycle()
+    val caffeineTrend by viewModel.caffeineTrend.collectAsStateWithLifecycle()
 
     var selectedEntry by remember { mutableStateOf<ConsumptionEntry?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -239,6 +241,7 @@ fun HomeScreen(
                             HomeViewMode.CIRCULAR -> CaffeineCircularView(
                                 currentMg = currentLevel,
                                 maxMg = userSettings.sleepThresholdMg.toDouble(),
+                                trend = caffeineTrend,
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
