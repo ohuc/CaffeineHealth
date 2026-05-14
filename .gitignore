@@ -6,7 +6,6 @@ local.properties
 # IDE
 .idea/
 .vscode/
-.github/
 .claude/
 
 CLAUDE.md
