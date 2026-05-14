@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
-
     <!-- Widgets -->
     <string name="widget_caffeine_now_label">ಕ್ಯಾಫೀನ್ ಮಟ್ಟ</string>
     <string name="widget_caffeine_now_description">ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸಕ್ರಿಯ ಕ್ಯಾಫೀನ್ ಮಟ್ಟವನ್ನು ಒಂದೇ ನೋಟದಲ್ಲಿ ತೋರಿಸುತ್ತದೆ.</string>
@@ -12,7 +12,6 @@
     <string name="widget_quick_add_description">ನಿಮ್ಮ ಇತ್ತೀಚಿನ ಪಾನೀಯಗಳನ್ನು ಹೋಮ್ ಸ್ಕ್ರೀನ್‌ನಿಂದಲೇ ದಾಖಲಿಸಿ.</string>
     <string name="widget_combined_label">Caffeine ಡ್ಯಾಶ್‌ಬೋರ್ಡ್</string>
     <string name="widget_combined_description">ಆ್ಯಪ್ ತೆರೆಯದೇ ನಿಮ್ಮ ಕ್ಯಾಫೀನ್ ಮಟ್ಟವನ್ನು ನೋಡಿ ಮತ್ತು ಪಾನೀಯಗಳನ್ನು ದಾಖಲಿಸಿ.</string>
-
     <!-- Common actions -->
     <string name="action_back">ಹಿಂದೆ</string>
     <string name="action_yes">ಹೌದು</string>
@@ -26,7 +25,6 @@
     <string name="action_close">ಮುಚ್ಚಿ</string>
     <string name="action_continue">ಮುಂದುವರಿಸಿ</string>
     <string name="action_skip">ಬಿಟ್ಟುಬಿಡಿ</string>
-
     <!-- Settings -->
     <string name="settings_title">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
     <string name="settings_caffeine_profile_title">ಕ್ಯಾಫೀನ್ ಪ್ರೊಫೈಲ್</string>
@@ -48,7 +46,6 @@
     <string name="settings_whats_new_summary">v%s ನಲ್ಲಿ ಹೊಸದಾಗಿ ಏನು ಬಂದಿದೆ ನೋಡಿ</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">GitHub ರೆಪೊಸಿಟರಿ</string>
-
     <!-- Appearance -->
     <string name="appearance_theme_label">ಥೀಮ್</string>
     <string name="appearance_theme_mode_system">ಸಿಸ್ಟಮ್</string>
@@ -56,7 +53,6 @@
     <string name="appearance_theme_mode_dark">ಕತ್ತಲೆ</string>
     <string name="appearance_dynamic_color_label">ಡೈನಾಮಿಕ್ ಬಣ್ಣಗಳು</string>
     <string name="appearance_dynamic_color_summary">ನಿಮ್ಮ ವಾಲ್‌ಪೇಪರ್‌ಗೆ ಅನುಗುಣವಾಗಿ ಥೀಮ್ ಬದಲಿಸಿ</string>
-
     <!-- Home -->
     <string name="home_title">ಮುಖಪುಟ</string>
     <string name="home_my_consumptions">ನನ್ನ ಸೇವನೆಗಳು</string>
@@ -73,13 +69,11 @@
     <string name="home_edit_drink">%1$s ತಿದ್ದು</string>
     <string name="home_serving">ಪರಿಮಾಣ</string>
     <string name="home_serving_unavailable">ಈ ದಾಖಲೆಗೆ ಪರಿಮಾಣ ಆಯ್ಕೆಗಳು ಲಭ್ಯವಿಲ್ಲ.</string>
-
     <!-- Sleep forecast -->
     <string name="sleep_forecast_title">ನಿದ್ರೆ ಮುನ್ಸೂಚನೆ</string>
     <string name="sleep_forecast_safe">%1$s ಸಮಯಕ್ಕೆ ಮಲಗುವುದು ಸುರಕ್ಷಿತ</string>
     <string name="sleep_forecast_may_affect">ನಿದ್ರೆಗೆ ಪರಿಣಾಮ ಬೀರಬಹುದು (%1$dmg ಮಲಗುವ ವೇಳೆಗೆ)</string>
     <string name="sleep_forecast_disruption">ನಿದ್ರೆಗೆ ಅಡ್ಡಿಯಾಗುವ ಸಾಧ್ಯತೆ ಇದೆ (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">ಪಾನೀಯ ಸೇರಿಸಿ</string>
     <string name="add_create_custom_cd">ಕಸ್ಟಮ್ ಪಾನೀಯ ರಚಿಸಿ</string>
@@ -95,26 +89,22 @@
     <string name="add_total_caffeine">ಒಟ್ಟು ಕ್ಯಾಫೀನ್</string>
     <string name="add_bedtime_warning">ಮಲಗುವ ವೇಳೆಗೆ ಸುಮಾರು %1$d mg ಇನ್ನೂ ಸಕ್ರಿಯವಾಗಿರುತ್ತದೆ, ಇದು ನಿಮ್ಮ %2$d mg ನಿದ್ರೆ ಮಿತಿಯನ್ನು ಮೀರುತ್ತದೆ.</string>
     <string name="add_entry">ದಾಖಲೆ ಸೇರಿಸಿ</string>
-
     <!-- Navigation -->
     <string name="nav_home">ಮುಖಪುಟ</string>
     <string name="nav_analytics">ವಿಶ್ಲೇಷಣೆ</string>
     <string name="nav_settings">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
     <string name="main_add_consumption">ಸೇವನೆ ಸೇರಿಸಿ</string>
-
     <!-- Notifications -->
     <string name="notification_channel_daily">ದೈನಂದಿನ ಜ್ಞಾಪನೆಗಳು</string>
     <string name="notification_channel_daily_description">ಕ್ಯಾಫೀನ್ ದಾಖಲಿಸಲು ದೈನಂದಿನ ಜ್ಞಾಪನೆಗಳು</string>
     <string name="notification_channel_inactivity">ನಿಷ್ಕ್ರಿಯತಾ ಎಚ್ಚರಿಕೆಗಳು</string>
     <string name="notification_channel_inactivity_description">ನೀವು ಸ್ವಲ್ಪ ಸಮಯದಿಂದ ಕ್ಯಾಫೀನ್ ದಾಖಲಿಸದಿದ್ದಾಗ ಜ್ಞಾಪನೆ</string>
-
     <string name="notification_daily_title">ಕ್ಯಾಫೀನ್ ಪರಿಶೀಲನೆ</string>
     <string name="notification_daily_morning">ನಿಮ್ಮ ಬೆಳಗಿನ ಕಾಫಿ ಅಥವಾ ಚಹಾವನ್ನು ದಾಖಲಿಸುವ ಸಮಯವಾಗಿದೆ. ಇಂದು ನಿಮ್ಮ ಕ್ಯಾಫೀನ್ ಸೇವನೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ.</string>
     <string name="notification_daily_afternoon">ನಿಮ್ಮ ಮಧ್ಯಾಹ್ನದ ಕ್ಯಾಫೀನ್ ದಾಖಲಿಸುವ ಸಮಯವಾಗಿದೆ. ನಿಮ್ಮ ಟ್ರ್ಯಾಕಿಂಗ್ ಅನ್ನು ನವೀಕರಿಸಿ.</string>
     <string name="notification_daily_evening">ನಿಮ್ಮ ಸಂಜೆ ಕ್ಯಾಫೀನ್ ದಾಖಲಿಸುವ ಸಮಯವಾಗಿದೆ. ಇನ್ನಷ್ಟು ನಿಖರವಾದ ನಿದ್ರೆ ಮುನ್ಸೂಚನೆಗಳನ್ನು ಪಡೆಯಿರಿ.</string>
     <string name="notification_inactivity_title">ಕ್ಯಾಫೀನ್ ದಾಖಲಿಸುವುದನ್ನು ಮರೆತಿದ್ದೀರಾ?</string>
     <string name="notification_inactivity_body">ನಿಮ್ಮ ಕೊನೆಯ ದಾಖಲೆಯಿಂದ 5 ದಿನಗಳು ಕಳೆದಿವೆ. ನಿಮ್ಮ ಟ್ರ್ಯಾಕಿಂಗ್ ಅನ್ನು ನಿಖರವಾಗಿಡಲು ಆ್ಯಪ್ ತೆರೆಯಿರಿ.</string>
-
     <!-- Analytics -->
     <string name="analytics_title">ವಿಶ್ಲೇಷಣೆ</string>
     <string name="analytics_caffeine_by_source">ಮೂಲದ ಪ್ರಕಾರ ಕ್ಯಾಫೀನ್</string>
@@ -130,14 +120,12 @@
     <string name="analytics_top_source">ಮುಖ್ಯ ಮೂಲ</string>
     <string name="analytics_sleep_threshold">ನಿದ್ರೆ ಮಿತಿ</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Analytics ranges -->
     <string name="analytics_range_today">ಇಂದು</string>
     <string name="analytics_range_yesterday">ನಿನ್ನೆ</string>
     <string name="analytics_range_30_days">30 ದಿನಗಳು</string>
     <string name="analytics_range_90_days">90 ದಿನಗಳು</string>
     <string name="analytics_range_custom">ಕಸ್ಟಮ್</string>
-
     <!-- Onboarding -->
     <string name="onboarding_welcome_kicker">ಸ್ವಾಗತ</string>
     <string name="onboarding_intro_line_1">ನಿಮ್ಮ\n</string>
@@ -146,10 +134,8 @@
     <string name="onboarding_intro_subtitle">ನಿಮ್ಮ ದೇಹದಲ್ಲಿ ಇನ್ನೂ ಏನು ಉಳಿದಿದೆ ಮತ್ತು ಇಂದಿನ ರಾತ್ರಿ ಕುಡಿಯುವ ಎಸ್ಪ್ರೆಸ್ಸೋ ನಿಮ್ಮ ನಿದ್ರೆಗೆ ಪರಿಣಾಮ ಬೀರುತ್ತದೆಯೇ ಎಂಬುದನ್ನು ತೋರಿಸುವ ನೇರ ನೋಟ.</string>
     <string name="onboarding_get_started">ಪ್ರಾರಂಭಿಸಿ</string>
     <string name="onboarding_takes_a_minute">ಸುಮಾರು ಒಂದು ನಿಮಿಷ ತೆಗೆದುಕೊಳ್ಳುತ್ತದೆ · ಖಾತೆ ಅಗತ್ಯವಿಲ್ಲ</string>
-
     <string name="onboarding_step_format">ಹಂತ %1$d / %2$d</string>
     <string name="onboarding_skip_for_now">ಈಗಕ್ಕೆ ಬಿಟ್ಟುಬಿಡಿ</string>
-
     <!-- Profile -->
     <string name="profile_estimated_half_life">ಅಂದಾಜು ಹಾಫ್-ಲೈಫ್</string>
     <string name="profile_half_life_value_modified">%1$d ಗಂ (ಮೂಲ %2$d ಗಂ)</string>
@@ -157,7 +143,6 @@
     <string name="profile_typical_bedtime">ಸಾಮಾನ್ಯ ನಿದ್ರೆಯ ಸಮಯ</string>
     <string name="profile_sleep_threshold">ನಿದ್ರೆ ಮಿತಿ</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
-
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
 </resources>
