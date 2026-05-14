@@ -113,6 +113,15 @@ import com.uc.caffeine.util.formatServingSummary
 import com.uc.caffeine.util.formatUnitLabel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.IconButton
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -431,27 +440,55 @@ fun AddScreen(
     }
 
     selectedDrink?.let { drink ->
+        var isEditingCustomDrink by remember(drink.id) { mutableStateOf(false) }
+
         ModalBottomSheet(
             onDismissRequest = { selectedDrink = null },
             sheetState = sheetState,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            AddDrinkServingSheet(
-                preset = drink,
-                viewModel = viewModel,
-                userSettings = userSettings,
-                todayEntries = todayEntries,
-                onAdd = { quantity, unit, startedAtMillis, durationMinutes ->
-                    haptics.confirm()
-                    viewModel.logDrinkFromAddScreen(
+            AnimatedContent(
+                targetState = isEditingCustomDrink,
+                transitionSpec = {
+                    if (targetState) {
+                        slideInHorizontally { it } + fadeIn() togetherWith
+                            slideOutHorizontally { -it } + fadeOut()
+                    } else {
+                        slideInHorizontally { -it } + fadeIn() togetherWith
+                            slideOutHorizontally { it } + fadeOut()
+                    }
+                },
+                label = "edit-custom-drink-transition",
+            ) { editing ->
+                if (editing) {
+                    EditCustomDrinkSheet(
                         preset = drink,
-                        quantity = quantity,
-                        unit = unit,
-                        startedAtMillis = startedAtMillis,
-                        durationMinutes = durationMinutes,
+                        viewModel = viewModel,
+                        onBack = { isEditingCustomDrink = false },
+                        onDone = { selectedDrink = null },
+                    )
+                } else {
+                    AddDrinkServingSheet(
+                        preset = drink,
+                        viewModel = viewModel,
+                        userSettings = userSettings,
+                        todayEntries = todayEntries,
+                        onAdd = { quantity, unit, startedAtMillis, durationMinutes ->
+                            haptics.confirm()
+                            viewModel.logDrinkFromAddScreen(
+                                preset = drink,
+                                quantity = quantity,
+                                unit = unit,
+                                startedAtMillis = startedAtMillis,
+                                durationMinutes = durationMinutes,
+                            )
+                        },
+                        onEditCustomDrink = if (drink.isCustom) {
+                            { isEditingCustomDrink = true }
+                        } else null,
                     )
                 }
-            )
+            }
         }
     }
 
@@ -483,10 +520,12 @@ private fun AddDrinkServingSheet(
     userSettings: com.uc.caffeine.data.UserSettings,
     todayEntries: List<ConsumptionEntry>,
     onAdd: (Int, DrinkUnit, Long, Int) -> Unit,
+    onEditCustomDrink: (() -> Unit)? = null,
 ) {
     val units by produceState<List<DrinkUnit>?>(initialValue = null, key1 = preset.id) {
         value = viewModel.getUnitsForDrink(preset.id)
     }
+    val frozenTodayEntries = remember { todayEntries }
     var quantity by remember(preset.id) { mutableIntStateOf(1) }
     var startedAtMillis by remember(preset.id) { mutableStateOf(System.currentTimeMillis()) }
     var durationMinutes by remember(preset.id) {
@@ -613,7 +652,7 @@ private fun AddDrinkServingSheet(
             }
 
             val caffeineAtBedtimeMg = remember(
-                todayEntries, totalCaffeineMg, startedAtMillis, durationMinutes, userSettings,
+                totalCaffeineMg, startedAtMillis, durationMinutes, userSettings,
             ) {
                 if (totalCaffeineMg == 0) return@remember 0.0
                 val virtualEntry = ConsumptionEntry(
@@ -627,7 +666,7 @@ private fun AddDrinkServingSheet(
                 )
                 val bedtimeMillis = calculateNextBedtimeMillis(System.currentTimeMillis(), userSettings)
                 CaffeineCalculator.calculateCurrentLevel(
-                    entries = todayEntries + virtualEntry,
+                    entries = frozenTodayEntries + virtualEntry,
                     currentTimeMillis = bedtimeMillis,
                     halfLifeMinutes = userSettings.effectiveHalfLifeMinutes,
                 )
@@ -685,6 +724,21 @@ private fun AddDrinkServingSheet(
                     .height(56.dp),
             ) {
                 Text(stringResource(R.string.add_entry))
+            }
+
+            if (onEditCustomDrink != null) {
+                TextButton(
+                    onClick = onEditCustomDrink,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.custom_drink_edit_button))
+                }
             }
         }
 
@@ -1048,6 +1102,235 @@ private fun CreateCustomDrinkSheet(
                 .height(56.dp),
         ) {
             Text(stringResource(R.string.custom_drink_save))
+        }
+
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun EditCustomDrinkSheet(
+    preset: DrinkPreset,
+    viewModel: CaffeineViewModel,
+    onBack: () -> Unit,
+    onDone: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val haptics = rememberAppHaptics()
+
+    val existingUnit by produceState<DrinkUnit?>(initialValue = null, key1 = preset.id) {
+        value = viewModel.getUnitsForDrink(preset.id).firstOrNull()
+    }
+
+    var name by remember(preset.id) { mutableStateOf(preset.name) }
+    var emoji by remember(preset.id) { mutableStateOf(preset.emoji) }
+    var imageUri by remember(preset.id) { mutableStateOf(preset.imageName) }
+    var selectedCategory by remember(preset.id) { mutableStateOf(preset.category) }
+    var selectedUnitKey by remember(preset.id) { mutableStateOf(preset.defaultUnit) }
+    var caffeineText by remember(preset.id, existingUnit) {
+        val v = existingUnit?.caffeineMg
+        mutableStateOf(
+            if (v != null) {
+                if (v == v.toLong().toDouble()) v.toLong().toString() else v.toString()
+            } else {
+                preset.defaultCaffeineMg.toString()
+            }
+        )
+    }
+
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val path = viewModel.copyCustomDrinkImage(uri)
+                if (path != null) imageUri = path
+            }
+        }
+    }
+
+    val caffeineValue = caffeineText.toDoubleOrNull()
+    val isValid = name.isNotBlank() && caffeineValue != null && caffeineValue > 0
+
+    val categoryKeys = CategoryUtils.getCategoryOrder()
+    val unitKeys = listOf(
+        "cup", "shot", "can", "bottle", "mug", "ml", "fl oz", "liter",
+        "g", "pod", "teabag", "pill", "piece", "bar", "scoop",
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = { haptics.navigation(); onBack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.action_back),
+                )
+            }
+            Text(
+                text = stringResource(R.string.home_edit_drink, preset.name),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            TextButton(
+                enabled = isValid,
+                onClick = {
+                    val caffeine = caffeineValue ?: return@TextButton
+                    haptics.confirm()
+                    viewModel.updateCustomDrink(
+                        preset = preset,
+                        name = name.trim(),
+                        emoji = emoji.ifBlank { "☕" },
+                        imageUri = imageUri,
+                        category = selectedCategory,
+                        unitKey = selectedUnitKey,
+                        caffeineMg = caffeine,
+                    )
+                    onDone()
+                }
+            ) {
+                Text(stringResource(R.string.action_save))
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.clickable { pickImage.launch("image/*") }) {
+                ExpressiveIconBadge(index = preset.id, size = 76.dp) {
+                    DrinkIcon(
+                        imageName = imageUri,
+                        emoji = emoji.ifBlank { "☕" },
+                        contentDescription = stringResource(R.string.custom_drink_image_picker_cd),
+                        modifier = Modifier.size(48.dp),
+                        emojiSize = MaterialTheme.typography.headlineLarge.fontSize,
+                    )
+                }
+            }
+            Text(
+                text = name.ifBlank { "—" },
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        HorizontalDivider()
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text(stringResource(R.string.custom_drink_name_label)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = emoji,
+                onValueChange = { emoji = it },
+                label = { Text(stringResource(R.string.custom_drink_emoji_label)) },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = { pickImage.launch("image/*") }) {
+                Icon(
+                    imageVector = Icons.Filled.Image,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.size(6.dp))
+                Text(stringResource(if (imageUri.isBlank()) R.string.custom_drink_pick_image else R.string.custom_drink_change_image))
+            }
+            if (imageUri.isNotBlank()) {
+                TextButton(onClick = { imageUri = "" }) {
+                    Text(stringResource(R.string.custom_drink_remove))
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.custom_drink_category), style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            ) {
+                categoryKeys.forEachIndexed { index, key ->
+                    ToggleButton(
+                        checked = selectedCategory == key,
+                        onCheckedChange = { if (it) { haptics.toggle(); selectedCategory = key } },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            categoryKeys.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                    ) {
+                        Text(
+                            text = CategoryUtils.getCategoryButtonLabel(
+                                CategoryUtils.getCategoryDisplayName(key)
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.custom_drink_serving_unit), style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            ) {
+                unitKeys.forEachIndexed { index, key ->
+                    ToggleButton(
+                        checked = selectedUnitKey == key,
+                        onCheckedChange = { if (it) { haptics.toggle(); selectedUnitKey = key } },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            unitKeys.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                    ) {
+                        Text(
+                            text = formatUnitLabel(key),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.custom_drink_caffeine_per_serving), style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = caffeineText,
+                onValueChange = { caffeineText = it.filter { c -> c.isDigit() || c == '.' } },
+                label = { Text(stringResource(R.string.custom_drink_amount_label)) },
+                suffix = { Text(stringResource(R.string.unit_mg)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
 
         Spacer(Modifier.height(8.dp))

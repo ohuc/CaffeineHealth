@@ -131,7 +131,7 @@
     <string name="health_connect_caffeine_and_sleep_active">Caffeine sync and sleep data active</string>
     <string name="health_connect_caffeine_active">Caffeine sync active</string>
     <string name="health_connect_sleep_active">Sleep data active</string>
-    <string name="health_connect_description"><![CDATA[Syncs your <b>caffeine intake</b> and if sleep access is granted libs<b>auto-sets your bedtime</b> from Health Connect.]]></string>
+    <string name="health_connect_description"><![CDATA[Syncs your <b>caffeine intake</b> and if sleep access is granted, <b>auto-sets your bedtime</b> from Health Connect.]]></string>
     <string name="health_connect_no_sleep_warning">No sleep data found in Health Connect. Your manual bedtime is used until sleep sessions are recorded.</string>
     <string name="health_connect_bedtime_source">Bedtime source</string>
     <string name="health_connect_last_night">Last night\'s sleep</string>
@@ -268,6 +268,14 @@
     <string name="analytics_bedtime_impact">Bedtime impact</string>
     <string name="analytics_bedtime_impact_summary">How much caffeine is still active by the time you sleep.</string>
     <string name="analytics_bedtime_card_supporting">Average caffeine still active by bedtime for each period.</string>
+    <string name="analytics_bedtime_calendar_prev_month">Previous month</string>
+    <string name="analytics_bedtime_calendar_next_month">Next month</string>
+    <string name="analytics_bedtime_safe_nights_summary">%1$d nights below your sleep threshold in %2$s</string>
+    <string name="analytics_bedtime_no_data_month">No data recorded in %1$s</string>
+    <string name="analytics_bedtime_threshold_label">Sleep threshold: %1$d mg</string>
+    <string name="analytics_streak_count_label">%1$d-night streak</string>
+    <string name="analytics_streak_sublabel">Consecutive safe bedtimes</string>
+    <string name="analytics_streak_zero_label">Start your streak tonight</string>
     <string name="analytics_when_you_drink">When you drink caffeine</string>
     <string name="analytics_when_you_drink_summary">How your intake is spread across the day.</string>
     <string name="analytics_total_caffeine_logged">Total caffeine logged in this range</string>
@@ -458,14 +466,18 @@
 
     <!-- What's New changelog sheet -->
     <string name="whats_new_title">What\'s New</string>
-    <string name="whats_new_version_badge">v2.0</string>
+    <string name="whats_new_version_badge">v2.2</string>
     <string name="whats_new_got_it">Got it</string>
-    <string name="whats_new_widgets_title">Home Screen Widgets</string>
-    <string name="whats_new_widgets_body">Track your caffeine level and log drinks right from your home screen. No app tap needed.</string>
-    <string name="whats_new_language_title">Language Selection</string>
-    <string name="whats_new_language_body">Hindi is now supported. Switch in Settings → Language, and the app is now open for community translations.</string>
-    <string name="whats_new_ui_title">Polished Interface</string>
-    <string name="whats_new_ui_body">Refreshed cards, smoother animations, and expressive icon shapes throughout the app.</string>
+    <string name="whats_new_circular_title">Circular View</string>
+    <string name="whats_new_circular_body">A new radial display shows your current caffeine level at a glance, right from the home screen.</string>
+    <string name="whats_new_chart_title">Redesigned Chart</string>
+    <string name="whats_new_chart_body">The caffeine curve now shows drink images, richer detail on tap, and smoother chart interactions.</string>
+    <string name="whats_new_analytics_title">Redesigned Analytics</string>
+    <string name="whats_new_analytics_body">Bedtime Impact now shows a full monthly calendar with streaks. When You Drink has cleaner bar charts with time-range filtering.</string>
+    <string name="whats_new_languages_title">14 New Languages</string>
+    <string name="whats_new_languages_body">Danish, Dutch, Finnish, French, German, Icelandic, Kannada, Malayalam, Norwegian, Portuguese, Spanish, Swedish, Tamil, and Telugu are now supported.</string>
+    <string name="whats_new_fixes_title">Fixes and Polish</string>
+    <string name="whats_new_fixes_body">Health Connect sync is more reliable, with a handful of smaller refinements across the app.</string>
 
     <!-- Completion celebration -->
     <string name="celebration_profile_saved">Profile saved.</string>
@@ -486,6 +498,12 @@
     <string name="appearance_home_view_summary">Choose how caffeine is shown on the home screen</string>
     <string name="appearance_home_view_graph">Graph</string>
     <string name="appearance_home_view_circular">Circular</string>
+    <string name="appearance_color_palette_label">Color palette</string>
+    <string name="appearance_color_palette_dynamic">Dynamic</string>
+    <string name="appearance_color_palette_espresso">Espresso</string>
+    <string name="appearance_color_palette_matcha">Matcha</string>
+    <string name="appearance_color_palette_ocean">Ocean</string>
+    <string name="appearance_color_palette_sakura">Sakura</string>
 
     <!-- Circular caffeine view -->
     <string name="home_circular_view_cd">Caffeine progress indicator</string>

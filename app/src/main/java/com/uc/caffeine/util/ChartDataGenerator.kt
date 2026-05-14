@@ -103,6 +103,7 @@ object ChartDataGenerator {
                 domainStartTime = domainStartTime,
                 endTime = endTime,
                 currentTime = currentTime,
+                dataPoints = dataPoints,
             ),
             thresholdLevel = settings.sleepThresholdMg.toDouble(),
             bedtimeMillis = bedtime,
@@ -420,6 +421,7 @@ object ChartDataGenerator {
         domainStartTime: Long,
         endTime: Long,
         currentTime: Long,
+        dataPoints: List<CaffeineDataPoint>,
     ): List<ChartConsumptionMarker> {
         return entries
             .asSequence()
@@ -430,23 +432,23 @@ object ChartDataGenerator {
                 roundDownToInterval(entry.startedAtMillis, samplingBucket)
             }
             .map { (bucketStartTime, groupedEntries) ->
+                val yValue = dataPoints.minByOrNull { abs(it.timestampMillis - bucketStartTime) }?.caffeineLevel ?: 0.0
                 ChartConsumptionMarker(
                     xValue = timestampToDomainX(domainStartTime, bucketStartTime),
-                    emojiLabel = groupedEntries.toEmojiLabel(),
-                    timestampMillis = groupedEntries.first().startedAtMillis
+                    yValue = yValue,
+                    entries = groupedEntries.map { entry ->
+                        ChartMarkerEntry(
+                            entryId = entry.id,
+                            drinkName = entry.drinkName,
+                            emoji = entry.emoji,
+                            imageName = entry.imageName,
+                            caffeineMg = entry.caffeineMg,
+                        )
+                    },
+                    timestampMillis = groupedEntries.first().startedAtMillis,
                 )
             }
             .sortedBy { it.xValue }
-    }
-
-    private fun List<ConsumptionEntry>.toEmojiLabel(): String {
-        if (isEmpty()) return ""
-
-        val emojis = map { it.emoji }
-        return when {
-            emojis.size <= 3 -> emojis.joinToString(separator = "")
-            else -> emojis.take(2).joinToString(separator = "") + "+${emojis.size - 2}"
-        }
     }
 
     private fun roundDownToInterval(timestamp: Long, intervalMillis: Long): Long {
@@ -476,10 +478,19 @@ data class ChartData(
     val domainStartMillis: Long,
 )
 
+data class ChartMarkerEntry(
+    val entryId: Int,
+    val drinkName: String,
+    val emoji: String,
+    val imageName: String,
+    val caffeineMg: Int,
+)
+
 data class ChartConsumptionMarker(
     val xValue: Double,
-    val emojiLabel: String,
-    val timestampMillis: Long
+    val yValue: Double,
+    val entries: List<ChartMarkerEntry>,
+    val timestampMillis: Long,
 )
 
 data class ConsumptionContributionPoint(

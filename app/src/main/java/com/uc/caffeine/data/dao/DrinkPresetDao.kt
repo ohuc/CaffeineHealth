@@ -3,6 +3,7 @@ package com.uc.caffeine.data.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.uc.caffeine.data.model.DrinkPreset
 import kotlinx.coroutines.flow.Flow
 
@@ -36,6 +37,9 @@ interface DrinkPresetDao {
 
     @Query("SELECT * FROM drink_presets WHERE isCustom = 1 ORDER BY name ASC")
     suspend fun getCustomPresets(): List<DrinkPreset>
+
+    @Update
+    suspend fun update(preset: DrinkPreset)
 
     @Query("DELETE FROM drink_presets WHERE isCustom = 1")
     suspend fun deleteCustomPresets()

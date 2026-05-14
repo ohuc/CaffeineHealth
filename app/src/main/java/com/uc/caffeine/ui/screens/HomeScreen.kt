@@ -24,7 +24,9 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DonutLarge
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -107,6 +109,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ToggleButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
@@ -161,7 +164,33 @@ fun HomeScreen(
     }
 
     CaffeineScreenScaffold(
-        title = stringResource(R.string.home_title)
+        title = stringResource(R.string.home_title),
+        actions = {
+            val modes = HomeViewMode.entries
+            modes.forEachIndexed { index, mode ->
+                ToggleButton(
+                    checked = userSettings.homeViewMode == mode,
+                    onCheckedChange = { if (it) { haptics.toggle(); viewModel.updateHomeViewMode(mode) } },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        modes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                ) {
+                    Icon(
+                        imageVector = when (mode) {
+                            HomeViewMode.GRAPH -> Icons.AutoMirrored.Filled.ShowChart
+                            HomeViewMode.CIRCULAR -> Icons.Filled.DonutLarge
+                        },
+                        contentDescription = when (mode) {
+                            HomeViewMode.GRAPH -> stringResource(R.string.home_view_toggle_to_graph_cd)
+                            HomeViewMode.CIRCULAR -> stringResource(R.string.home_view_toggle_to_circular_cd)
+                        },
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
     ) { bottomPadding ->
         ElevatedCard(
             modifier = Modifier

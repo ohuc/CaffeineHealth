@@ -1,0 +1,163 @@
+<resources>
+    <string name="app_name">Caffeine Health</string>
+    <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
+    <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
+    <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
+    <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
+
+    <!-- Widgets -->
+    <string name="widget_caffeine_now_label">கஃபீன் அளவு</string>
+    <string name="widget_caffeine_now_description">உங்கள் தற்போதைய செயல்பாட்டிலுள்ள கஃபீன் அளவை ஒரு பார்வையில் காண்பிக்கிறது.</string>
+    <string name="widget_quick_add_label">விரைவு பதிவு</string>
+    <string name="widget_quick_add_description">உங்கள் சமீபத்திய பானங்களை முகப்பு திரையிலிருந்தே பதிவு செய்யுங்கள்.</string>
+    <string name="widget_combined_label">Caffeine டாஷ்போர்டு</string>
+    <string name="widget_combined_description">ஆப்பைத் திறக்காமல் உங்கள் கஃபீன் அளவைப் பார்த்து பானங்களை பதிவு செய்யுங்கள்.</string>
+
+    <!-- Common actions -->
+    <string name="action_back">பின்னுக்கு</string>
+    <string name="action_yes">ஆம்</string>
+    <string name="action_no">இல்லை</string>
+    <string name="action_cancel">ரத்து செய்</string>
+    <string name="action_add">சேர்</string>
+    <string name="action_expand">விரிவாக்கு</string>
+    <string name="action_collapse">சுருக்கு</string>
+    <string name="action_save">சேமி</string>
+    <string name="action_ok">சரி</string>
+    <string name="action_close">மூடு</string>
+    <string name="action_continue">தொடர்</string>
+    <string name="action_skip">தவிர்</string>
+
+    <!-- Settings -->
+    <string name="settings_title">அமைப்புகள்</string>
+    <string name="settings_caffeine_profile_title">கஃபீன் சுயவிவரம்</string>
+    <string name="settings_caffeine_profile_summary">அரை ஆயுள், உறக்க நேரம் மற்றும் பாதுகாப்பான வரம்பு</string>
+    <string name="settings_appearance_title">தோற்றம்</string>
+    <string name="settings_appearance_summary">தீம் முறை மற்றும் இயங்கும் நிறங்கள்</string>
+    <string name="settings_language_title">மொழி</string>
+    <string name="settings_language_summary">உங்கள் மொழியைத் தேர்வு செய்யுங்கள்</string>
+    <string name="settings_date_time_title">தேதி மற்றும் நேரம்</string>
+    <string name="settings_date_time_summary">கடிகாரம், தேதி வடிவம் மற்றும் நேர மண்டலம்</string>
+    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_summary">கஃபீன் தரவை Health Connect உடன் ஒத்திசைக்கவும்</string>
+    <string name="settings_my_data_title">என் தரவு</string>
+    <string name="settings_my_data_summary">உங்கள் தரவை ஏற்றுமதி மற்றும் இறக்குமதி செய்யுங்கள்</string>
+    <string name="settings_notifications_title">அறிவிப்புகள்</string>
+    <string name="settings_notifications_summary">தினசரி நினைவூட்டல்கள் மற்றும் செயலற்ற எச்சரிக்கைகள்</string>
+    <string name="settings_about_title">பற்றி</string>
+    <string name="settings_whats_new_title">புதியவை</string>
+    <string name="settings_whats_new_summary">v%s இல் புதியதைப் பாருங்கள்</string>
+    <string name="settings_about_version">v%s</string>
+    <string name="settings_about_github_cd">GitHub சேமிப்பகம்</string>
+
+    <!-- Appearance -->
+    <string name="appearance_theme_label">தீம்</string>
+    <string name="appearance_theme_mode_system">கணினி</string>
+    <string name="appearance_theme_mode_light">ஒளிரும்</string>
+    <string name="appearance_theme_mode_dark">இருண்ட</string>
+    <string name="appearance_dynamic_color_label">இயங்கும் நிறங்கள்</string>
+    <string name="appearance_dynamic_color_summary">உங்கள் வால்பேப்பருக்கு ஏற்ப தீமை மாற்றவும்</string>
+
+    <!-- Home -->
+    <string name="home_title">முகப்பு</string>
+    <string name="home_my_consumptions">என் உட்கொள்ளல்கள்</string>
+    <string name="home_no_consumptions">இன்னும் எந்த உட்கொள்ளலும் பதிவு செய்யப்படவில்லை</string>
+    <string name="home_started_meta">%1$s அன்று தொடங்கியது</string>
+    <string name="home_action_edit">திருத்து</string>
+    <string name="home_action_duplicate">நகலெடு</string>
+    <string name="home_action_delete">நீக்கு</string>
+    <string name="home_adds_now">இப்போது %1$s சேர்க்கிறது</string>
+    <string name="home_drink_contribution_title">கஃபீன் அளவிற்கு பானத்தின் பங்களிப்பு</string>
+    <string name="home_at_peak">உச்ச நிலையில் (%1$s)</string>
+    <string name="home_now">இப்போது</string>
+    <string name="home_in_total_over_time">மொத்தம் (காலப்போக்கில்)</string>
+    <string name="home_edit_drink">%1$s ஐத் திருத்து</string>
+    <string name="home_serving">அளவு</string>
+    <string name="home_serving_unavailable">இந்த பதிவிற்கான அளவு விருப்பங்கள் கிடைக்கவில்லை.</string>
+
+    <!-- Sleep forecast -->
+    <string name="sleep_forecast_title">உறக்க கணிப்பு</string>
+    <string name="sleep_forecast_safe">%1$s மணிக்கு தூங்குவது பாதுகாப்பானது</string>
+    <string name="sleep_forecast_may_affect">உறக்கத்தை பாதிக்கலாம் (%1$dmg உறக்க நேரத்தில்)</string>
+    <string name="sleep_forecast_disruption">உறக்கக் குறுக்கீடு ஏற்படும் வாய்ப்பு உள்ளது (%1$dmg)</string>
+
+    <!-- Add screen -->
+    <string name="add_title">பானம் சேர்க்கவும்</string>
+    <string name="add_create_custom_cd">தனிப்பயன் பானம் உருவாக்கு</string>
+    <string name="add_search_placeholder">பானங்களைத் தேடுங்கள்…</string>
+    <string name="add_search_cd">தேடு</string>
+    <string name="add_clear_search_cd">தேடலை அழி</string>
+    <string name="add_filter_all">அனைத்தும்</string>
+    <string name="add_recent_servings">சமீபத்திய அளவுகள்</string>
+    <string name="add_logged_toast">%1$s பதிவு செய்யப்பட்டது</string>
+    <string name="add_log_serving_of">%1$s ஐ பதிவு செய்</string>
+    <string name="add_no_serving_options">இந்த பானத்திற்கான அளவு விருப்பங்கள் இன்னும் கிடைக்கவில்லை.</string>
+    <string name="add_choose_unit">ஒரு அலகைத் தேர்வு செய்யுங்கள்</string>
+    <string name="add_total_caffeine">மொத்த கஃபீன்</string>
+    <string name="add_bedtime_warning">உறக்க நேரத்தில் சுமார் %1$d mg இன்னும் செயல்பாட்டில் இருக்கும், இது உங்கள் %2$d mg உறக்க வரம்பை மீறுகிறது.</string>
+    <string name="add_entry">பதிவைச் சேர்</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">முகப்பு</string>
+    <string name="nav_analytics">பகுப்பாய்வு</string>
+    <string name="nav_settings">அமைப்புகள்</string>
+    <string name="main_add_consumption">உட்கொள்ளலைச் சேர்</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_daily">தினசரி நினைவூட்டல்கள்</string>
+    <string name="notification_channel_daily_description">கஃபீனை பதிவு செய்ய தினசரி நினைவூட்டல்கள்</string>
+    <string name="notification_channel_inactivity">செயலற்ற எச்சரிக்கைகள்</string>
+    <string name="notification_channel_inactivity_description">நீங்கள் நீண்ட நேரமாக கஃபீனை பதிவு செய்யாதபோது நினைவூட்டல்</string>
+
+    <string name="notification_daily_title">கஃபீன் சரிபார்ப்பு</string>
+    <string name="notification_daily_morning">உங்கள் காலை காபி அல்லது தேநீரை பதிவு செய்ய வேண்டிய நேரம். இன்று உங்கள் கஃபீன் உட்கொள்ளலை கண்காணியுங்கள்.</string>
+    <string name="notification_daily_afternoon">உங்கள் பிற்பகல் கஃபீனை பதிவு செய்ய வேண்டிய நேரம். உங்கள் கண்காணிப்பை புதுப்பித்துக் கொள்ளுங்கள்.</string>
+    <string name="notification_daily_evening">உங்கள் மாலை கஃபீனை பதிவு செய்ய வேண்டிய நேரம். மேலும் துல்லியமான உறக்க கணிப்புகளைப் பெறுங்கள்.</string>
+    <string name="notification_inactivity_title">கஃபீன் பதிவை மறந்துவிட்டீர்களா?</string>
+    <string name="notification_inactivity_body">நீங்கள் கடைசியாக பதிவு செய்ததிலிருந்து 5 நாட்கள் ஆகிவிட்டன. உங்கள் கண்காணிப்பை துல்லியமாக வைத்திருக்க ஆப்பைத் திறக்கவும்.</string>
+
+    <!-- Analytics -->
+    <string name="analytics_title">பகுப்பாய்வு</string>
+    <string name="analytics_caffeine_by_source">மூலத்தின்படி கஃபீன்</string>
+    <string name="analytics_caffeine_by_source_summary">இந்த காலத்தில் உங்கள் கஃபீன் எங்கிருந்து வந்தது.</string>
+    <string name="analytics_bedtime_impact">உறக்க நேர பாதிப்பு</string>
+    <string name="analytics_bedtime_impact_summary">நீங்கள் தூங்கச் செல்லும் நேரத்தில் எவ்வளவு கஃபீன் இன்னும் செயல்பாட்டில் உள்ளது.</string>
+    <string name="analytics_when_you_drink">நீங்கள் எப்போது கஃபீன் குடிக்கிறீர்கள்</string>
+    <string name="analytics_when_you_drink_summary">உங்கள் உட்கொள்ளல் நாளெங்கும் எவ்வாறு பரவியுள்ளது.</string>
+    <string name="analytics_total_caffeine_logged">இந்த காலப்பகுதியில் பதிவுசெய்யப்பட்ட மொத்த கஃபீன்</string>
+    <string name="analytics_average_per_day">சராசரி/நாள்</string>
+    <string name="analytics_safe_nights">பாதுகாப்பான இரவுகள்</string>
+    <string name="analytics_safe_nights_value">%1$d / %2$d</string>
+    <string name="analytics_top_source">முக்கிய மூலம்</string>
+    <string name="analytics_sleep_threshold">உறக்க வரம்பு</string>
+    <string name="analytics_value_mg">%1$d mg</string>
+
+    <!-- Analytics ranges -->
+    <string name="analytics_range_today">இன்று</string>
+    <string name="analytics_range_yesterday">நேற்று</string>
+    <string name="analytics_range_30_days">30 நாட்கள்</string>
+    <string name="analytics_range_90_days">90 நாட்கள்</string>
+    <string name="analytics_range_custom">தனிப்பயன்</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_kicker">வரவேற்கிறோம்</string>
+    <string name="onboarding_intro_line_1">உங்கள்\n</string>
+    <string name="onboarding_intro_line_2">கஃபீனை அறிந்து கொள்ளுங்கள்.</string>
+    <string name="onboarding_intro_line_3">\nஉங்கள்\nஉறக்கத்தை பாதுகாத்துக் கொள்ளுங்கள்.</string>
+    <string name="onboarding_intro_subtitle">உங்கள் உடலில் இன்னும் என்ன உள்ளது மற்றும் இன்றிரவு குடிக்கும் எஸ்பிரெசோ உங்கள் உறக்கத்தை பாதிக்குமா என்பதை நேரடியாகக் காட்டும் பார்வை.</string>
+    <string name="onboarding_get_started">தொடங்குங்கள்</string>
+    <string name="onboarding_takes_a_minute">சுமார் ஒரு நிமிடம் ஆகும் · கணக்கு தேவையில்லை</string>
+
+    <string name="onboarding_step_format">படி %1$d / %2$d</string>
+    <string name="onboarding_skip_for_now">இப்போது தவிர்</string>
+
+    <!-- Profile -->
+    <string name="profile_estimated_half_life">மதிப்பிடப்பட்ட அரை ஆயுள்</string>
+    <string name="profile_half_life_value_modified">%1$d மணி (அடிப்படை %2$d மணி)</string>
+    <string name="profile_half_life_value">%1$d மணி</string>
+    <string name="profile_typical_bedtime">வழக்கமான உறக்க நேரம்</string>
+    <string name="profile_sleep_threshold">உறக்க வரம்பு</string>
+    <string name="profile_sleep_threshold_value">%1$d mg</string>
+
+    <!-- Common -->
+    <string name="brand_caffeine_health">Caffeine Health</string>
+</resources>

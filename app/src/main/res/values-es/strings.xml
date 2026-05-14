@@ -1,0 +1,183 @@
+<resources>
+    <string name="app_name">Caffeine Health</string>
+    <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
+    <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
+    <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
+    <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
+
+    <!-- Widgets -->
+    <string name="widget_caffeine_now_label">Nivel de cafeína</string>
+    <string name="widget_caffeine_now_description">Muestra tu nivel actual de cafeína activa de un vistazo.</string>
+    <string name="widget_quick_add_label">Registro rápido</string>
+    <string name="widget_quick_add_description">Registra tus bebidas recientes directamente desde la pantalla de inicio.</string>
+    <string name="widget_combined_label">Panel de Caffeine</string>
+    <string name="widget_combined_description">Consulta tu nivel de cafeína y registra bebidas sin abrir la aplicación.</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Atrás</string>
+    <string name="action_yes">Sí</string>
+    <string name="action_no">No</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_add">Agregar</string>
+    <string name="action_expand">Expandir</string>
+    <string name="action_collapse">Contraer</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_ok">Aceptar</string>
+    <string name="action_close">Cerrar</string>
+    <string name="action_continue">Continuar</string>
+    <string name="action_skip">Omitir</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_caffeine_profile_title">Perfil de cafeína</string>
+    <string name="settings_caffeine_profile_summary">Vida media, hora de dormir y límite seguro</string>
+    <string name="settings_appearance_title">Apariencia</string>
+    <string name="settings_appearance_summary">Modo de tema y color dinámico</string>
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_language_summary">Elige tu idioma</string>
+    <string name="settings_date_time_title">Fecha y hora</string>
+    <string name="settings_date_time_summary">Reloj, formato de fecha y zona horaria</string>
+    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_summary">Sincroniza los datos de cafeína con Health Connect</string>
+    <string name="settings_my_data_title">Mis datos</string>
+    <string name="settings_my_data_summary">Exporta e importa tus datos</string>
+    <string name="settings_notifications_title">Notificaciones</string>
+    <string name="settings_notifications_summary">Recordatorios diarios y alertas de inactividad</string>
+    <string name="settings_about_title">Acerca de</string>
+    <string name="settings_whats_new_title">Novedades</string>
+    <string name="settings_whats_new_summary">Descubre las novedades de la v%s</string>
+    <string name="settings_about_version">v%s</string>
+    <string name="settings_about_github_cd">Repositorio de GitHub</string>
+
+    <!-- Appearance -->
+    <string name="appearance_theme_label">Tema</string>
+    <string name="appearance_theme_mode_system">Sistema</string>
+    <string name="appearance_theme_mode_light">Claro</string>
+    <string name="appearance_theme_mode_dark">Oscuro</string>
+    <string name="appearance_dynamic_color_label">Color dinámico</string>
+    <string name="appearance_dynamic_color_summary">Adapta el tema a tu fondo de pantalla</string>
+
+    <!-- Date and time -->
+    <string name="date_time_24h_label">Usar formato de 24 horas</string>
+    <string name="date_time_24h_summary">13:00 en lugar de 1:00 PM</string>
+    <string name="date_time_date_format_label">Formato de fecha</string>
+    <string name="date_time_date_format_sheet_description">Elige cómo deben mostrarse las fechas en toda la aplicación.</string>
+    <string name="date_time_timezone_label">Zona horaria</string>
+    <string name="date_time_timezone_sheet_description">Selecciona la zona horaria que la aplicación debe usar para gráficos, cálculos de sueño y límites del día.</string>
+    <string name="date_time_timezone_search_label">Buscar zona horaria</string>
+
+    <!-- Language -->
+    <string name="language_section_title">Idioma</string>
+    <string name="language_selected_cd">Seleccionado</string>
+    <string name="language_deferred_title">Localización pospuesta</string>
+    <string name="language_deferred_description">El inglés seguirá siendo el idioma activo en esta versión.</string>
+
+    <!-- Units -->
+    <string name="unit_mg">mg</string>
+    <string name="caffeine_mg_compact">%1$dmg</string>
+    <string name="caffeine_mg">%1$d mg</string>
+
+    <!-- Home -->
+    <string name="home_title">Inicio</string>
+    <string name="home_my_consumptions">Mis consumos</string>
+    <string name="home_no_consumptions">Aún no hay consumos registrados</string>
+    <string name="home_started_meta">Comenzó %1$s</string>
+    <string name="home_action_edit">Editar</string>
+    <string name="home_action_duplicate">Duplicar</string>
+    <string name="home_action_delete">Eliminar</string>
+    <string name="home_adds_now">Añade %1$s ahora</string>
+    <string name="home_drink_contribution_title">Contribución de la bebida al nivel de cafeína</string>
+    <string name="home_at_peak">En el pico (%1$s)</string>
+    <string name="home_now">Ahora</string>
+    <string name="home_in_total_over_time">En total (a lo largo del tiempo)</string>
+    <string name="home_edit_drink">Editar %1$s</string>
+    <string name="home_serving">Porción</string>
+    <string name="home_serving_unavailable">No hay opciones de porción disponibles para esta entrada.</string>
+
+    <!-- Sleep forecast -->
+    <string name="sleep_forecast_title">Pronóstico de sueño</string>
+    <string name="sleep_forecast_safe">Seguro para dormir a las %1$s</string>
+    <string name="sleep_forecast_may_affect">Puede afectar el sueño (%1$dmg al acostarte)</string>
+    <string name="sleep_forecast_disruption">Es probable que altere el sueño (%1$dmg)</string>
+
+    <!-- Add screen -->
+    <string name="add_title">Agregar una bebida</string>
+    <string name="add_create_custom_cd">Crear bebida personalizada</string>
+    <string name="add_search_placeholder">Buscar bebidas…</string>
+    <string name="add_search_cd">Buscar</string>
+    <string name="add_clear_search_cd">Borrar búsqueda</string>
+    <string name="add_filter_all">Todo</string>
+    <string name="add_recent_servings">Porciones recientes</string>
+    <string name="add_logged_toast">Registrado %1$s</string>
+    <string name="add_log_serving_of">Registrar %1$s de</string>
+    <string name="add_no_serving_options">Todavía no hay opciones de porción disponibles para esta bebida.</string>
+    <string name="add_choose_unit">Elige una unidad</string>
+    <string name="add_total_caffeine">Cafeína total</string>
+    <string name="add_bedtime_warning">A la hora de dormir, aún habrá ~%1$d mg activos, por encima de tu límite de sueño de %2$d mg.</string>
+    <string name="add_entry">Agregar registro</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_analytics">Análisis</string>
+    <string name="nav_settings">Configuración</string>
+    <string name="main_add_consumption">Agregar consumo</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_daily">Recordatorios diarios</string>
+    <string name="notification_channel_daily_description">Recordatorios diarios para registrar cafeína</string>
+    <string name="notification_channel_inactivity">Recordatorios de inactividad</string>
+    <string name="notification_channel_inactivity_description">Recordatorio cuando no registras cafeína durante un tiempo</string>
+
+    <string name="notification_daily_title">Registro de cafeína</string>
+    <string name="notification_daily_morning">Es hora de registrar tu café o té de la mañana. Mantén tu consumo de cafeína al día.</string>
+    <string name="notification_daily_afternoon">Es hora de registrar tu cafeína de la tarde. Mantén tu seguimiento actualizado.</string>
+    <string name="notification_daily_evening">Es hora de registrar tu cafeína nocturna. Obtén predicciones de sueño más precisas.</string>
+    <string name="notification_inactivity_title">¿Olvidaste registrar tu cafeína?</string>
+    <string name="notification_inactivity_body">Han pasado 5 días desde tu último registro. Abre la aplicación para mantener tu seguimiento preciso.</string>
+
+    <!-- Analytics -->
+    <string name="analytics_title">Análisis</string>
+    <string name="analytics_caffeine_by_source">Cafeína por fuente</string>
+    <string name="analytics_caffeine_by_source_summary">De dónde provino tu cafeína durante este período.</string>
+    <string name="analytics_bedtime_impact">Impacto al dormir</string>
+    <string name="analytics_bedtime_impact_summary">Cuánta cafeína sigue activa cuando te vas a dormir.</string>
+    <string name="analytics_when_you_drink">Cuándo consumes cafeína</string>
+    <string name="analytics_when_you_drink_summary">Cómo se distribuye tu consumo a lo largo del día.</string>
+    <string name="analytics_total_caffeine_logged">Cafeína total registrada en este rango</string>
+    <string name="analytics_average_per_day">Promedio/día</string>
+    <string name="analytics_safe_nights">Noches seguras</string>
+    <string name="analytics_safe_nights_value">%1$d / %2$d</string>
+    <string name="analytics_top_source">Fuente principal</string>
+    <string name="analytics_sleep_threshold">Límite de sueño</string>
+    <string name="analytics_value_mg">%1$d mg</string>
+
+    <!-- Analytics ranges -->
+    <string name="analytics_range_today">Hoy</string>
+    <string name="analytics_range_yesterday">Ayer</string>
+    <string name="analytics_range_30_days">30 días</string>
+    <string name="analytics_range_90_days">90 días</string>
+    <string name="analytics_range_custom">Personalizado</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_kicker">BIENVENIDO</string>
+    <string name="onboarding_intro_line_1">Conoce tu\n</string>
+    <string name="onboarding_intro_line_2">cafeína.</string>
+    <string name="onboarding_intro_line_3">\nProtege\ntu sueño.</string>
+    <string name="onboarding_intro_subtitle">Una vista en tiempo real de lo que aún permanece en tu organismo y de si ese espresso nocturno te costará sueño.</string>
+    <string name="onboarding_get_started">Comenzar</string>
+    <string name="onboarding_takes_a_minute">Toma aproximadamente un minuto · No se necesita cuenta</string>
+
+    <string name="onboarding_step_format">PASO %1$d DE %2$d</string>
+    <string name="onboarding_skip_for_now">Omitir por ahora</string>
+
+    <!-- Profile -->
+    <string name="profile_estimated_half_life">Vida media estimada</string>
+    <string name="profile_half_life_value_modified">%1$d h (base %2$d h)</string>
+    <string name="profile_half_life_value">%1$d h</string>
+    <string name="profile_typical_bedtime">Hora habitual de dormir</string>
+    <string name="profile_sleep_threshold">Límite de sueño</string>
+    <string name="profile_sleep_threshold_value">%1$d mg</string>
+
+    <!-- Common labels -->
+    <string name="brand_caffeine_health">Caffeine Health</string>
+</resources>

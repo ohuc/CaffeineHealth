@@ -47,3 +47,6 @@
 # Preserve source file names and line numbers for readable crash stack traces
 -keepattributes SourceFile, LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Disable name obfuscation so bytecode is identical across JVM versions (required for reproducible builds)
+-dontobfuscate

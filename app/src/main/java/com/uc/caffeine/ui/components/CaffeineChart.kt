@@ -1,5 +1,7 @@
 package com.uc.caffeine.ui.components
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -9,15 +11,29 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import com.uc.caffeine.util.ChartConsumptionMarker
+import com.uc.caffeine.util.ChartMarkerEntry
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.text.font.FontWeight
 import com.uc.caffeine.data.AppDateFormat
 import com.uc.caffeine.ui.theme.MontserratFamily
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +42,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,7 +63,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,14 +89,10 @@ import com.patrykandpatrick.vico.compose.cartesian.decoration.Decoration
 import com.patrykandpatrick.vico.compose.cartesian.decoration.HorizontalLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.Fill
-import com.patrykandpatrick.vico.compose.common.Insets
 import com.patrykandpatrick.vico.compose.common.Position
 import com.patrykandpatrick.vico.compose.common.vicoTheme
 import com.patrykandpatrick.vico.compose.common.component.LineComponent
@@ -87,8 +100,6 @@ import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.core.content.ContextCompat
 import com.uc.caffeine.R
-import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
-import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.util.ChartData
@@ -179,7 +190,8 @@ fun CaffeineChart(
     liveNowMillis: Long,
     currentCaffeineLevel: Double,
     predictedBedtimeCaffeineLevel: Double,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEntryClick: ((entryId: Int) -> Unit)? = null,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val displaySeries = remember(chartData, liveNowMillis) {
@@ -320,11 +332,33 @@ fun CaffeineChart(
         iconOnRightSide = true,
     )
 
-    val consumptionMarkers = remember(chartData.consumptionMarkers) {
-        chartData.consumptionMarkers.map { marker -> marker.xValue to marker.emojiLabel }
-    }
-    val markerPairs = consumptionMarkers.map { (x, label) ->
-        x to rememberConsumptionMarker(label)
+    val markerPositions = remember { mutableMapOf<Double, Offset>() }
+    var selectedMarker by remember { mutableStateOf<ChartConsumptionMarker?>(null) }
+    var popupOffset by remember { mutableStateOf(Offset.Zero) }
+
+    val context = LocalContext.current
+    val containerColor = MaterialTheme.colorScheme.primaryContainer.toArgb()
+    val strokeColor = MaterialTheme.colorScheme.outlineVariant.toArgb()
+    val dotColor = MaterialTheme.colorScheme.primary.toArgb()
+    val badgeColor = MaterialTheme.colorScheme.error.toArgb()
+    val badgeTextColor = MaterialTheme.colorScheme.onError.toArgb()
+    val density = LocalDensity.current
+    val chartInsetPx = with(density) { 4.dp.toPx() }
+
+    val consumptionDecoration = remember(chartData.consumptionMarkers, yAxisMax, containerColor, strokeColor, dotColor, badgeColor, badgeTextColor) {
+        ConsumptionImageDecoration(
+            markers = chartData.consumptionMarkers,
+            appContext = context,
+            yMin = 0.0,
+            yMax = yAxisMax,
+            containerColor = containerColor,
+            strokeColor = strokeColor,
+            dotColor = dotColor,
+            badgeColor = badgeColor,
+            textColor = badgeTextColor,
+        ) { xValue, canvasOffset ->
+            markerPositions[xValue] = Offset(canvasOffset.x + chartInsetPx, canvasOffset.y + chartInsetPx)
+        }
     }
 
     val chart = rememberCartesianChart(
@@ -350,16 +384,11 @@ fun CaffeineChart(
             },
             guideline = null
         ),
-        decorations =
-            listOfNotNull(
-                thresholdDecoration,
-                currentTimeDecoration,
-            ) + bedtimeDecorations,
-        persistentMarkers = {
-            markerPairs.forEach { (x, marker) ->
-                marker at x
-            }
-        }
+        decorations = listOfNotNull(
+            thresholdDecoration,
+            currentTimeDecoration,
+            consumptionDecoration,
+        ) + bedtimeDecorations,
     )
 
     val currentTimeXState = rememberUpdatedState(currentTimeX)
@@ -438,8 +467,32 @@ fun CaffeineChart(
         derivedStateOf { dayOffsetFromToday < 0 }
     }
 
+    val hitRadiusPx = with(density) { (MarkerImageRadius + 8.dp).toPx() }
+
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(chartData.consumptionMarkers, hitRadiusPx) {
+                detectTapGestures { tap ->
+                    val hitMarker = chartData.consumptionMarkers.firstOrNull { marker ->
+                        val pos = markerPositions[marker.xValue] ?: return@firstOrNull false
+                        val dx = tap.x - pos.x
+                        val dy = tap.y - pos.y
+                        dx * dx + dy * dy < hitRadiusPx * hitRadiusPx
+                    }
+                    when {
+                        hitMarker != null && hitMarker.entries.size > 1 -> {
+                            selectedMarker = hitMarker
+                            popupOffset = markerPositions[hitMarker.xValue] ?: Offset.Zero
+                        }
+                        hitMarker != null && hitMarker.entries.size == 1 -> {
+                            selectedMarker = null
+                            onEntryClick?.invoke(hitMarker.entries.first().entryId)
+                        }
+                        else -> selectedMarker = null
+                    }
+                }
+            }
     ) {
         if (isModelReady) {
             CartesianChartHost(
@@ -502,6 +555,59 @@ fun CaffeineChart(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                 contentDescription = "Return to current day",
             )
+        }
+
+        if (selectedMarker != null) {
+            Box(
+                modifier = Modifier
+                    .size(1.dp)
+                    .absoluteOffset {
+                        IntOffset(popupOffset.x.roundToInt(), popupOffset.y.roundToInt())
+                    }
+            ) {
+                DropdownMenu(
+                    expanded = true,
+                    onDismissRequest = { selectedMarker = null },
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                ) {
+                    selectedMarker?.entries?.forEach { entry ->
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    DrinkIcon(
+                                        imageName = entry.imageName,
+                                        emoji = entry.emoji,
+                                        contentDescription = entry.drinkName,
+                                        modifier = Modifier.size(28.dp),
+                                        emojiSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                    )
+                                    Text(
+                                        text = entry.drinkName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.caffeine_mg_compact, entry.caffeineMg),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            },
+                            onClick = {
+                                selectedMarker = null
+                                onEntryClick?.invoke(entry.entryId)
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -1073,53 +1179,6 @@ private fun rememberVerticalReferenceLineDecoration(
     }
 }
 
-@Composable
-private fun rememberConsumptionMarker(emojiLabel: String): CartesianMarker {
-    return rememberBadgeMarker(
-        labelText = emojiLabel,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        contentColor = MaterialTheme.colorScheme.onSurface
-    )
-}
-
-@Composable
-private fun rememberBadgeMarker(
-    labelText: String,
-    containerColor: Color,
-    contentColor: Color
-): CartesianMarker {
-    val bubbleBackground = rememberShapeComponent(
-        fill = Fill(containerColor),
-        shape = CircleShape,
-        strokeFill = Fill(MaterialTheme.colorScheme.outlineVariant),
-        strokeThickness = 1.dp
-    )
-    val labelStyle = MaterialTheme.typography.labelLarge.copy(
-        fontFamily = MontserratFamily,
-        color = contentColor,
-    )
-    val labelFontRefreshKey = rememberFontRefreshKey(labelStyle)
-    val label = key(labelFontRefreshKey) {
-        rememberTextComponent(
-            style = labelStyle,
-            lineCount = 1,
-            padding = Insets(horizontal = 10.dp, vertical = 6.dp),
-            background = bubbleBackground,
-            minWidth = TextComponent.MinWidth.fixed(36.dp)
-        )
-    }
-    val valueFormatter = remember(labelText) {
-        DefaultCartesianMarker.ValueFormatter { _, _ -> labelText }
-    }
-
-    return rememberDefaultCartesianMarker(
-        label = label,
-        valueFormatter = valueFormatter,
-        labelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint,
-        guideline = null,
-        indicator = null
-    )
-}
 
 @Composable
 private fun rememberFontRefreshKey(style: TextStyle): Any {
@@ -1132,6 +1191,126 @@ private fun rememberFontRefreshKey(style: TextStyle): Any {
     )
 
     return resolvedTypeface
+}
+
+private val MarkerImageRadius = 16.dp
+private val MarkerDotRadius = 4.dp
+private val MarkerImageGap = 6.dp
+private val MarkerBadgeRadius = 7.dp
+
+private object DrinkBitmapCache {
+    private val cache = mutableMapOf<String, Bitmap?>()
+
+    fun get(context: android.content.Context, imageName: String): Bitmap? {
+        return cache.getOrPut(imageName) {
+            try {
+                context.assets.open("items/$imageName.png").use { BitmapFactory.decodeStream(it) }
+            } catch (_: Exception) { null }
+        }
+    }
+}
+
+private class ConsumptionImageDecoration(
+    private val markers: List<ChartConsumptionMarker>,
+    private val appContext: android.content.Context,
+    private val yMin: Double,
+    private val yMax: Double,
+    private val containerColor: Int,
+    private val strokeColor: Int,
+    private val dotColor: Int,
+    private val badgeColor: Int,
+    private val textColor: Int,
+    private val onPositionDrawn: (xValue: Double, center: Offset) -> Unit,
+) : Decoration {
+    private fun CartesianDrawingContext.yToCanvas(yValue: Double): Float {
+        if (yMax <= yMin) return layerBounds.bottom
+        val fraction = ((yValue - yMin) / (yMax - yMin)).coerceIn(0.0, 1.0).toFloat()
+        return layerBounds.bottom - fraction * (layerBounds.bottom - layerBounds.top)
+    }
+
+    private val fillPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        style = android.graphics.Paint.Style.FILL
+    }
+    private val strokePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        style = android.graphics.Paint.Style.STROKE
+    }
+    private val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        textAlign = android.graphics.Paint.Align.CENTER
+        isFakeBoldText = true
+    }
+    private val emojiPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        textAlign = android.graphics.Paint.Align.CENTER
+    }
+
+    override fun drawOverLayers(context: CartesianDrawingContext) {
+        with(context) {
+            if (layerDimensions.xSpacing == 0f || ranges.xStep == 0.0) return
+
+            val imageRadius = MarkerImageRadius.pixels
+            val dotRadius = MarkerDotRadius.pixels
+            val gap = MarkerImageGap.pixels
+            val badgeRadius = MarkerBadgeRadius.pixels
+
+            strokePaint.strokeWidth = 1.5.dp.pixels
+            textPaint.textSize = 8.dp.pixels
+            emojiPaint.textSize = 13.dp.pixels
+
+            for (marker in markers) {
+                val canvasX = xToCanvas(marker.xValue)
+                if (canvasX < layerBounds.left - imageRadius * 2 || canvasX > layerBounds.right + imageRadius * 2) continue
+
+                val canvasY = yToCanvas(marker.yValue)
+                val imageCenterY = canvasY - gap - imageRadius
+
+                val primaryEntry = marker.entries.firstOrNull() ?: continue
+                val bitmap = if (primaryEntry.imageName.isNotBlank()) {
+                    DrinkBitmapCache.get(appContext, primaryEntry.imageName)
+                } else null
+
+                fillPaint.color = containerColor
+                canvas.nativeCanvas.drawCircle(canvasX, imageCenterY, imageRadius, fillPaint)
+
+                if (bitmap != null) {
+                    val clipPath = android.graphics.Path()
+                    clipPath.addCircle(canvasX, imageCenterY, imageRadius, android.graphics.Path.Direction.CW)
+                    canvas.nativeCanvas.save()
+                    canvas.nativeCanvas.clipPath(clipPath)
+                    val dst = android.graphics.RectF(
+                        canvasX - imageRadius,
+                        imageCenterY - imageRadius,
+                        canvasX + imageRadius,
+                        imageCenterY + imageRadius,
+                    )
+                    canvas.nativeCanvas.drawBitmap(bitmap, null, dst, null)
+                    canvas.nativeCanvas.restore()
+                } else {
+                    val emoji = primaryEntry.emoji.ifBlank { "☕" }
+                    val yOff = (emojiPaint.descent() + emojiPaint.ascent()) / 2f
+                    canvas.nativeCanvas.drawText(emoji, canvasX, imageCenterY - yOff, emojiPaint)
+                }
+
+                strokePaint.color = strokeColor
+                canvas.nativeCanvas.drawCircle(canvasX, imageCenterY, imageRadius, strokePaint)
+
+                fillPaint.color = dotColor
+                canvas.nativeCanvas.drawCircle(canvasX, canvasY, dotRadius, fillPaint)
+                strokePaint.color = strokeColor
+                canvas.nativeCanvas.drawCircle(canvasX, canvasY, dotRadius, strokePaint)
+
+                if (marker.entries.size > 1) {
+                    val badgeCenterX = canvasX + imageRadius * 0.68f
+                    val badgeCenterY = imageCenterY - imageRadius * 0.68f
+                    fillPaint.color = badgeColor
+                    canvas.nativeCanvas.drawCircle(badgeCenterX, badgeCenterY, badgeRadius, fillPaint)
+                    textPaint.color = textColor
+                    val yOff = (textPaint.descent() + textPaint.ascent()) / 2f
+                    canvas.nativeCanvas.drawText("+${marker.entries.size - 1}", badgeCenterX, badgeCenterY - yOff, textPaint)
+                }
+
+                onPositionDrawn(marker.xValue, Offset(canvasX, imageCenterY))
+            }
+        }
+    }
 }
 
 private data class VerticalReferenceLineDecoration(

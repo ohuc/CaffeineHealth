@@ -46,6 +46,8 @@ data class AnalyticsUiState(
     val timeOfDayAxisLabels: List<String> = TimeOfDayBucket.axisLabels,
     val timeOfDayValues: List<Double> = List(TimeOfDayBucket.entries.size) { 0.0 },
     val sleepThresholdMg: Double = 0.0,
+    val currentSleepStreak: Int = 0,
+    val bedtimeDailyStats: Map<LocalDate, DailyBedtimeStat> = emptyMap(),
     val customStartDate: java.time.LocalDate? = null,
     val customEndDate: java.time.LocalDate? = null,
 )
@@ -58,7 +60,7 @@ private data class AnalyticsWindow(
     val endDate: LocalDate,
 )
 
-private data class DailyBedtimeStat(
+data class DailyBedtimeStat(
     val date: LocalDate,
     val caffeineMg: Double,
     val isSafe: Boolean,
@@ -107,6 +109,12 @@ fun buildAnalyticsUiState(
             entries = entries,
             settings = settings,
         )
+    }
+    val allDatesWithEntries = entries
+        .map { entry -> Instant.ofEpochMilli(entry.startedAtMillis).atZone(zoneId).toLocalDate() }
+        .toSortedSet()
+    val allBedtimeDailyStats = allDatesWithEntries.associateWith { date ->
+        buildDailyBedtimeStat(date = date, entries = entries, settings = settings)
     }
     val sourceTotals = buildSourceTotals(entriesInRange = entriesInRange, presets = presets)
     val sortedSourceTotals = sourceTotals.entries.sortedWith(
@@ -159,6 +167,8 @@ fun buildAnalyticsUiState(
         timeOfDayAxisLabels = TimeOfDayBucket.axisLabels,
         timeOfDayValues = timeOfDayValues,
         sleepThresholdMg = settings.sleepThresholdMg.toDouble(),
+        currentSleepStreak = computeCurrentStreak(allBedtimeDailyStats, today),
+        bedtimeDailyStats = allBedtimeDailyStats,
         customStartDate = customStartDate,
         customEndDate = customEndDate,
     )
@@ -275,6 +285,26 @@ private fun buildDailyBedtimeStat(
         caffeineMg = caffeineMg,
         isSafe = caffeineMg <= settings.sleepThresholdMg.toDouble(),
     )
+}
+
+private fun computeCurrentStreak(
+    allBedtimeDailyStats: Map<LocalDate, DailyBedtimeStat>,
+    today: LocalDate,
+): Int {
+    if (allBedtimeDailyStats.isEmpty()) return 0
+    val earliestDate = allBedtimeDailyStats.keys.minOrNull() ?: return 0
+    var streak = 0
+    var date = today.minusDays(1)
+    while (!date.isBefore(earliestDate)) {
+        val isSafe = allBedtimeDailyStats[date]?.isSafe ?: true
+        if (isSafe) {
+            streak++
+            date = date.minusDays(1)
+        } else {
+            break
+        }
+    }
+    return streak
 }
 
 private fun resolveAnalyticsWindow(

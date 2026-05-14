@@ -2,10 +2,11 @@ package com.uc.caffeine.ui.screens.settings
 
 import android.os.Build
 import android.os.LocaleList
+import java.text.Collator
+import java.util.Locale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,8 +39,26 @@ private data class AppLanguage(
 
 private val supportedLanguages = listOf(
     AppLanguage("en", "🇬🇧", "English"),
+    AppLanguage("nl", "🇳🇱", "Nederlands"),
+    AppLanguage("de", "🇩🇪", "Deutsch"),
+    AppLanguage("da", "🇩🇰", "Dansk"),
+    AppLanguage("is", "🇮🇸", "Íslenska"),
+    AppLanguage("sv", "🇸🇪", "Svenska"),
+    AppLanguage("nb", "🇳🇴", "Norsk"),
+    AppLanguage("fi", "🇫🇮", "Suomi"),
+    AppLanguage("es", "🇪🇸", "Español"),
+    AppLanguage("pt", "🇵🇹", "Português"),
+    AppLanguage("fr", "🇫🇷", "Français"),
     AppLanguage("hi", "🇮🇳", "हिंदी"),
-)
+    AppLanguage("ml", "🇮🇳", "മലയാളം"),
+    AppLanguage("kn", "🇮🇳", "ಕನ್ನಡ"),
+    AppLanguage("te", "🇮🇳", "తెలుగు"),
+    AppLanguage("ta", "🇮🇳", "தமிழ்"),
+).let { all ->
+    val pinned = listOf("en", "hi")
+    all.filter { it.tag in pinned }.sortedBy { pinned.indexOf(it.tag) } +
+    all.filter { it.tag !in pinned }.sortedWith(compareBy(Collator.getInstance(Locale.ENGLISH)) { it.nativeName })
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -72,15 +91,6 @@ internal fun LanguageSettingsScreen(
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(bottom = bottomPadding + 24.dp),
         ) {
-            item {
-                Text(
-                    text = stringResource(R.string.language_section_title),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-                )
-            }
-
             itemsIndexed(supportedLanguages) { index, language ->
                 val isSelected = selectedTag == language.tag
                 SegmentedListItem(

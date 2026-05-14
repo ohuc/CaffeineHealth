@@ -34,6 +34,9 @@ interface DrinkUnitDao {
     )
     suspend fun getUnitsForPresetItemId(presetItemId: String): List<DrinkUnit>
 
+    @Query("DELETE FROM drink_units WHERE drinkId = :drinkId")
+    suspend fun deleteUnitsForDrink(drinkId: Int)
+
     @Query("SELECT COUNT(*) FROM drink_units")
     suspend fun getCount(): Int
 }

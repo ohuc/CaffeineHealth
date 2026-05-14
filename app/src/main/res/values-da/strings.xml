@@ -1,0 +1,163 @@
+<resources>
+    <string name="app_name">Caffeine Health</string>
+    <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
+    <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
+    <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
+    <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
+
+    <!-- Widgets -->
+    <string name="widget_caffeine_now_label">Koffeinniveau</string>
+    <string name="widget_caffeine_now_description">Viser dit nuværende aktive koffeinniveau med et hurtigt overblik.</string>
+    <string name="widget_quick_add_label">Hurtiglog</string>
+    <string name="widget_quick_add_description">Log dine seneste drikke direkte fra startskærmen.</string>
+    <string name="widget_combined_label">Caffeine-dashboard</string>
+    <string name="widget_combined_description">Se dit koffeinniveau og log drikke uden at åbne appen.</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Tilbage</string>
+    <string name="action_yes">Ja</string>
+    <string name="action_no">Nej</string>
+    <string name="action_cancel">Annuller</string>
+    <string name="action_add">Tilføj</string>
+    <string name="action_expand">Udvid</string>
+    <string name="action_collapse">Skjul</string>
+    <string name="action_save">Gem</string>
+    <string name="action_ok">OK</string>
+    <string name="action_close">Luk</string>
+    <string name="action_continue">Fortsæt</string>
+    <string name="action_skip">Spring over</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Indstillinger</string>
+    <string name="settings_caffeine_profile_title">Koffeinprofil</string>
+    <string name="settings_caffeine_profile_summary">Halveringstid, sengetid og sikker grænse</string>
+    <string name="settings_appearance_title">Udseende</string>
+    <string name="settings_appearance_summary">Tematilstand og dynamiske farver</string>
+    <string name="settings_language_title">Sprog</string>
+    <string name="settings_language_summary">Vælg dit sprog</string>
+    <string name="settings_date_time_title">Dato og tid</string>
+    <string name="settings_date_time_summary">Ur, datoformat og tidszone</string>
+    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_summary">Synkroniser koffeindata til Health Connect</string>
+    <string name="settings_my_data_title">Mine data</string>
+    <string name="settings_my_data_summary">Eksportér og importér dine data</string>
+    <string name="settings_notifications_title">Notifikationer</string>
+    <string name="settings_notifications_summary">Daglige påmindelser og inaktivitetsadvarsler</string>
+    <string name="settings_about_title">Om</string>
+    <string name="settings_whats_new_title">Nyheder</string>
+    <string name="settings_whats_new_summary">Se hvad der er nyt i v%s</string>
+    <string name="settings_about_version">v%s</string>
+    <string name="settings_about_github_cd">GitHub-repository</string>
+
+    <!-- Appearance -->
+    <string name="appearance_theme_label">Tema</string>
+    <string name="appearance_theme_mode_system">System</string>
+    <string name="appearance_theme_mode_light">Lyst</string>
+    <string name="appearance_theme_mode_dark">Mørkt</string>
+    <string name="appearance_dynamic_color_label">Dynamiske farver</string>
+    <string name="appearance_dynamic_color_summary">Tilpas temaet efter dit baggrundsbillede</string>
+
+    <!-- Home -->
+    <string name="home_title">Hjem</string>
+    <string name="home_my_consumptions">Mine indtag</string>
+    <string name="home_no_consumptions">Ingen indtag er registreret endnu</string>
+    <string name="home_started_meta">Startet %1$s</string>
+    <string name="home_action_edit">Redigér</string>
+    <string name="home_action_duplicate">Duplikér</string>
+    <string name="home_action_delete">Slet</string>
+    <string name="home_adds_now">Tilføjer %1$s nu</string>
+    <string name="home_drink_contribution_title">Drikkens bidrag til koffeinniveauet</string>
+    <string name="home_at_peak">På toppen (%1$s)</string>
+    <string name="home_now">Nu</string>
+    <string name="home_in_total_over_time">I alt (over tid)</string>
+    <string name="home_edit_drink">Redigér %1$s</string>
+    <string name="home_serving">Portion</string>
+    <string name="home_serving_unavailable">Portionsmuligheder er ikke tilgængelige for denne post.</string>
+
+    <!-- Sleep forecast -->
+    <string name="sleep_forecast_title">Søvnprognose</string>
+    <string name="sleep_forecast_safe">Sikkert at sove kl. %1$s</string>
+    <string name="sleep_forecast_may_affect">Kan påvirke søvnen (%1$dmg ved sengetid)</string>
+    <string name="sleep_forecast_disruption">Søvnforstyrrelse sandsynlig (%1$dmg)</string>
+
+    <!-- Add screen -->
+    <string name="add_title">Tilføj en drik</string>
+    <string name="add_create_custom_cd">Opret brugerdefineret drik</string>
+    <string name="add_search_placeholder">Søg efter drikke…</string>
+    <string name="add_search_cd">Søg</string>
+    <string name="add_clear_search_cd">Ryd søgning</string>
+    <string name="add_filter_all">Alle</string>
+    <string name="add_recent_servings">Seneste portioner</string>
+    <string name="add_logged_toast">Registrerede %1$s</string>
+    <string name="add_log_serving_of">Registrér %1$s af</string>
+    <string name="add_no_serving_options">Der er endnu ingen portionsmuligheder til denne drik.</string>
+    <string name="add_choose_unit">Vælg en enhed</string>
+    <string name="add_total_caffeine">Samlet koffein</string>
+    <string name="add_bedtime_warning">Ved sengetid vil cirka %1$d mg stadig være aktivt, over din søvngrænse på %2$d mg.</string>
+    <string name="add_entry">Tilføj post</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Hjem</string>
+    <string name="nav_analytics">Analyse</string>
+    <string name="nav_settings">Indstillinger</string>
+    <string name="main_add_consumption">Tilføj indtag</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_daily">Daglige påmindelser</string>
+    <string name="notification_channel_daily_description">Daglige påmindelser om at registrere koffein</string>
+    <string name="notification_channel_inactivity">Inaktivitetsadvarsler</string>
+    <string name="notification_channel_inactivity_description">Påmindelse når du ikke har registreret koffein i et stykke tid</string>
+
+    <string name="notification_daily_title">Koffeintjek</string>
+    <string name="notification_daily_morning">Tid til at registrere din morgenkaffe eller te. Hold styr på dit koffeinindtag i dag.</string>
+    <string name="notification_daily_afternoon">Tid til at registrere dit eftermiddagskoffein. Hold din tracking opdateret.</string>
+    <string name="notification_daily_evening">Tid til at registrere dit aftenkoffein. Få mere præcise søvnprognoser.</string>
+    <string name="notification_inactivity_title">Glemt at registrere koffein?</string>
+    <string name="notification_inactivity_body">Det er 5 dage siden din sidste registrering. Åbn appen for at holde din tracking præcis.</string>
+
+    <!-- Analytics -->
+    <string name="analytics_title">Analyse</string>
+    <string name="analytics_caffeine_by_source">Koffein efter kilde</string>
+    <string name="analytics_caffeine_by_source_summary">Hvor dit koffein kom fra i denne periode.</string>
+    <string name="analytics_bedtime_impact">Påvirkning ved sengetid</string>
+    <string name="analytics_bedtime_impact_summary">Hvor meget koffein der stadig er aktivt, når du går i seng.</string>
+    <string name="analytics_when_you_drink">Hvornår du drikker koffein</string>
+    <string name="analytics_when_you_drink_summary">Hvordan dit indtag fordeler sig i løbet af dagen.</string>
+    <string name="analytics_total_caffeine_logged">Samlet koffein registreret i dette interval</string>
+    <string name="analytics_average_per_day">Gennemsnit/dag</string>
+    <string name="analytics_safe_nights">Sikre nætter</string>
+    <string name="analytics_safe_nights_value">%1$d / %2$d</string>
+    <string name="analytics_top_source">Største kilde</string>
+    <string name="analytics_sleep_threshold">Søvngrænse</string>
+    <string name="analytics_value_mg">%1$d mg</string>
+
+    <!-- Analytics ranges -->
+    <string name="analytics_range_today">I dag</string>
+    <string name="analytics_range_yesterday">I går</string>
+    <string name="analytics_range_30_days">30 dage</string>
+    <string name="analytics_range_90_days">90 dage</string>
+    <string name="analytics_range_custom">Brugerdefineret</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_kicker">VELKOMMEN</string>
+    <string name="onboarding_intro_line_1">Forstå din\n</string>
+    <string name="onboarding_intro_line_2">koffein.</string>
+    <string name="onboarding_intro_line_3">\nBeskyt\ndin søvn.</string>
+    <string name="onboarding_intro_subtitle">Et live-overblik over hvad der stadig er i din krop, og om aftenens espresso kommer til at koste dig søvn.</string>
+    <string name="onboarding_get_started">Kom i gang</string>
+    <string name="onboarding_takes_a_minute">Tager cirka et minut · Ingen konto nødvendig</string>
+
+    <string name="onboarding_step_format">TRIN %1$d AF %2$d</string>
+    <string name="onboarding_skip_for_now">Spring over for nu</string>
+
+    <!-- Profile -->
+    <string name="profile_estimated_half_life">Estimeret halveringstid</string>
+    <string name="profile_half_life_value_modified">%1$d t (basis %2$d t)</string>
+    <string name="profile_half_life_value">%1$d t</string>
+    <string name="profile_typical_bedtime">Typisk sengetid</string>
+    <string name="profile_sleep_threshold">Søvngrænse</string>
+    <string name="profile_sleep_threshold_value">%1$d mg</string>
+
+    <!-- Common -->
+    <string name="brand_caffeine_health">Caffeine Health</string>
+</resources>

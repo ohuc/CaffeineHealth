@@ -1,0 +1,163 @@
+<resources>
+    <string name="app_name">Caffeine Health</string>
+    <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
+    <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
+    <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
+    <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
+
+    <!-- Widgets -->
+    <string name="widget_caffeine_now_label">Cafeïneniveau</string>
+    <string name="widget_caffeine_now_description">Toont in één oogopslag je huidige actieve cafeïneniveau.</string>
+    <string name="widget_quick_add_label">Snelle registratie</string>
+    <string name="widget_quick_add_description">Registreer je recente drankjes direct vanaf het startscherm.</string>
+    <string name="widget_combined_label">Caffeine-dashboard</string>
+    <string name="widget_combined_description">Bekijk je cafeïneniveau en registreer drankjes zonder de app te openen.</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Terug</string>
+    <string name="action_yes">Ja</string>
+    <string name="action_no">Nee</string>
+    <string name="action_cancel">Annuleren</string>
+    <string name="action_add">Toevoegen</string>
+    <string name="action_expand">Uitvouwen</string>
+    <string name="action_collapse">Inklappen</string>
+    <string name="action_save">Opslaan</string>
+    <string name="action_ok">OK</string>
+    <string name="action_close">Sluiten</string>
+    <string name="action_continue">Doorgaan</string>
+    <string name="action_skip">Overslaan</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Instellingen</string>
+    <string name="settings_caffeine_profile_title">Cafeïneprofiel</string>
+    <string name="settings_caffeine_profile_summary">Halfwaardetijd, bedtijd en veilige grens</string>
+    <string name="settings_appearance_title">Weergave</string>
+    <string name="settings_appearance_summary">Themamodus en dynamische kleuren</string>
+    <string name="settings_language_title">Taal</string>
+    <string name="settings_language_summary">Kies je taal</string>
+    <string name="settings_date_time_title">Datum en tijd</string>
+    <string name="settings_date_time_summary">Klok, datumnotatie en tijdzone</string>
+    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_summary">Synchroniseer cafeïnegegevens met Health Connect</string>
+    <string name="settings_my_data_title">Mijn gegevens</string>
+    <string name="settings_my_data_summary">Exporteer en importeer je gegevens</string>
+    <string name="settings_notifications_title">Meldingen</string>
+    <string name="settings_notifications_summary">Dagelijkse herinneringen en inactiviteitswaarschuwingen</string>
+    <string name="settings_about_title">Over</string>
+    <string name="settings_whats_new_title">Wat is nieuw</string>
+    <string name="settings_whats_new_summary">Bekijk wat nieuw is in v%s</string>
+    <string name="settings_about_version">v%s</string>
+    <string name="settings_about_github_cd">GitHub-repository</string>
+
+    <!-- Appearance -->
+    <string name="appearance_theme_label">Thema</string>
+    <string name="appearance_theme_mode_system">Systeem</string>
+    <string name="appearance_theme_mode_light">Licht</string>
+    <string name="appearance_theme_mode_dark">Donker</string>
+    <string name="appearance_dynamic_color_label">Dynamische kleuren</string>
+    <string name="appearance_dynamic_color_summary">Pas het thema aan op je achtergrond</string>
+
+    <!-- Home -->
+    <string name="home_title">Start</string>
+    <string name="home_my_consumptions">Mijn consumpties</string>
+    <string name="home_no_consumptions">Nog geen consumpties geregistreerd</string>
+    <string name="home_started_meta">Gestart %1$s</string>
+    <string name="home_action_edit">Bewerken</string>
+    <string name="home_action_duplicate">Dupliceren</string>
+    <string name="home_action_delete">Verwijderen</string>
+    <string name="home_adds_now">Voegt nu %1$s toe</string>
+    <string name="home_drink_contribution_title">Bijdrage van drank aan cafeïneniveau</string>
+    <string name="home_at_peak">Op piekniveau (%1$s)</string>
+    <string name="home_now">Nu</string>
+    <string name="home_in_total_over_time">In totaal (over tijd)</string>
+    <string name="home_edit_drink">%1$s bewerken</string>
+    <string name="home_serving">Portie</string>
+    <string name="home_serving_unavailable">Portie-opties zijn niet beschikbaar voor deze invoer.</string>
+
+    <!-- Sleep forecast -->
+    <string name="sleep_forecast_title">Slaapvoorspelling</string>
+    <string name="sleep_forecast_safe">Veilig om te slapen om %1$s</string>
+    <string name="sleep_forecast_may_affect">Kan de slaap beïnvloeden (%1$dmg bij bedtijd)</string>
+    <string name="sleep_forecast_disruption">Slaapverstoring waarschijnlijk (%1$dmg)</string>
+
+    <!-- Add screen -->
+    <string name="add_title">Drank toevoegen</string>
+    <string name="add_create_custom_cd">Aangepaste drank maken</string>
+    <string name="add_search_placeholder">Zoek drankjes…</string>
+    <string name="add_search_cd">Zoeken</string>
+    <string name="add_clear_search_cd">Zoekopdracht wissen</string>
+    <string name="add_filter_all">Alles</string>
+    <string name="add_recent_servings">Recente porties</string>
+    <string name="add_logged_toast">%1$s geregistreerd</string>
+    <string name="add_log_serving_of">%1$s registreren van</string>
+    <string name="add_no_serving_options">Er zijn nog geen portie-opties beschikbaar voor deze drank.</string>
+    <string name="add_choose_unit">Kies een eenheid</string>
+    <string name="add_total_caffeine">Totale cafeïne</string>
+    <string name="add_bedtime_warning">Bij bedtijd zal ongeveer %1$d mg nog actief zijn, boven je slaapgrens van %2$d mg.</string>
+    <string name="add_entry">Invoer toevoegen</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Start</string>
+    <string name="nav_analytics">Analyse</string>
+    <string name="nav_settings">Instellingen</string>
+    <string name="main_add_consumption">Consumptie toevoegen</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_daily">Dagelijkse herinneringen</string>
+    <string name="notification_channel_daily_description">Dagelijkse herinneringen om cafeïne te registreren</string>
+    <string name="notification_channel_inactivity">Inactiviteitswaarschuwingen</string>
+    <string name="notification_channel_inactivity_description">Herinnering wanneer je al een tijdje geen cafeïne hebt geregistreerd</string>
+
+    <string name="notification_daily_title">Cafeïnecheck</string>
+    <string name="notification_daily_morning">Tijd om je ochtendkoffie of thee te registreren. Houd vandaag je cafeïne-inname bij.</string>
+    <string name="notification_daily_afternoon">Tijd om je cafeïne van de middag te registreren. Houd je tracking up-to-date.</string>
+    <string name="notification_daily_evening">Tijd om je avondcafeïne te registreren. Krijg nauwkeurigere slaapvoorspellingen.</string>
+    <string name="notification_inactivity_title">Vergeten je cafeïne te registreren?</string>
+    <string name="notification_inactivity_body">Het is 5 dagen geleden sinds je laatste registratie. Open de app om je tracking nauwkeurig te houden.</string>
+
+    <!-- Analytics -->
+    <string name="analytics_title">Analyse</string>
+    <string name="analytics_caffeine_by_source">Cafeïne per bron</string>
+    <string name="analytics_caffeine_by_source_summary">Waar je cafeïne vandaan kwam in deze periode.</string>
+    <string name="analytics_bedtime_impact">Impact op bedtijd</string>
+    <string name="analytics_bedtime_impact_summary">Hoeveel cafeïne nog actief is wanneer je gaat slapen.</string>
+    <string name="analytics_when_you_drink">Wanneer je cafeïne drinkt</string>
+    <string name="analytics_when_you_drink_summary">Hoe je inname over de dag is verdeeld.</string>
+    <string name="analytics_total_caffeine_logged">Totale geregistreerde cafeïne in deze periode</string>
+    <string name="analytics_average_per_day">Gemiddeld/dag</string>
+    <string name="analytics_safe_nights">Veilige nachten</string>
+    <string name="analytics_safe_nights_value">%1$d / %2$d</string>
+    <string name="analytics_top_source">Belangrijkste bron</string>
+    <string name="analytics_sleep_threshold">Slaapgrens</string>
+    <string name="analytics_value_mg">%1$d mg</string>
+
+    <!-- Analytics ranges -->
+    <string name="analytics_range_today">Vandaag</string>
+    <string name="analytics_range_yesterday">Gisteren</string>
+    <string name="analytics_range_30_days">30 dagen</string>
+    <string name="analytics_range_90_days">90 dagen</string>
+    <string name="analytics_range_custom">Aangepast</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_kicker">WELKOM</string>
+    <string name="onboarding_intro_line_1">Begrijp je\n</string>
+    <string name="onboarding_intro_line_2">cafeïne.</string>
+    <string name="onboarding_intro_line_3">\nBescherm\nje slaap.</string>
+    <string name="onboarding_intro_subtitle">Een live-overzicht van wat nog in je systeem zit en of die espresso van vanavond je slaap gaat kosten.</string>
+    <string name="onboarding_get_started">Aan de slag</string>
+    <string name="onboarding_takes_a_minute">Duurt ongeveer een minuut · Geen account nodig</string>
+
+    <string name="onboarding_step_format">STAP %1$d VAN %2$d</string>
+    <string name="onboarding_skip_for_now">Voor nu overslaan</string>
+
+    <!-- Profile -->
+    <string name="profile_estimated_half_life">Geschatte halfwaardetijd</string>
+    <string name="profile_half_life_value_modified">%1$d u (basis %2$d u)</string>
+    <string name="profile_half_life_value">%1$d u</string>
+    <string name="profile_typical_bedtime">Gebruikelijke bedtijd</string>
+    <string name="profile_sleep_threshold">Slaapgrens</string>
+    <string name="profile_sleep_threshold_value">%1$d mg</string>
+
+    <!-- Common -->
+    <string name="brand_caffeine_health">Caffeine Health</string>
+</resources>

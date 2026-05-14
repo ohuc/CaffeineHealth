@@ -98,8 +98,8 @@ fun SettingsScreen(
                     SettingsDestination.Appearance -> AppearanceSettingsScreen(
                         userSettings = userSettings,
                         onThemeModeChange = viewModel::updateThemeMode,
-                        onDynamicColorChange = viewModel::updateDynamicColor,
                         onHomeViewModeChange = viewModel::updateHomeViewMode,
+                        onColorPaletteChange = viewModel::updateColorPalette,
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )
 

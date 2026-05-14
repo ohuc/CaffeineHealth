@@ -6,18 +6,14 @@ plugins {
 
 android {
     namespace = "com.uc.caffeine"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.uc.caffeine"
         minSdk = 31
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.0"
+        versionCode = 5
+        versionName = "2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

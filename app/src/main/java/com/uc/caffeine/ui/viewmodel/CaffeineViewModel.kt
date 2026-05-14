@@ -663,6 +663,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateColorPalette(palette: com.uc.caffeine.data.AppColorPalette) {
+        viewModelScope.launch {
+            settingsRepo.updateColorPalette(palette)
+        }
+    }
+
     fun updateUse24HourClock(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepo.updateUse24HourClock(enabled)
@@ -765,6 +771,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             if (settings.inactivityReminderEnabled) {
                 com.uc.caffeine.util.notifications.NotificationScheduler.scheduleInactivityReminder(getApplication())
             }
+            if (settings.hcSleepEnabled) refreshHcSleepData()
         }
     }
 

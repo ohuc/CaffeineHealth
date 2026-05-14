@@ -1,0 +1,125 @@
+<resources>
+    <string name="app_name">Caffeine Health</string>
+    <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
+    <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
+    <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
+    <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
+    <string name="widget_caffeine_now_label">Niveau de caféine</string>
+    <string name="widget_caffeine_now_description">Affiche votre niveau actuel de caféine active en un coup d’œil.</string>
+    <string name="widget_quick_add_label">Ajout rapide</string>
+    <string name="widget_quick_add_description">Enregistrez vos boissons récentes directement depuis l’écran d’accueil.</string>
+    <string name="widget_combined_label">Tableau de bord Caffeine</string>
+    <string name="widget_combined_description">Consultez votre niveau de caféine et ajoutez des boissons sans ouvrir l’application.</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Retour</string>
+
+    <!-- Settings list -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_caffeine_profile_title">Profil caféine</string>
+    <string name="settings_caffeine_profile_summary">Demi-vie, heure du coucher, seuil de sécurité</string>
+    <string name="settings_appearance_title">Apparence</string>
+    <string name="settings_appearance_summary">Mode du thème et couleurs dynamiques</string>
+    <string name="settings_language_title">Langue</string>
+    <string name="settings_language_summary">Choisissez votre langue</string>
+    <string name="settings_date_time_title">Date et heure</string>
+    <string name="settings_date_time_summary">Horloge, format de date, fuseau horaire</string>
+    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_summary">Synchroniser les données de caféine avec Health Connect</string>
+    <string name="settings_my_data_title">Mes données</string>
+    <string name="settings_my_data_summary">Exporter et importer vos données</string>
+    <string name="settings_notifications_title">Notifications</string>
+    <string name="settings_notifications_summary">Rappels quotidiens et alertes d’inactivité</string>
+    <string name="settings_about_title">À propos</string>
+    <string name="settings_whats_new_title">Nouveautés</string>
+    <string name="settings_whats_new_summary">Découvrez les nouveautés de la v%s</string>
+    <string name="settings_about_version">v%s</string>
+    <string name="settings_about_github_cd">Dépôt GitHub</string>
+
+    <!-- Appearance settings -->
+    <string name="appearance_theme_label">Thème</string>
+    <string name="appearance_theme_mode_system">Système</string>
+    <string name="appearance_theme_mode_light">Clair</string>
+    <string name="appearance_theme_mode_dark">Sombre</string>
+    <string name="appearance_dynamic_color_label">Couleurs dynamiques</string>
+    <string name="appearance_dynamic_color_summary">Adapter le thème à votre fond d’écran</string>
+
+    <!-- Date and time settings -->
+    <string name="date_time_24h_label">Utiliser le format 24 heures</string>
+    <string name="date_time_24h_summary">13:00 au lieu de 1:00 PM</string>
+    <string name="date_time_date_format_label">Format de date</string>
+    <string name="date_time_date_format_sheet_description">Choisissez comment les dates doivent apparaître dans l’application.</string>
+    <string name="date_time_timezone_label">Fuseau horaire</string>
+    <string name="date_time_timezone_sheet_description">Choisissez le fuseau horaire utilisé pour les graphiques, les calculs de coucher et les limites de journée.</string>
+    <string name="date_time_timezone_search_label">Rechercher un fuseau horaire</string>
+
+    <!-- Language settings -->
+    <string name="language_section_title">Langue</string>
+    <string name="language_selected_cd">Sélectionné</string>
+    <string name="language_deferred_title">Localisation reportée</string>
+    <string name="language_deferred_description">L’anglais restera la langue active dans cette version.</string>
+
+    <!-- Common actions reused across screens -->
+    <string name="action_yes">Oui</string>
+    <string name="action_no">Non</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_add">Ajouter</string>
+    <string name="action_expand">Développer</string>
+    <string name="action_collapse">Réduire</string>
+
+    <!-- Caffeine profile snapshot -->
+    <string name="profile_estimated_half_life">Demi-vie estimée</string>
+    <string name="profile_half_life_value_modified">%1$d h (base %2$d h)</string>
+    <string name="profile_half_life_value">%1$d h</string>
+    <string name="profile_half_life_description_modified">Ajustée selon vos facteurs génétiques et hormonaux.</string>
+    <string name="profile_half_life_description_default">Durée pendant laquelle la caféine reste généralement dans votre organisme.</string>
+    <string name="profile_typical_bedtime">Heure de coucher habituelle</string>
+    <string name="profile_typical_bedtime_description">Utilisée pour le repère du coucher et la prévision du sommeil.</string>
+    <string name="profile_sleep_threshold">Seuil de sommeil</string>
+    <string name="profile_sleep_threshold_value">%1$d mg</string>
+    <string name="profile_sleep_threshold_description">Le niveau de caféine active auquel les conseils de sommeil se réfèrent.</string>
+
+    <!-- Caffeine profile re-adjust card -->
+    <string name="profile_re_adjust_title">Réajuster le profil Caffeine Health</string>
+    <string name="profile_re_adjust_description">Affinez votre demi-vie, vos paramètres de sommeil et vos facteurs métaboliques.</string>
+    <string name="profile_redo_onboarding">Refaire l’intégration</string>
+    <string name="profile_redo_onboarding_description">Reprenez la configuration du profil sans supprimer vos boissons enregistrées ni votre historique.</string>
+
+    <!-- Caffeine profile editors -->
+    <string name="profile_caffeine_half_life">Demi-vie de la caféine</string>
+    <string name="profile_caffeine_half_life_supporting">La moyenne est d’environ 5 heures, mais vous pouvez la personnaliser ici.</string>
+    <string name="profile_caffeine_half_life_hint">Ajuster par pas d’1 heure</string>
+    <string name="profile_sleep_threshold_supporting">Gardez cette valeur basse si la caféine affecte facilement votre sommeil, plus élevée si vous êtes moins sensible.</string>
+    <string name="profile_sleep_threshold_hint">Ajuster par pas de 5 mg</string>
+    <string name="profile_health_section">Profil de santé</string>
+    <string name="profile_age_range">Tranche d’âge</string>
+    <string name="profile_age_range_description">La caféine peut rester plus longtemps chez les personnes âgées.</string>
+    <string name="profile_weight">Poids</string>
+    <string name="profile_sleep_sensitivity">Sensibilité au sommeil</string>
+    <string name="profile_sleep_sensitivity_description">Si l’insomnie fait partie du tableau, le seuil reste plus prudent.</string>
+    <string name="profile_smoking_habit">Habitudes tabagiques</string>
+    <string name="profile_smoking_habit_description">Le tabac peut accélérer l’élimination de la caféine via le CYP1A2.</string>
+    <string name="profile_heavy_alcohol">Consommation élevée d’alcool</string>
+    <string name="profile_heavy_alcohol_description">Une forte consommation d’alcool peut ralentir l’élimination et réduire votre seuil effectif.</string>
+    <string name="profile_high_caffeine">Consommation élevée de caféine</string>
+    <string name="profile_high_caffeine_description">Une consommation fréquente peut augmenter la tolérance.</string>
+    <string name="profile_liver_context">État du foie</string>
+    <string name="profile_liver_context_description">Les maladies du foie peuvent ralentir considérablement l’élimination de la caféine.</string>
+    <string name="profile_medications">Médicaments</string>
+    <string name="profile_medications_description">Sélectionnez ceux qui peuvent ralentir l’élimination de la caféine. Choisissez Aucun si aucun ne s’applique.</string>
+    <string name="stepper_decrease_cd">Diminuer %1$s</string>
+    <string name="stepper_increase_cd">Augmenter %1$s</string>
+
+    <!-- Advanced metabolism card -->
+    <string name="profile_advanced_metabolism">Métabolisme avancé</string>
+    <string name="profile_advanced_metabolism_description">Facteurs génétiques et hormonaux optionnels pour affiner l’estimation de votre demi-vie.</string>
+    <string name="profile_advanced_metabolism_intro">Si vous connaissez votre génotype CYP1A2 ou AHR (par exemple via 23andMe ou similaire), vous pouvez le saisir ici. Tout cela reste entièrement facultatif.</string>
+    <string name="profile_cyp1a2">CYP1A2 rs762551</string>
+    <string name="profile_cyp1a2_description">Contrôle la vitesse du métabolisme de la caféine. A/A est la référence des métaboliseurs rapides.</string>
+    <string name="profile_ahr">AHR rs2066853</string>
+    <string name="profile_ahr_description">Influence le niveau d’expression du CYP1A2. G/G est considéré comme normal.</string>
+    <string name="profile_hormonal_status">Statut hormonal</string>
+    <string name="profile_hormonal_status_description">La grossesse et les contraceptifs oraux peuvent ralentir fortement l’élimination de la caféine.</string>
+    <string name="profile_effective_half_life">Demi-vie effective : %1$d h %2$d min</string>
+    <string name="profile_clearance_factor_explanation">Base %1$d h ajustée par un facteur combiné de %2$s.</string>
+</resources>

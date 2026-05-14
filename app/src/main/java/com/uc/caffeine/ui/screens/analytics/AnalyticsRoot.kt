@@ -76,10 +76,7 @@ internal fun AnalyticsRoot(
 
                     AnalyticsDestination.Bedtime -> AnalyticsBedtimePage(
                         uiState = uiState,
-                        onRangeSelected = viewModel::setAnalyticsRange,
-                        onCustomRange = viewModel::setCustomRange,
                         onBack = { nestedBackStack.removeLastOrNull() },
-                        modelProducer = viewModel.analyticsBedtimeChartModelProducer,
                     )
 
                     AnalyticsDestination.TimeOfDay -> AnalyticsTimeOfDayPage(
@@ -87,7 +84,6 @@ internal fun AnalyticsRoot(
                         onRangeSelected = viewModel::setAnalyticsRange,
                         onCustomRange = viewModel::setCustomRange,
                         onBack = { nestedBackStack.removeLastOrNull() },
-                        modelProducer = viewModel.analyticsTimeOfDayChartModelProducer,
                     )
                 }
             }

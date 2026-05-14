@@ -179,7 +179,7 @@ fun CaffeineApp(
     )
     CaffeineTheme(
         darkTheme = darkTheme,
-        dynamicColor = userSettings.useDynamicColor,
+        colorPalette = userSettings.colorPalette,
     ) {
         // Backdrop for the startup transition: the Onboarding→Main scaleIn from 0.92 leaves a
         // margin around the incoming shell, which would otherwise expose the windowBackground.
