@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
-
     <!-- Widgets -->
     <string name="widget_caffeine_now_label">Koffínmagn</string>
     <string name="widget_caffeine_now_description">Sýnir núverandi virkt koffínmagn þitt í fljótu bragði.</string>
@@ -12,7 +12,6 @@
     <string name="widget_quick_add_description">Skráðu nýlega drykki beint af heimaskjánum.</string>
     <string name="widget_combined_label">Caffeine-yfirlit</string>
     <string name="widget_combined_description">Sjáðu koffínmagnið þitt og skráðu drykki án þess að opna appið.</string>
-
     <!-- Common actions -->
     <string name="action_back">Til baka</string>
     <string name="action_yes">Já</string>
@@ -26,7 +25,6 @@
     <string name="action_close">Loka</string>
     <string name="action_continue">Halda áfram</string>
     <string name="action_skip">Sleppa</string>
-
     <!-- Settings -->
     <string name="settings_title">Stillingar</string>
     <string name="settings_caffeine_profile_title">Koffínsnið</string>
@@ -48,7 +46,6 @@
     <string name="settings_whats_new_summary">Sjáðu hvað er nýtt í v%s</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">GitHub-geymsla</string>
-
     <!-- Appearance -->
     <string name="appearance_theme_label">Þema</string>
     <string name="appearance_theme_mode_system">Kerfi</string>
@@ -56,7 +53,6 @@
     <string name="appearance_theme_mode_dark">Dökkt</string>
     <string name="appearance_dynamic_color_label">Kraftmiklir litir</string>
     <string name="appearance_dynamic_color_summary">Aðlaga þemað að bakgrunnsmyndinni þinni</string>
-
     <!-- Home -->
     <string name="home_title">Heim</string>
     <string name="home_my_consumptions">Neyslan mín</string>
@@ -73,13 +69,11 @@
     <string name="home_edit_drink">Breyta %1$s</string>
     <string name="home_serving">Skammtur</string>
     <string name="home_serving_unavailable">Skammtavalkostir eru ekki tiltækir fyrir þessa færslu.</string>
-
     <!-- Sleep forecast -->
     <string name="sleep_forecast_title">Svefnspá</string>
     <string name="sleep_forecast_safe">Öruggt að sofa kl. %1$s</string>
     <string name="sleep_forecast_may_affect">Getur haft áhrif á svefn (%1$dmg við háttatíma)</string>
     <string name="sleep_forecast_disruption">Líklegt að svefn raskist (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">Bæta við drykk</string>
     <string name="add_create_custom_cd">Búa til sérsniðinn drykk</string>
@@ -95,26 +89,22 @@
     <string name="add_total_caffeine">Heildarkoffín</string>
     <string name="add_bedtime_warning">Við háttatíma verða um %1$d mg enn virk, sem er yfir svefnmörkum þínum upp á %2$d mg.</string>
     <string name="add_entry">Bæta við færslu</string>
-
     <!-- Navigation -->
     <string name="nav_home">Heim</string>
     <string name="nav_analytics">Greining</string>
     <string name="nav_settings">Stillingar</string>
     <string name="main_add_consumption">Bæta við neyslu</string>
-
     <!-- Notifications -->
     <string name="notification_channel_daily">Daglegar áminningar</string>
     <string name="notification_channel_daily_description">Daglegar áminningar um að skrá koffín</string>
     <string name="notification_channel_inactivity">Óvirkniviðvaranir</string>
     <string name="notification_channel_inactivity_description">Áminning þegar þú hefur ekki skráð koffín í nokkurn tíma</string>
-
     <string name="notification_daily_title">Koffínskoðun</string>
     <string name="notification_daily_morning">Tími til að skrá morgunkaffið eða teið þitt. Haltu koffínskráningunni uppfærðri í dag.</string>
     <string name="notification_daily_afternoon">Tími til að skrá síðdegiskoffínið þitt. Haltu yfirlitinu uppfærðu.</string>
     <string name="notification_daily_evening">Tími til að skrá kvöldkoffínið þitt. Fáðu nákvæmari svefnspár.</string>
     <string name="notification_inactivity_title">Gleymdirðu að skrá koffín?</string>
     <string name="notification_inactivity_body">Það eru liðnir 5 dagar síðan þú skráðir síðast. Opnaðu appið til að halda skráningunni nákvæmri.</string>
-
     <!-- Analytics -->
     <string name="analytics_title">Greining</string>
     <string name="analytics_caffeine_by_source">Koffín eftir uppruna</string>
@@ -130,14 +120,12 @@
     <string name="analytics_top_source">Helsti uppruni</string>
     <string name="analytics_sleep_threshold">Svefnmörk</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Analytics ranges -->
     <string name="analytics_range_today">Í dag</string>
     <string name="analytics_range_yesterday">Í gær</string>
     <string name="analytics_range_30_days">30 dagar</string>
     <string name="analytics_range_90_days">90 dagar</string>
     <string name="analytics_range_custom">Sérsniðið</string>
-
     <!-- Onboarding -->
     <string name="onboarding_welcome_kicker">VELKOMIN</string>
     <string name="onboarding_intro_line_1">Kynntu þér\n</string>
@@ -146,10 +134,8 @@
     <string name="onboarding_intro_subtitle">Rauntímayfirlit yfir hvað er enn í líkamanum þínum og hvort espresso kvöldsins muni kosta þig svefn.</string>
     <string name="onboarding_get_started">Hefjast handa</string>
     <string name="onboarding_takes_a_minute">Tekur um eina mínútu · Enginn aðgangur nauðsynlegur</string>
-
     <string name="onboarding_step_format">SKREF %1$d AF %2$d</string>
     <string name="onboarding_skip_for_now">Sleppa í bili</string>
-
     <!-- Profile -->
     <string name="profile_estimated_half_life">Áætlaður helmingunartími</string>
     <string name="profile_half_life_value_modified">%1$d klst (grunnur %2$d klst)</string>
@@ -157,7 +143,6 @@
     <string name="profile_typical_bedtime">Venjulegur háttatími</string>
     <string name="profile_sleep_threshold">Svefnmörk</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
-
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
 </resources>
