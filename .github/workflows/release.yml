@@ -1,4 +1,4 @@
-name: Android CI
+name: Release
 
 on:
   push:
@@ -9,11 +9,12 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -22,15 +23,31 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > $GITHUB_WORKSPACE/release.keystore
 
       - name: Build release APK
+        env:
+          SIGNING_STORE_FILE: ${{ github.workspace }}/release.keystore
+          SIGNING_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
+
+      - name: Rename APK
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          mv app/build/outputs/apk/release/app-release.apk \
+             app/build/outputs/apk/release/caffeine-health-${TAG}.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: "Caffeine Health ${{ github.ref_name }}"
           generate_release_notes: true
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/build/outputs/apk/release/caffeine-health-*.apk
