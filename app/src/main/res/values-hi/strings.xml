@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
@@ -10,10 +11,8 @@
     <string name="widget_quick_add_description">होम स्क्रीन से सीधे अपने हाल के पेय लॉग करें।</string>
     <string name="widget_combined_label">कैफीन डैशबोर्ड</string>
     <string name="widget_combined_description">ऐप खोले बिना अपना कैफीन स्तर देखें और पेय लॉग करें।</string>
-
     <!-- Common actions -->
     <string name="action_back">वापस</string>
-
     <!-- Settings list -->
     <string name="settings_title">सेटिंग्स</string>
     <string name="settings_caffeine_profile_title">कैफीन प्रोफ़ाइल</string>
@@ -33,7 +32,6 @@
     <string name="settings_about_title">जानकारी</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">GitHub रिपॉज़िटरी</string>
-
     <!-- Appearance settings -->
     <string name="appearance_theme_label">थीम</string>
     <string name="appearance_theme_mode_system">सिस्टम</string>
@@ -41,7 +39,6 @@
     <string name="appearance_theme_mode_dark">डार्क</string>
     <string name="appearance_dynamic_color_label">डायनेमिक रंग</string>
     <string name="appearance_dynamic_color_summary">अपनी वॉलपेपर से थीम अपनाएँ</string>
-
     <!-- Date and time settings -->
     <string name="date_time_24h_label">24-घंटे प्रारूप का उपयोग करें</string>
     <string name="date_time_24h_summary">1:00 PM की जगह 13:00</string>
@@ -50,11 +47,9 @@
     <string name="date_time_timezone_label">टाइमज़ोन</string>
     <string name="date_time_timezone_sheet_description">चार्ट, सोने के समय की गणना और दिन की सीमाओं के लिए ऐप कौन सा टाइमज़ोन उपयोग करे, यह चुनें।</string>
     <string name="date_time_timezone_search_label">टाइमज़ोन खोजें</string>
-
     <!-- Language settings -->
     <string name="language_deferred_title">लोकलाइज़ेशन स्थगित है</string>
     <string name="language_deferred_description">इस बिल्ड में अंग्रेज़ी ऐप की सक्रिय भाषा बनी रहेगी।</string>
-
     <!-- Common actions reused across screens -->
     <string name="action_yes">हाँ</string>
     <string name="action_no">नहीं</string>
@@ -62,7 +57,6 @@
     <string name="action_add">जोड़ें</string>
     <string name="action_expand">फैलाएँ</string>
     <string name="action_collapse">समेटें</string>
-
     <!-- Caffeine profile snapshot -->
     <string name="profile_estimated_half_life">अनुमानित Half-life</string>
     <string name="profile_half_life_value_modified">%1$d hr (आधार %2$d hr)</string>
@@ -74,13 +68,11 @@
     <string name="profile_sleep_threshold">नींद सीमा</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
     <string name="profile_sleep_threshold_description">सक्रिय कैफीन लक्ष्य जिससे नींद मार्गदर्शन तुलना करता है।</string>
-
     <!-- Caffeine profile re-adjust card -->
     <string name="profile_re_adjust_title">Caffeine Health प्रोफ़ाइल फिर से समायोजित करें</string>
     <string name="profile_re_adjust_description">अपनी half-life, नींद सेटिंग्स और metabolism factors को बेहतर बनाएँ।</string>
     <string name="profile_redo_onboarding">ऑनबोर्डिंग फिर करें</string>
     <string name="profile_redo_onboarding_description">कोई लॉग या इतिहास हटाए बिना प्रोफ़ाइल सेटअप फिर से पूरा करें।</string>
-
     <!-- Caffeine profile editors -->
     <string name="profile_caffeine_half_life">कैफीन Half-Life</string>
     <string name="profile_caffeine_half_life_supporting">औसत लगभग 5 घंटे होता है, लेकिन आप इसे यहाँ और व्यक्तिगत बना सकते हैं।</string>
@@ -105,7 +97,6 @@
     <string name="profile_medications_description">ऐसी कोई भी दवा चुनें जो कैफीन की सफाई धीमी कर सकती हो। अगर कोई लागू नहीं होती, तो None चुनें।</string>
     <string name="stepper_decrease_cd">%1$s घटाएँ</string>
     <string name="stepper_increase_cd">%1$s बढ़ाएँ</string>
-
     <!-- Advanced metabolism card -->
     <string name="profile_advanced_metabolism">उन्नत मेटाबॉलिज़्म</string>
     <string name="profile_advanced_metabolism_description">वैकल्पिक genetic और hormonal कारक जो आपके half-life अनुमान को और सटीक बनाते हैं।</string>
@@ -118,7 +109,6 @@
     <string name="profile_hormonal_status_description">गर्भावस्था और oral contraceptives कैफीन की सफाई को काफी धीमा कर सकते हैं।</string>
     <string name="profile_effective_half_life">प्रभावी half-life: %1$d hr %2$d min</string>
     <string name="profile_clearance_factor_explanation">Base %1$d hr को %2$s के संयुक्त clearance factor से समायोजित किया गया है।</string>
-
     <!-- Health Connect settings -->
     <string name="health_connect_no_permissions_granted">कोई Health Connect अनुमति नहीं दी गई</string>
     <string name="health_connect_not_installed">इस डिवाइस पर Health Connect इंस्टॉल नहीं है</string>
@@ -135,7 +125,6 @@
     <string name="health_connect_uses_recent_session">सबसे हालिया नींद सत्र का उपयोग करता है</string>
     <string name="health_connect_seven_day_avg">7-दिन का औसत</string>
     <string name="health_connect_seven_day_avg_description">पिछले सप्ताह का औसत सोने का समय</string>
-
     <!-- Notifications settings -->
     <string name="notifications_inactivity_section">निष्क्रियता रिमाइंडर</string>
     <string name="notifications_no_log_title">लॉग न करने का रिमाइंडर</string>
@@ -144,7 +133,6 @@
     <string name="notifications_remove_reminder_cd">रिमाइंडर हटाएँ</string>
     <string name="notifications_add_reminder">रिमाइंडर जोड़ें</string>
     <string name="notifications_add_daily_dialog_title">दैनिक रिमाइंडर जोड़ें</string>
-
     <!-- My Data settings -->
     <string name="my_data_export_title">डेटा एक्सपोर्ट करें</string>
     <string name="my_data_export_description">अपने इतिहास, प्रोफ़ाइल और custom drinks का बैकअप सहेजें</string>
@@ -156,15 +144,12 @@
     <string name="my_data_export_failed">एक्सपोर्ट विफल: %1$s</string>
     <string name="my_data_export_error_unknown">अज्ञात त्रुटि</string>
     <string name="my_data_import_could_not_read">फ़ाइल पढ़ी नहीं जा सकी</string>
-
     <!-- Save action (reused) -->
     <string name="action_save">सहेजें</string>
-
     <!-- Caffeine units -->
     <string name="unit_mg">mg</string>
     <string name="caffeine_mg_compact">%1$dmg</string>
     <string name="caffeine_mg">%1$d mg</string>
-
     <!-- Home screen -->
     <string name="home_title">होम</string>
     <string name="home_my_consumptions">मेरी सेवन प्रविष्टियाँ</string>
@@ -181,13 +166,11 @@
     <string name="home_edit_drink">%1$s संपादित करें</string>
     <string name="home_serving">सर्विंग</string>
     <string name="home_serving_unavailable">इस प्रविष्टि के लिए serving विकल्प उपलब्ध नहीं हैं।</string>
-
     <!-- Sleep forecast (HomeScreen card) -->
     <string name="sleep_forecast_title">नींद पूर्वानुमान</string>
     <string name="sleep_forecast_safe">%1$s पर सोना सुरक्षित</string>
     <string name="sleep_forecast_may_affect">नींद प्रभावित कर सकता है (%1$dmg bedtime पर)</string>
     <string name="sleep_forecast_disruption">नींद में बाधा की संभावना (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">एक पेय जोड़ें</string>
     <string name="add_create_custom_cd">कस्टम पेय बनाएँ</string>
@@ -203,7 +186,6 @@
     <string name="add_total_caffeine">कुल कैफीन</string>
     <string name="add_bedtime_warning">सोने के समय तक लगभग %1$d mg अभी भी सक्रिय होगा — आपकी %2$d mg नींद सीमा से ऊपर।</string>
     <string name="add_entry">प्रविष्टि जोड़ें</string>
-
     <!-- Add screen empty results -->
     <string name="add_empty_no_drinks_found">कोई पेय नहीं मिला</string>
     <string name="add_empty_no_drinks_available">कोई पेय उपलब्ध नहीं</string>
@@ -213,7 +195,6 @@
     <string name="add_empty_message_default">यहाँ पेय देखने के लिए कुछ presets जोड़ें।</string>
     <string name="add_create_custom_drink_button">कस्टम पेय बनाएँ</string>
     <string name="add_clear_filters">फ़िल्टर साफ़ करें</string>
-
     <!-- Custom drink sheet -->
     <string name="custom_drink_image_picker_cd">छवि चुनने के लिए टैप करें</string>
     <string name="custom_drink_new">नया कस्टम पेय</string>
@@ -227,22 +208,18 @@
     <string name="custom_drink_caffeine_per_serving">प्रति सर्विंग कैफीन</string>
     <string name="custom_drink_amount_label">मात्रा</string>
     <string name="custom_drink_save">कस्टम पेय सहेजें</string>
-
     <!-- Common reused -->
     <string name="action_ok">ठीक है</string>
-
     <!-- Navigation -->
     <string name="nav_home">होम</string>
     <string name="nav_analytics">विश्लेषण</string>
     <string name="nav_settings">सेटिंग्स</string>
     <string name="main_add_consumption">उपभोग जोड़ें</string>
-
     <!-- Notification channels -->
     <string name="notification_channel_daily">दैनिक रिमाइंडर</string>
     <string name="notification_channel_daily_description">दैनिक कैफीन लॉगिंग रिमाइंडर</string>
     <string name="notification_channel_inactivity">निष्क्रियता रिमाइंडर</string>
     <string name="notification_channel_inactivity_description">जब आपने कुछ समय से कैफीन लॉग नहीं किया हो, तब रिमाइंडर</string>
-
     <!-- Notification messages -->
     <string name="notification_daily_title">कैफीन चेक-इन</string>
     <string name="notification_daily_morning">अपनी सुबह की कॉफ़ी या चाय लॉग करने का समय है। आज अपने कैफीन सेवन पर नज़र रखें।</string>
@@ -250,12 +227,10 @@
     <string name="notification_daily_evening">अपना शाम का कैफीन लॉग करने का समय है। सटीक bedtime पूर्वानुमान पाएँ।</string>
     <string name="notification_inactivity_title">कैफीन लॉग छूट गया?</string>
     <string name="notification_inactivity_body">आपने 5 दिनों से लॉग नहीं किया है। अपने ट्रैकर को सटीक रखने के लिए ऐप खोलें।</string>
-
     <!-- Widgets (in-content text) -->
     <string name="widget_caffeine_now_inline_label">कैफीन अभी</string>
     <string name="widget_refresh_cd">रीफ़्रेश</string>
     <string name="widget_quick_log_toast">उपभोग जोड़ दिया गया है!</string>
-
     <!-- Analytics screen -->
     <string name="analytics_title">विश्लेषण</string>
     <string name="analytics_caffeine_by_source">स्रोत के अनुसार कैफीन</string>
@@ -272,21 +247,18 @@
     <string name="analytics_top_source">शीर्ष स्रोत</string>
     <string name="analytics_sleep_threshold">नींद सीमा</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Range button labels (short — used in toggle buttons) -->
     <string name="analytics_range_today">आज</string>
     <string name="analytics_range_yesterday">कल</string>
     <string name="analytics_range_30_days">30 दिन</string>
     <string name="analytics_range_90_days">90 दिन</string>
     <string name="analytics_range_custom">कस्टम</string>
-
     <!-- Headline labels (long — used in summary card) -->
     <string name="analytics_headline_today">आज</string>
     <string name="analytics_headline_yesterday">कल</string>
     <string name="analytics_headline_last_30">पिछले 30 दिन</string>
     <string name="analytics_headline_last_90">पिछले 90 दिन</string>
     <string name="analytics_headline_custom">कस्टम सीमा</string>
-
     <!-- Range bottom sheet -->
     <string name="analytics_change_range_cd">सीमा बदलें</string>
     <string name="analytics_quick_select">त्वरित चयन</string>
@@ -295,11 +267,9 @@
     <string name="analytics_to">तक</string>
     <string name="analytics_apply_custom_range">कस्टम सीमा लागू करें</string>
     <string name="analytics_custom_range_format">%1$s – %2$s</string>
-
     <!-- Empty state -->
     <string name="analytics_nothing_to_chart">अभी चार्ट करने के लिए कुछ नहीं</string>
     <string name="analytics_empty_body">कुछ पेय लॉग करें और यह %1$s दृश्य trends, sleep impact, और intake timing से भर जाएगा।</string>
-
     <!-- By Source page -->
     <string name="analytics_view_category">श्रेणी</string>
     <string name="analytics_view_item">आइटम</string>
@@ -310,7 +280,6 @@
     <string name="analytics_servings_one">%1$d serving</string>
     <string name="analytics_servings_other">%1$d servings</string>
     <string name="analytics_full_percent" formatted="false">100%</string>
-
     <!-- Time-of-day buckets -->
     <string name="analytics_bucket_night">रात</string>
     <string name="analytics_bucket_night_range">7pm – 5am</string>
@@ -320,13 +289,11 @@
     <string name="analytics_bucket_afternoon_range">12pm – 3pm</string>
     <string name="analytics_bucket_evening">शाम</string>
     <string name="analytics_bucket_evening_range">3pm – 7pm</string>
-
     <!-- Common reused -->
     <string name="action_close">बंद करें</string>
     <string name="action_continue">जारी रखें</string>
     <string name="action_skip">छोड़ें</string>
     <string name="brand_caffeine_health">Caffeine Health</string>
-
     <!-- Onboarding intro -->
     <string name="onboarding_brand_logo_cd">Caffeine Health लोगो</string>
     <string name="onboarding_welcome_kicker">स्वागत</string>
@@ -339,12 +306,10 @@
     <string name="onboarding_intro_subtitle">देखें कि आपके सिस्टम में अभी क्या बाकी है और क्या आज रात की espresso आपकी नींद बिगाड़ देगी।</string>
     <string name="onboarding_get_started">शुरू करें</string>
     <string name="onboarding_takes_a_minute">लगभग एक मिनट लगता है · किसी खाते की ज़रूरत नहीं</string>
-
     <!-- Onboarding scaffolding -->
     <string name="onboarding_step_format">चरण %1$d / %2$d</string>
     <string name="onboarding_skip_for_now">अभी छोड़ें</string>
     <string name="onboarding_default_disabled_hint">जारी रखने के लिए इस अनुभाग का उत्तर दें।</string>
-
     <!-- Basic info -->
     <string name="onboarding_basic_info_title">अपना आधार तय करें</string>
     <string name="onboarding_basic_info_subtitle">अपना आयु वर्ग चुनें और डिफ़ॉल्ट वज़न वैसे ही छोड़ दें, जब तक कि आप अभी उसे समायोजित नहीं करना चाहते।</string>
@@ -354,14 +319,12 @@
     <string name="onboarding_age_range_supporting">यह अनुमान को सतर्क रखता है जब कैफीन अधिक देर तक रह सकता है।</string>
     <string name="onboarding_weight_section">वज़न</string>
     <string name="onboarding_weight_supporting">अगर आप डिफ़ॉल्ट शुरुआती वज़न समायोजित करना चाहते हैं, तो stepper का उपयोग करें।</string>
-
     <!-- Sleep -->
     <string name="onboarding_sleep_title">अपने नींद विंडो को निर्धारित करें</string>
     <string name="onboarding_sleep_subtitle">अपना सामान्य bedtime चुनें। हम आपको बताएँगे जब कैफीन अभी भी सक्रिय हो सकता है।</string>
     <string name="onboarding_sleep_disabled_hint">हमें बताइए कि क्या नींद आपके लिए संवेदनशील है।</string>
     <string name="onboarding_sleep_enabled_hint">यह bedtime forecast और threshold line को चलाता है।</string>
     <string name="onboarding_sleep_sensitivity_supporting">अगर अनिद्रा पहले से समस्या है, तो हम bedtime target को अधिक सतर्क रखते हैं।</string>
-
     <!-- Lifestyle -->
     <string name="onboarding_lifestyle_title">असल जीवन का संदर्भ जोड़ें</string>
     <string name="onboarding_lifestyle_subtitle">ये आदतें बदलती हैं कि कैफीन कितनी जल्दी साफ़ होता है और bedtime guidance कितनी सावधान होनी चाहिए।</string>
@@ -370,7 +333,6 @@
     <string name="onboarding_smoking_info">धूम्रपान कुछ लोगों में CYP1A2 activity को प्रभावित करके कैफीन की सफाई तेज़ कर सकता है।</string>
     <string name="onboarding_alcohol_info">अधिक शराब का उपयोग सफाई धीमी कर सकता है और आपकी प्रभावी bedtime सीमा को कम कर सकता है।</string>
     <string name="onboarding_caffeine_info">बार-बार अधिक सेवन सहनशीलता बढ़ा सकता है, भले ही bedtime guidance सतर्क ही रहनी चाहिए।</string>
-
     <!-- Medical -->
     <string name="onboarding_medical_title">अनुमान को ज़िम्मेदार रखें</string>
     <string name="onboarding_medical_subtitle">थोड़ा-सा स्वास्थ्य संदर्भ पहले दिन की प्रोफ़ाइल को अत्यधिक आशावादी होने से बचाता है।</string>
@@ -380,7 +342,6 @@
     <string name="onboarding_medications_section">ऐसी दवाएँ जो कैफीन की सफाई धीमी कर सकती हैं</string>
     <string name="onboarding_medications_supporting">जो लागू हों, वे चुनें। अगर कुछ भी लागू नहीं होता, तो None चुनें।</string>
     <string name="onboarding_medications_info">कुछ CYP1A2 inhibitors कैफीन को सामान्य से बहुत अधिक देर तक शरीर में रख सकते हैं।</string>
-
     <!-- Profile ready -->
     <string name="onboarding_profile_ready_title">प्रोफ़ाइल तैयार</string>
     <string name="onboarding_profile_ready_subtitle">यह रहा शुरुआती प्रोफ़ाइल जिसे Caffeine आपके live curve और bedtime forecast के लिए उपयोग करेगा।</string>
@@ -389,12 +350,10 @@
     <string name="onboarding_metric_half_life_description">आपके शरीर को आपके सेवन किए गए कैफीन का आधा भाग साफ़ करने में कितना समय लगता है।</string>
     <string name="onboarding_metric_sleep_threshold_description">सोने से पहले आपके सिस्टम में कितनी सक्रिय कैफीन रह सकती है, उसका एक सतर्क bedtime target।</string>
     <string name="onboarding_metric_bedtime_description">हर दिन sleep forecast card और chart markers प्रोजेक्ट करने के लिए उपयोग किया जाता है।</string>
-
     <!-- Profile info dialogs -->
     <string name="onboarding_dialog_half_life_body">Half-life वह अनुमानित समय है जिसमें आपका शरीर आपके सिस्टम में अभी सक्रिय कैफीन का आधा भाग साफ़ करता है। लंबी half-life का मतलब है कि कैफीन दिन के बाद के हिस्से तक रह सकता है।</string>
     <string name="onboarding_dialog_sleep_threshold_body">यह सोने से पहले आपके सिस्टम में कितनी सक्रिय कैफीन रह सकती है, इसका एक सतर्क bedtime target है, ताकि नींद प्रभावित होने की संभावना कम रहे।</string>
     <string name="onboarding_dialog_bedtime_body">Bedtime chart marker और sleep forecast card को चलाता है, ताकि ऐप अनुमान लगा सके कि जब आप सोने जाएँ तो कितना कैफीन अभी भी सक्रिय हो सकता है।</string>
-
     <!-- Onboarding components -->
     <string name="onboarding_source_label">स्रोत</string>
     <string name="onboarding_bedtime_aware">पहले कप से ही bedtime-aware</string>
@@ -418,18 +377,15 @@
     <string name="onboarding_clock_6_am">6 AM</string>
     <string name="onboarding_clock_noon">NOON</string>
     <string name="onboarding_clock_11_pm">11 PM</string>
-
     <!-- Half-life format -->
     <string name="onboarding_half_life_hours_only">%1$d h</string>
     <string name="onboarding_half_life_hours_minutes">%1$d h %2$d m</string>
-
     <!-- Bedtime dot slider labels -->
     <string name="bedtime_label_9_pm">9 PM</string>
     <string name="bedtime_label_10_pm">10 PM</string>
     <string name="bedtime_label_11_pm">11 PM</string>
     <string name="bedtime_label_12_am">12 AM</string>
     <string name="bedtime_label_1_am">1 AM</string>
-
     <!-- Onboarding enum labels -->
     <string name="age_under_65">65 से कम</string>
     <string name="age_65_or_older">65 या अधिक</string>
@@ -449,11 +405,9 @@
     <string name="medication_ciprofloxacin">Ciprofloxacin</string>
     <string name="medication_fluvoxamine">Fluvoxamine</string>
     <string name="medication_other_cyp1a2">अन्य CYP1A2 inhibitor</string>
-
     <!-- Health Connect hints in profile (deferred from batch 2) -->
     <string name="health_connect_sleep_hint_active">Health Connect यह मान प्रदान कर रहा है</string>
     <string name="health_connect_sleep_hint_no_data">अभी Health Connect में कोई नींद डेटा नहीं है — fallback के रूप में आपकी सेटिंग उपयोग की जाती है</string>
-
     <!-- Completion celebration -->
     <string name="celebration_profile_saved">प्रोफ़ाइल सहेजी गई।</string>
     <string name="celebration_subtitle">जब आप तैयार हों, Caffeine Health तैयार है।</string>
