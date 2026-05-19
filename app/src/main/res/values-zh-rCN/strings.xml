@@ -148,8 +148,6 @@
     <string name="home_now">当前</string>
     <string name="home_in_total_over_time">合计（随时间推移）</string>
     <string name="home_edit_drink">编辑 %1$s</string>
-    <string name="home_serving"></string>
-    <string name="home_serving_unavailable"></string>
     <string name="sleep_forecast_title">睡眠预报</string>
     <string name="sleep_forecast_safe">不影响%1$s的睡眠</string>
     <string name="sleep_forecast_may_affect">可能会影响睡眠 (就寝时，仍有%1$d毫克)</string>
