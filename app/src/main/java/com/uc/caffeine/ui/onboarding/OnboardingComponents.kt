@@ -28,6 +28,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -281,7 +282,7 @@ internal fun OnboardingScaffold(
                                         contentAlignment = Alignment.CenterStart,
                                     ) {
                                         if (showBackButton && onBack != null) {
-                                            IconButton(
+                                            FilledTonalIconButton(
                                                 onClick = {
                                                     haptics.navigation()
                                                     onBack()
@@ -905,6 +906,8 @@ internal fun <T> ConnectedChoiceButtonGroup(
     labelFor: (T) -> String,
     onOptionSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
+    checkedContainerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
+    checkedContentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimary,
 ) {
     val haptics = rememberAppHaptics()
 
@@ -927,6 +930,8 @@ internal fun <T> ConnectedChoiceButtonGroup(
                 role = Role.RadioButton,
                 minHeight = 50.dp,
                 shapes = expressiveChoiceShapes(index = index, count = options.size),
+                checkedContainerColor = checkedContainerColor,
+                checkedContentColor = checkedContentColor,
             )
         }
     }
@@ -1099,6 +1104,8 @@ private fun OnboardingChoiceTile(
     role: Role,
     minHeight: Dp,
     shapes: ToggleButtonShapes,
+    checkedContainerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
+    checkedContentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimary,
 ) {
     ToggleButton(
         checked = checked,
@@ -1108,8 +1115,8 @@ private fun OnboardingChoiceTile(
             .heightIn(min = minHeight)
             .semantics { this.role = role },
         colors = ToggleButtonDefaults.toggleButtonColors(
-            checkedContainerColor = MaterialTheme.colorScheme.primary,
-            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+            checkedContainerColor = checkedContainerColor,
+            checkedContentColor = checkedContentColor,
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             contentColor = MaterialTheme.colorScheme.onSurface,
         ),
@@ -1339,6 +1346,8 @@ internal fun WeightStepperCard(
             selectedOption = weightUnit,
             labelFor = { unit -> weightUnitLabels[unit] ?: "" },
             onOptionSelected = onWeightUnitSelected,
+            checkedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            checkedContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         )
 
         Surface(
@@ -1373,7 +1382,13 @@ internal fun WeightStepperCard(
                 }
 
                 Column(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            haptics.toggle()
+                            showInputDialog = true
+                        },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
@@ -1537,13 +1552,14 @@ internal fun SleepTimePickerCard(
                 shape = CircleShape,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Text(
+                RollingNumberText(
                     text = formatTimeOfDay(
                         hour = selectedTime.hour,
                         minute = selectedTime.minute,
                         settings = displaySettings,
                     ),
                     style = MaterialTheme.typography.titleMedium,
+                    labelPrefix = "bedtime_time",
                 )
             }
         }

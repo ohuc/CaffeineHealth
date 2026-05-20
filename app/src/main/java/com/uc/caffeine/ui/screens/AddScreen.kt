@@ -50,6 +50,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SearchBar
@@ -890,10 +891,7 @@ private fun SegmentedDrinkListItem(
                 fontWeight = FontWeight.Bold,
             )
         },
-        shapes = ListItemDefaults.segmentedShapes(
-            index = index,
-            count = count,
-        ),
+        shapes = segmentedListItemShapes(index, count),
         colors = ListItemDefaults.colors(
             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
         ),

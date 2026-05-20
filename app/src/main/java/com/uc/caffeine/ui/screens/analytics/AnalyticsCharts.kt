@@ -36,7 +36,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -197,7 +199,12 @@ internal fun AnalyticsRangeBottomSheet(
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
     val today = remember { java.time.LocalDate.now() }
+
+    fun animatedDismiss() {
+        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+    }
     var customStart by remember { mutableStateOf(today.minusDays(29)) }
     var customEnd by remember { mutableStateOf(today) }
     var showStartPicker by remember { mutableStateOf(false) }
@@ -242,7 +249,7 @@ internal fun AnalyticsRangeBottomSheet(
                         ToggleButton(
                             checked = selectedRange == range,
                             onCheckedChange = { checked ->
-                                if (checked) { onRangeSelected(range); onDismiss() }
+                                if (checked) { onRangeSelected(range); animatedDismiss() }
                             },
                             modifier = Modifier.weight(1f),
                             shapes = when (index) {
@@ -270,7 +277,7 @@ internal fun AnalyticsRangeBottomSheet(
                                 if (checked) {
                                     if (range != AnalyticsRange.CUSTOM) {
                                         onRangeSelected(range)
-                                        onDismiss()
+                                        animatedDismiss()
                                     } else {
                                         onRangeSelected(range)
                                     }
@@ -313,7 +320,7 @@ internal fun AnalyticsRangeBottomSheet(
             Button(
                 onClick = {
                     onCustomRange(customStart, customEnd)
-                    onDismiss()
+                    animatedDismiss()
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) {

@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
@@ -112,7 +113,7 @@ internal fun NotificationsSettingsScreen(
                             },
                         )
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    shapes = segmentedListItemShapes(0, 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -146,7 +147,7 @@ internal fun NotificationsSettingsScreen(
                                 Icon(Icons.Default.Close, contentDescription = stringResource(R.string.notifications_remove_reminder_cd))
                             }
                         },
-                        shapes = ListItemDefaults.segmentedShapes(index = index, count = totalItems),
+                        shapes = segmentedListItemShapes(index, totalItems),
                         colors = ListItemDefaults.colors(
                             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                         ),
@@ -164,7 +165,7 @@ internal fun NotificationsSettingsScreen(
                     content = {
                         Text(text = stringResource(R.string.notifications_add_reminder))
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = reminderCount, count = totalItems),
+                    shapes = segmentedListItemShapes(reminderCount, totalItems),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),

@@ -151,7 +151,7 @@
 
     <!-- My Data settings -->
     <string name="my_data_export_title">Export data</string>
-    <string name="my_data_export_description">Save a backup of your history, profile, and custom drinks</string>
+    <string name="my_data_export_description">Save a Backup of everything</string>
     <string name="my_data_import_title">Import data</string>
     <string name="my_data_import_description">Restore from a previous backup file</string>
     <string name="my_data_import_dialog_text">Merge adds imported entries alongside your current data. Replace wipes all existing history and settings before restoring.</string>

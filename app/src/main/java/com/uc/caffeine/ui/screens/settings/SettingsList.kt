@@ -29,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
@@ -160,10 +161,7 @@ internal fun SettingsListScreen(
                             contentDescription = null,
                         )
                     },
-                    shapes = ListItemDefaults.segmentedShapes(
-                        index = index,
-                        count = categories.size,
-                    ),
+                    shapes = segmentedListItemShapes(index, categories.size),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -210,7 +208,7 @@ internal fun SettingsListScreen(
                             )
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                    shapes = segmentedListItemShapes(0, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -241,7 +239,7 @@ internal fun SettingsListScreen(
                             contentDescription = null,
                         )
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                    shapes = segmentedListItemShapes(1, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),

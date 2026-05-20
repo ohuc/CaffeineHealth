@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedListItem
@@ -152,7 +153,7 @@ internal fun HealthConnectSettingsScreen(
                             enabled = healthConnectManager.isAvailable(),
                         )
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    shapes = segmentedListItemShapes(0, 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -231,7 +232,7 @@ internal fun HealthConnectSettingsScreen(
                                         onClick = { onHcSleepModeChange(HcSleepMode.PREVIOUS_DAY) },
                                     )
                                 },
-                                shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                                shapes = segmentedListItemShapes(0, 2),
                                 colors = ListItemDefaults.colors(
                                     containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                                 ),
@@ -263,7 +264,7 @@ internal fun HealthConnectSettingsScreen(
                                         onClick = { onHcSleepModeChange(HcSleepMode.SEVEN_DAY_AVERAGE) },
                                     )
                                 },
-                                shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                                shapes = segmentedListItemShapes(1, 2),
                                 colors = ListItemDefaults.colors(
                                     containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                                 ),

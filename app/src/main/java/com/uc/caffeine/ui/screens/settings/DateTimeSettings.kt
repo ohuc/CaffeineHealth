@@ -15,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -86,10 +87,7 @@ internal fun DateTimeSettingsScreen(
                             },
                         )
                     },
-                    shapes = ListItemDefaults.segmentedShapes(
-                        index = 0,
-                        count = 3,
-                    ),
+                    shapes = segmentedListItemShapes(0, 3),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -114,10 +112,7 @@ internal fun DateTimeSettingsScreen(
                             contentDescription = null,
                         )
                     },
-                    shapes = ListItemDefaults.segmentedShapes(
-                        index = 1,
-                        count = 3,
-                    ),
+                    shapes = segmentedListItemShapes(1, 3),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -142,10 +137,7 @@ internal fun DateTimeSettingsScreen(
                             contentDescription = null,
                         )
                     },
-                    shapes = ListItemDefaults.segmentedShapes(
-                        index = 2,
-                        count = 3,
-                    ),
+                    shapes = segmentedListItemShapes(2, 3),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -226,10 +218,7 @@ private fun AppDateFormatBottomSheet(
                             )
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(
-                        index = index,
-                        count = dateFormats.size,
-                    ),
+                    shapes = segmentedListItemShapes(index, dateFormats.size),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -322,10 +311,7 @@ private fun TimeZoneBottomSheet(
                             )
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(
-                        index = index,
-                        count = filteredTimeZoneIds.size,
-                    ),
+                    shapes = segmentedListItemShapes(index, filteredTimeZoneIds.size),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),

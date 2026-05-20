@@ -21,6 +21,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
@@ -181,10 +182,7 @@ private fun AnalyticsNavCard(
                         contentDescription = null,
                     )
                 },
-                shapes = ListItemDefaults.segmentedShapes(
-                    index = index,
-                    count = items.size,
-                ),
+                shapes = segmentedListItemShapes(index, items.size),
                 colors = ListItemDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),

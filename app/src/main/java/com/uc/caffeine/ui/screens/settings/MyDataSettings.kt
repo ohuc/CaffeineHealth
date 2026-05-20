@@ -17,6 +17,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SnackbarHost
@@ -208,7 +209,7 @@ private fun MyDataSettingsContent(
                     supportingContent = {
                         Text(stringResource(R.string.my_data_export_description))
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                    shapes = segmentedListItemShapes(0, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -228,7 +229,7 @@ private fun MyDataSettingsContent(
                     supportingContent = {
                         Text(stringResource(R.string.my_data_import_description))
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                    shapes = segmentedListItemShapes(1, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),

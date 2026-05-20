@@ -25,8 +25,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DonutLarge
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ColorScheme
@@ -36,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -110,7 +114,11 @@ internal fun AppearanceSettingsScreen(
                     onClick = {},
                     leadingContent = {
                         Icon(
-                            imageVector = Icons.Default.Palette,
+                            imageVector = when (userSettings.themeMode) {
+                                ThemeMode.SYSTEM -> Icons.Default.BrightnessAuto
+                                ThemeMode.LIGHT -> Icons.Default.LightMode
+                                ThemeMode.DARK -> Icons.Default.DarkMode
+                            },
                             contentDescription = null,
                         )
                     },
@@ -122,7 +130,9 @@ internal fun AppearanceSettingsScreen(
                     },
                     supportingContent = {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                         ) {
                             themeModes.forEachIndexed { index, (themeMode, label) ->
@@ -149,7 +159,7 @@ internal fun AppearanceSettingsScreen(
                             }
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    shapes = segmentedListItemShapes(index = 0, count = 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -175,7 +185,9 @@ internal fun AppearanceSettingsScreen(
                     },
                     supportingContent = {
                         LazyRow(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(vertical = 4.dp),
                         ) {
@@ -200,7 +212,7 @@ internal fun AppearanceSettingsScreen(
                             }
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    shapes = segmentedListItemShapes(index = 0, count = 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -226,7 +238,9 @@ internal fun AppearanceSettingsScreen(
                     },
                     supportingContent = {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                         ) {
                             homeViewModes.forEachIndexed { index, (mode, label) ->
@@ -252,7 +266,7 @@ internal fun AppearanceSettingsScreen(
                             }
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 1),
+                    shapes = segmentedListItemShapes(index = 0, count = 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),

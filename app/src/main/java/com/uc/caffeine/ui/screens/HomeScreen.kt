@@ -39,6 +39,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
+import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedListItem
@@ -109,7 +110,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.ToggleButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -483,10 +484,7 @@ private fun ConsumptionHistoryListItem(
                 fontWeight = FontWeight.Bold,
             )
         },
-        shapes = ListItemDefaults.segmentedShapes(
-            index = index,
-            count = count,
-        ),
+        shapes = segmentedListItemShapes(index, count),
         colors = ListItemDefaults.colors(
             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
         ),
@@ -1009,7 +1007,7 @@ private fun EditConsumptionEntrySheet(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = {
+            FilledTonalIconButton(onClick = {
                 haptics.navigation()
                 onBack()
             }) {
