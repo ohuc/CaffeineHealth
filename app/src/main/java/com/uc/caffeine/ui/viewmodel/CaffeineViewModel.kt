@@ -49,6 +49,7 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProdu
 import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
 import com.patrykandpatrick.vico.compose.pie.data.pieSeries
+import java.time.Duration
 import java.time.LocalDate
 import java.time.Instant
 import java.time.LocalTime
@@ -75,6 +76,8 @@ sealed interface MyDataUiState {
 }
 
 enum class CaffeineTrend { RISING, STEADY, FALLING }
+
+private const val INITIAL_HEALTH_CONNECT_IMPORT_WINDOW_DAYS = 30L
 
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -817,7 +820,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         val since = if (lastOpenedAt > 0L) {
             Instant.ofEpochMilli(lastOpenedAt)
         } else {
-            now.minusSeconds(30L * 24L * 60L * 60L)
+            now.minus(Duration.ofDays(INITIAL_HEALTH_CONNECT_IMPORT_WINDOW_DAYS))
         }
 
         val importedEntries = healthConnectManager.readCaffeineEntries(since, now)
@@ -825,7 +828,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         for (entry in importedEntries) {
             val isDuplicate = logDao.hasHealthConnectImportedEntry(entry.startedAtMillis, entry.caffeineMg)
             if (!isDuplicate) {
-                logDao.logDrink(entry.copy(absorptionRate = userSettings.value.absorptionRateMinutes))
+                logDao.logDrink(entry)
                 importedCount += 1
             }
         }

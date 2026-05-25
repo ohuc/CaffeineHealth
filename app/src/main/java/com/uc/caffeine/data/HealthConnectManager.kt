@@ -16,6 +16,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 const val HEALTH_CONNECT_IMPORTED_PRESET_ID = "health_connect_imported"
+private const val MILLIS_PER_MINUTE = 60_000L
 
 class HealthConnectManager(private val context: Context) {
 
@@ -79,7 +80,7 @@ class HealthConnectManager(private val context: Context) {
         return response.records.mapNotNull { record ->
             val caffeineMg = record.caffeine?.inMilligrams?.toInt()?.takeIf { it > 0 } ?: return@mapNotNull null
             val startMillis = record.startTime.toEpochMilli()
-            val durationMinutes = ((record.endTime.toEpochMilli() - startMillis) / 60_000L).toInt().coerceAtLeast(1)
+            val durationMinutes = ((record.endTime.toEpochMilli() - startMillis) / MILLIS_PER_MINUTE).toInt().coerceAtLeast(1)
             ConsumptionEntry(
                 drinkName = "Health Connect",
                 caffeineMg = caffeineMg,
