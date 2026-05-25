@@ -3,9 +3,15 @@ package com.uc.caffeine.data.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.uc.caffeine.data.HEALTH_CONNECT_IMPORTED_PRESET_ID
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.RecentDrink
 import kotlinx.coroutines.flow.Flow
+
+data class ImportedEntrySignature(
+    val startedAtMillis: Long,
+    val caffeineMg: Int,
+)
 
 @Dao
 interface ConsumptionLogDao {
@@ -59,14 +65,15 @@ interface ConsumptionLogDao {
     suspend fun getAllEntriesOnce(): List<ConsumptionEntry>
 
     @Query(
-        "SELECT EXISTS(" +
-            "SELECT 1 FROM consumption_log " +
-            "WHERE presetItemId = 'health_connect_imported' " +
-            "AND startedAtMillis = :startedAtMillis " +
-            "AND caffeineMg = :caffeineMg" +
-        ")"
+        "SELECT startedAtMillis, caffeineMg " +
+            "FROM consumption_log " +
+            "WHERE presetItemId = '" + HEALTH_CONNECT_IMPORTED_PRESET_ID + "' " +
+            "AND startedAtMillis BETWEEN :startMillis AND :endMillis"
     )
-    suspend fun hasHealthConnectImportedEntry(startedAtMillis: Long, caffeineMg: Int): Boolean
+    suspend fun getImportedEntrySignaturesInRange(
+        startMillis: Long,
+        endMillis: Long,
+    ): List<ImportedEntrySignature>
 
     // Delete all entries from today — the "Reset Today" button
     @Query("DELETE FROM consumption_log WHERE startedAtMillis >= :startOfDay")

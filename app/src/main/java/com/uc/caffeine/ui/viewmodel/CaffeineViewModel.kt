@@ -824,15 +824,20 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
 
         val importedEntries = healthConnectManager.readCaffeineEntries(since, now)
-        var importedCount = 0
+        val existingImportedSignatures = logDao.getImportedEntrySignaturesInRange(
+            startMillis = since.toEpochMilli(),
+            endMillis = now.toEpochMilli(),
+        ).mapTo(mutableSetOf()) { it.startedAtMillis to it.caffeineMg }
+
+        var newlyImportedCount = 0
         for (entry in importedEntries) {
-            val isDuplicate = logDao.hasHealthConnectImportedEntry(entry.startedAtMillis, entry.caffeineMg)
-            if (!isDuplicate) {
+            val signature = entry.startedAtMillis to entry.caffeineMg
+            if (existingImportedSignatures.add(signature)) {
                 logDao.logDrink(entry)
-                importedCount += 1
+                newlyImportedCount += 1
             }
         }
-        if (importedCount > 0) triggerWidgetRefresh()
+        if (newlyImportedCount > 0) triggerWidgetRefresh()
     }
 
     private suspend fun refreshHcSleepData() {
