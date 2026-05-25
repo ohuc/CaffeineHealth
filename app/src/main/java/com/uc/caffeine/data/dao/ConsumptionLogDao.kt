@@ -58,6 +58,16 @@ interface ConsumptionLogDao {
     @Query("SELECT * FROM consumption_log ORDER BY startedAtMillis DESC")
     suspend fun getAllEntriesOnce(): List<ConsumptionEntry>
 
+    @Query(
+        "SELECT EXISTS(" +
+            "SELECT 1 FROM consumption_log " +
+            "WHERE presetItemId = 'health_connect_imported' " +
+            "AND startedAtMillis = :startedAtMillis " +
+            "AND caffeineMg = :caffeineMg" +
+        ")"
+    )
+    suspend fun hasHealthConnectImportedEntry(startedAtMillis: Long, caffeineMg: Int): Boolean
+
     // Delete all entries from today — the "Reset Today" button
     @Query("DELETE FROM consumption_log WHERE startedAtMillis >= :startOfDay")
     suspend fun clearToday(startOfDay: Long)

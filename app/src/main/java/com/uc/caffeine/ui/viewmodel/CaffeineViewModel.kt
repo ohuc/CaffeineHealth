@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 import com.uc.caffeine.data.AhrGenotype
 import com.uc.caffeine.data.AppDateFormat
 import com.uc.caffeine.data.HealthConnectManager
+import com.uc.caffeine.data.HEALTH_CONNECT_IMPORTED_PRESET_ID
 import com.uc.caffeine.data.CaffeineDatabase
 import com.uc.caffeine.data.Cyp1a2Genotype
 import com.uc.caffeine.data.HormonalStatus
@@ -49,6 +50,7 @@ import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
 import com.patrykandpatrick.vico.compose.pie.data.pieSeries
 import java.time.LocalDate
+import java.time.Instant
 import java.time.LocalTime
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.Dispatchers
@@ -746,10 +748,8 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             settingsRepo.updateHealthConnectEnabled(enabled)
             if (enabled) {
-                val settings = userSettings.value
-                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
-                val entries = logDao.getAllEntriesOnce()
-                runCatching { healthConnectManager.syncAll(entries, zoneId) }
+                syncCaffeineToHealthConnect()
+                importCaffeineFromHealthConnect(settingsRepo.getLastAppOpenedAt())
             }
         }
     }
@@ -790,13 +790,46 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
     fun onAppOpened() {
         viewModelScope.launch {
+            val lastOpenedAt = settingsRepo.getLastAppOpenedAt()
             settingsRepo.recordAppOpened()
             val settings = userSettings.value
             if (settings.inactivityReminderEnabled) {
                 com.uc.caffeine.util.notifications.NotificationScheduler.scheduleInactivityReminder(getApplication())
             }
+            if (settings.healthConnectEnabled) {
+                importCaffeineFromHealthConnect(lastOpenedAt)
+            }
             if (settings.hcSleepEnabled) refreshHcSleepData()
         }
+    }
+
+    private suspend fun syncCaffeineToHealthConnect() {
+        val settings = userSettings.value
+        val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+        val entries = logDao.getAllEntriesOnce().filterNot {
+            it.presetItemId == HEALTH_CONNECT_IMPORTED_PRESET_ID
+        }
+        runCatching { healthConnectManager.syncAll(entries, zoneId) }
+    }
+
+    private suspend fun importCaffeineFromHealthConnect(lastOpenedAt: Long) {
+        val now = Instant.now()
+        val since = if (lastOpenedAt > 0L) {
+            Instant.ofEpochMilli(lastOpenedAt)
+        } else {
+            now.minusSeconds(30L * 24L * 60L * 60L)
+        }
+
+        val importedEntries = healthConnectManager.readCaffeineEntries(since, now)
+        var importedCount = 0
+        for (entry in importedEntries) {
+            val isDuplicate = logDao.hasHealthConnectImportedEntry(entry.startedAtMillis, entry.caffeineMg)
+            if (!isDuplicate) {
+                logDao.logDrink(entry.copy(absorptionRate = userSettings.value.absorptionRateMinutes))
+                importedCount += 1
+            }
+        }
+        if (importedCount > 0) triggerWidgetRefresh()
     }
 
     private suspend fun refreshHcSleepData() {

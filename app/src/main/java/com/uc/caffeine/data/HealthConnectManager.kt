@@ -15,9 +15,14 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
+const val HEALTH_CONNECT_IMPORTED_PRESET_ID = "health_connect_imported"
+
 class HealthConnectManager(private val context: Context) {
 
-    val permissions = setOf(HealthPermission.getWritePermission(NutritionRecord::class))
+    val permissions = setOf(
+        HealthPermission.getWritePermission(NutritionRecord::class),
+        HealthPermission.getReadPermission(NutritionRecord::class),
+    )
     val sleepPermissions = setOf(HealthPermission.getReadPermission(SleepSessionRecord::class))
     val allPermissions = permissions + sleepPermissions
 
@@ -58,6 +63,37 @@ class HealthConnectManager(private val context: Context) {
 
     suspend fun syncAll(entries: List<ConsumptionEntry>, zoneId: ZoneId = ZoneId.systemDefault()) {
         entries.forEach { writeEntry(it, zoneId) }
+    }
+
+    suspend fun readCaffeineEntries(from: Instant, to: Instant): List<ConsumptionEntry> {
+        val c = client ?: return emptyList()
+        val response = runCatching {
+            c.readRecords(
+                ReadRecordsRequest(
+                    recordType = NutritionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                )
+            )
+        }.getOrNull() ?: return emptyList()
+
+        return response.records.mapNotNull { record ->
+            val caffeineMg = record.caffeine?.inMilligrams?.toInt()?.takeIf { it > 0 } ?: return@mapNotNull null
+            val startMillis = record.startTime.toEpochMilli()
+            val durationMinutes = ((record.endTime.toEpochMilli() - startMillis) / 60_000L).toInt().coerceAtLeast(1)
+            ConsumptionEntry(
+                drinkName = "Health Connect",
+                caffeineMg = caffeineMg,
+                emoji = "🔗",
+                presetItemId = HEALTH_CONNECT_IMPORTED_PRESET_ID,
+                quantity = 1,
+                unitKey = "mg",
+                unitCaffeineMg = caffeineMg.toDouble(),
+                imageName = "",
+                absorptionRate = 45,
+                startedAtMillis = startMillis,
+                durationMinutes = durationMinutes,
+            )
+        }
     }
 
     suspend fun readSleepBedtime(mode: HcSleepMode, zoneId: ZoneId = ZoneId.systemDefault()): LocalTime? {
