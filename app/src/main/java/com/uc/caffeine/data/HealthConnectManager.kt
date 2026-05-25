@@ -18,6 +18,7 @@ import kotlin.math.roundToInt
 
 const val HEALTH_CONNECT_IMPORTED_PRESET_ID = "health_connect_imported"
 private const val MILLIS_PER_MINUTE = 60_000L
+private const val MIN_IMPORT_DURATION_MINUTES = 1
 
 class HealthConnectManager(private val context: Context) {
 
@@ -83,7 +84,7 @@ class HealthConnectManager(private val context: Context) {
             val startMillis = record.startTime.toEpochMilli()
             val durationMinutes = ((record.endTime.toEpochMilli() - startMillis).toDouble() / MILLIS_PER_MINUTE)
                 .roundToInt()
-                .coerceAtLeast(1)
+                .coerceAtLeast(MIN_IMPORT_DURATION_MINUTES)
             ConsumptionEntry(
                 drinkName = "Health Connect",
                 caffeineMg = caffeineMg,

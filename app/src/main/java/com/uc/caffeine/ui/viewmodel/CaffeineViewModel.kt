@@ -825,6 +825,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
         val importedEntries = healthConnectManager.readCaffeineEntries(since, now)
         val existingImportedSignatures = logDao.getImportedEntrySignaturesInRange(
+            presetItemId = HEALTH_CONNECT_IMPORTED_PRESET_ID,
             startMillis = since.toEpochMilli(),
             endMillis = now.toEpochMilli(),
         ).mapTo(mutableSetOf()) { it.startedAtMillis to it.caffeineMg }

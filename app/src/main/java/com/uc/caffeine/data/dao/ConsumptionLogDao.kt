@@ -3,7 +3,6 @@ package com.uc.caffeine.data.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.uc.caffeine.data.HEALTH_CONNECT_IMPORTED_PRESET_ID
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.RecentDrink
 import kotlinx.coroutines.flow.Flow
@@ -67,10 +66,11 @@ interface ConsumptionLogDao {
     @Query(
         "SELECT startedAtMillis, caffeineMg " +
             "FROM consumption_log " +
-            "WHERE presetItemId = '" + HEALTH_CONNECT_IMPORTED_PRESET_ID + "' " +
+            "WHERE presetItemId = :presetItemId " +
             "AND startedAtMillis BETWEEN :startMillis AND :endMillis"
     )
     suspend fun getImportedEntrySignaturesInRange(
+        presetItemId: String,
         startMillis: Long,
         endMillis: Long,
     ): List<ImportedEntrySignature>
