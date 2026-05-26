@@ -8,7 +8,9 @@ import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalTime
 
 enum class ImportMode { MERGE, REPLACE }
 
@@ -68,6 +70,12 @@ class BackupManager(
             pf.heavyCaffeine?.let { put("profileHeavyCaffeine", it) }
             pf.liverDisease?.let { put("profileLiverDisease", it) }
             put("profileMedications", JSONArray(pf.medications.toList()))
+            put("weeklySleepRotaEnabled", settings.weeklySleepRotaEnabled)
+            put("weeklySleepRota", JSONObject().apply {
+                settings.weeklySleepRota.forEach { (day, time) ->
+                    put(day.name, "%02d:%02d".format(time.hour, time.minute))
+                }
+            })
         }
         root.put("settings", settingsObj)
 
@@ -171,6 +179,18 @@ class BackupManager(
                 ahrGenotype = AhrGenotype.fromStorage(settingsObj.optString("ahrGenotype")),
                 hormonalStatus = HormonalStatus.fromStorage(settingsObj.optString("hormonalStatus")),
                 profileFactors = pf,
+                weeklySleepRotaEnabled = settingsObj.optBoolean("weeklySleepRotaEnabled", false),
+                weeklySleepRota = settingsObj.optJSONObject("weeklySleepRota")?.let { obj ->
+                    buildMap {
+                        obj.keys().forEach { key ->
+                            val day = runCatching { DayOfWeek.valueOf(key) }.getOrNull() ?: return@forEach
+                            val parts = obj.optString(key).split(":", limit = 2)
+                            val hour = parts.getOrNull(0)?.toIntOrNull()?.takeIf { it in 0..23 } ?: return@forEach
+                            val minute = parts.getOrNull(1)?.toIntOrNull()?.takeIf { it in 0..59 } ?: return@forEach
+                            put(day, LocalTime.of(hour, minute))
+                        }
+                    }
+                } ?: emptyMap(),
             )
             settingsRepo.importSettings(imported)
         }

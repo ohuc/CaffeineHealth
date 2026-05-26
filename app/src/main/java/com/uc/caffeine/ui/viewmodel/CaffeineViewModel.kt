@@ -663,6 +663,18 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateWeeklySleepRotaEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepo.updateWeeklySleepRotaEnabled(enabled) }
+    }
+
+    fun setWeeklySleepRotaEntry(day: java.time.DayOfWeek, time: LocalTime) {
+        viewModelScope.launch { settingsRepo.setWeeklySleepRotaEntry(day, time) }
+    }
+
+    fun clearWeeklySleepRotaEntry(day: java.time.DayOfWeek) {
+        viewModelScope.launch { settingsRepo.clearWeeklySleepRotaEntry(day) }
+    }
+
     fun updateSleepThreshold(milligrams: Int) {
         viewModelScope.launch {
             settingsRepo.updateSleepThreshold(milligrams)

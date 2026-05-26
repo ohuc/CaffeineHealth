@@ -15,6 +15,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.time.DayOfWeek
+import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
 
@@ -47,6 +49,8 @@ object SettingsKeys {
     val WHATS_NEW_LAST_SEEN_VERSION = intPreferencesKey("whats_new_last_seen_version")
     val HOME_VIEW_MODE = stringPreferencesKey("home_view_mode")
     val COLOR_PALETTE = stringPreferencesKey("color_palette")
+    val WEEKLY_SLEEP_ROTA_ENABLED = booleanPreferencesKey("weekly_sleep_rota_enabled")
+    val WEEKLY_SLEEP_ROTA = stringSetPreferencesKey("weekly_sleep_rota")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -251,6 +255,29 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateWeeklySleepRotaEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setWeeklySleepRotaEntry(day: DayOfWeek, time: LocalTime) {
+        context.dataStore.edit { prefs ->
+            val current = (prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] ?: emptySet()).toMutableSet()
+            current.removeAll { it.startsWith("${day.name}=") }
+            current.add("${day.name}=%02d:%02d".format(time.hour, time.minute))
+            prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = current
+        }
+    }
+
+    suspend fun clearWeeklySleepRotaEntry(day: DayOfWeek) {
+        context.dataStore.edit { prefs ->
+            val current = (prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] ?: emptySet()).toMutableSet()
+            current.removeAll { it.startsWith("${day.name}=") }
+            prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = current
+        }
+    }
+
     suspend fun recordAppOpened() {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.LAST_APP_OPENED_AT] = System.currentTimeMillis()
@@ -293,6 +320,8 @@ class SettingsRepository(private val context: Context) {
             if (pf.medications.isNotEmpty()) {
                 prefs[SettingsKeys.PROFILE_MEDICATIONS] = pf.medications
             }
+            prefs[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] = settings.weeklySleepRotaEnabled
+            prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = encodeWeeklySleepRota(settings.weeklySleepRota)
         }
     }
 }
@@ -328,7 +357,24 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         colorPalette = this[SettingsKeys.COLOR_PALETTE]?.let { AppColorPalette.fromStorage(it) }
             ?: if (this[SettingsKeys.USE_DYNAMIC_COLOR] != false) AppColorPalette.DYNAMIC
                else AppColorPalette.ESPRESSO,
+        weeklySleepRotaEnabled = this[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] ?: false,
+        weeklySleepRota = decodeWeeklySleepRota(this[SettingsKeys.WEEKLY_SLEEP_ROTA]),
     )
+}
+
+internal fun encodeWeeklySleepRota(rota: Map<DayOfWeek, LocalTime>): Set<String> =
+    rota.entries.map { (day, time) -> "${day.name}=%02d:%02d".format(time.hour, time.minute) }.toSet()
+
+internal fun decodeWeeklySleepRota(raw: Set<String>?): Map<DayOfWeek, LocalTime> {
+    if (raw.isNullOrEmpty()) return emptyMap()
+    return raw.mapNotNull { entry ->
+        val parts = entry.split("=", limit = 2).takeIf { it.size == 2 } ?: return@mapNotNull null
+        val day = runCatching { DayOfWeek.valueOf(parts[0]) }.getOrNull() ?: return@mapNotNull null
+        val timeParts = parts[1].split(":", limit = 2).takeIf { it.size == 2 } ?: return@mapNotNull null
+        val hour = timeParts[0].toIntOrNull()?.takeIf { it in 0..23 } ?: return@mapNotNull null
+        val minute = timeParts[1].toIntOrNull()?.takeIf { it in 0..59 } ?: return@mapNotNull null
+        day to LocalTime.of(hour, minute)
+    }.toMap()
 }
 
 fun Preferences.toProfileFactors(): ProfileFactors {

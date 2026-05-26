@@ -21,6 +21,7 @@ import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 private enum class SettingsDestination : NavKey {
     Main,
     CaffeineProfile,
+    WeeklySleepRota,
     Appearance,
     Language,
     DateTime,
@@ -93,6 +94,15 @@ fun SettingsScreen(
                         viewModel = viewModel,
                         onBack = { nestedBackStack.removeLastOrNull() },
                         onRedoOnboarding = onRedoOnboarding,
+                        onWeeklySleepRotaClick = { nestedBackStack.add(SettingsDestination.WeeklySleepRota) },
+                    )
+
+                    SettingsDestination.WeeklySleepRota -> WeeklySleepRotaSettingsScreen(
+                        userSettings = userSettings,
+                        onRotaEnabledChange = viewModel::updateWeeklySleepRotaEnabled,
+                        onDayTimeChange = viewModel::setWeeklySleepRotaEntry,
+                        onDayTimeClear = viewModel::clearWeeklySleepRotaEntry,
+                        onBack = { nestedBackStack.removeLastOrNull() },
                     )
 
                     SettingsDestination.Appearance -> AppearanceSettingsScreen(

@@ -110,6 +110,19 @@
     <string name="stepper_decrease_cd">Decrease %1$s</string>
     <string name="stepper_increase_cd">Increase %1$s</string>
 
+    <!-- Weekly sleep rota -->
+    <string name="profile_weekly_sleep_rota_title">Weekly sleep rota</string>
+    <string name="profile_weekly_sleep_rota_summary">Set a different bedtime for each day of the week.</string>
+    <string name="weekly_sleep_rota_enable_title">Use weekly rota</string>
+    <string name="weekly_sleep_rota_enable_description">When on, each day uses its own bedtime for sleep guidance. Days you leave unset fall back to your typical bedtime.</string>
+    <string name="weekly_sleep_rota_days_section">Bedtime by day</string>
+    <string name="weekly_sleep_rota_fallback">Days without a custom time fall back to your typical bedtime (%1$s).</string>
+    <string name="weekly_sleep_rota_custom_cd">Set a custom bedtime for %1$s</string>
+    <string name="weekly_sleep_rota_clear_cd">Reset %1$s to typical bedtime</string>
+    <string name="weekly_sleep_rota_disabled_hint">Turn on the weekly rota to give individual days their own bedtime.</string>
+    <string name="weekly_sleep_rota_pick_title">Bedtime for %1$s</string>
+    <string name="weekly_sleep_rota_nav_on">On — each day uses its own bedtime</string>
+
     <!-- Advanced metabolism card -->
     <string name="profile_advanced_metabolism">Advanced Metabolism</string>
     <string name="profile_advanced_metabolism_description">Optional genetic and hormonal factors that fine-tune your half-life estimate.</string>

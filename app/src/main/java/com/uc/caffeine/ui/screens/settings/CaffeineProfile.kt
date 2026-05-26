@@ -16,7 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
@@ -69,6 +71,7 @@ internal fun CaffeineProfileSettingsScreen(
     viewModel: CaffeineViewModel,
     onBack: () -> Unit,
     onRedoOnboarding: () -> Unit,
+    onWeeklySleepRotaClick: () -> Unit = {},
 ) {
     val halfLifeHours = userSettings.halfLifeMinutes / 60
     val effectiveHalfLifeHours = userSettings.effectiveHalfLifeMinutes / 60
@@ -162,6 +165,12 @@ internal fun CaffeineProfileSettingsScreen(
                 onHormonalStatusChange = viewModel::updateHormonalStatus,
             )
 
+            WeeklySleepRotaNavCard(
+                enabled = userSettings.weeklySleepRotaEnabled,
+                customDayCount = userSettings.weeklySleepRota.size,
+                onClick = onWeeklySleepRotaClick,
+            )
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -192,6 +201,53 @@ internal fun CaffeineProfileSettingsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun WeeklySleepRotaNavCard(
+    enabled: Boolean,
+    customDayCount: Int,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        onClick = onClick,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CalendarMonth,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.profile_weekly_sleep_rota_title),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = if (enabled && customDayCount > 0) {
+                        stringResource(R.string.weekly_sleep_rota_nav_on)
+                    } else {
+                        stringResource(R.string.profile_weekly_sleep_rota_summary)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

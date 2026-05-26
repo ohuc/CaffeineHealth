@@ -1,5 +1,7 @@
 package com.uc.caffeine.data
 
+import java.time.DayOfWeek
+import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
@@ -166,6 +168,8 @@ data class UserSettings(
     val whatsNewLastSeenVersion: Int = 0,
     val homeViewMode: HomeViewMode = HomeViewMode.GRAPH,
     val colorPalette: AppColorPalette = AppColorPalette.DYNAMIC,
+    val weeklySleepRotaEnabled: Boolean = false,
+    val weeklySleepRota: Map<DayOfWeek, LocalTime> = emptyMap(),
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.
@@ -188,4 +192,14 @@ data class UserSettings(
 
     val effectiveSleepTimeMinute: Int
         get() = if (hcSleepEnabled && hcSleepTimeMinute != null) hcSleepTimeMinute else sleepTimeMinute
+
+    fun effectiveSleepTimeFor(day: DayOfWeek): LocalTime {
+        if (hcSleepEnabled && hcSleepTimeHour != null) {
+            return LocalTime.of(hcSleepTimeHour, hcSleepTimeMinute ?: 0)
+        }
+        if (weeklySleepRotaEnabled) {
+            weeklySleepRota[day]?.let { return it }
+        }
+        return LocalTime.of(sleepTimeHour, sleepTimeMinute)
+    }
 }

@@ -144,14 +144,21 @@ fun calculateNextBedtimeMillis(
 ): Long {
     val zoneId = settings.resolvedZoneId()
     val currentZonedTime = Instant.ofEpochMilli(currentTimeMillis).atZone(zoneId)
+    val todayTime = settings.effectiveSleepTimeFor(currentZonedTime.dayOfWeek)
     var bedtime = currentZonedTime
-        .withHour(settings.effectiveSleepTimeHour)
-        .withMinute(settings.effectiveSleepTimeMinute)
+        .withHour(todayTime.hour)
+        .withMinute(todayTime.minute)
         .withSecond(0)
         .withNano(0)
 
     if (bedtime.toInstant().toEpochMilli() <= currentTimeMillis) {
-        bedtime = bedtime.plusDays(1)
+        val tomorrow = currentZonedTime.plusDays(1)
+        val tomorrowTime = settings.effectiveSleepTimeFor(tomorrow.dayOfWeek)
+        bedtime = tomorrow
+            .withHour(tomorrowTime.hour)
+            .withMinute(tomorrowTime.minute)
+            .withSecond(0)
+            .withNano(0)
     }
 
     return bedtime.toInstant().toEpochMilli()

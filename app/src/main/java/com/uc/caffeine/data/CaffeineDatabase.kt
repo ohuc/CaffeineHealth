@@ -38,18 +38,18 @@ abstract class CaffeineDatabase : RoomDatabase() {
                     CaffeineDatabase::class.java,
                     "caffeine_database"
                 )
-                .addCallback(object : RoomDatabase.Callback() {
-                    override fun onCreate(db: SupportSQLiteDatabase) {
-                        super.onCreate(db)
-                        // Seed in background when DB is first created
-                        CoroutineScope(Dispatchers.IO).launch {
-                            INSTANCE?.let { database ->
-                                seedDatabase(context, database)
+                    .addCallback(object : RoomDatabase.Callback() {
+                        override fun onCreate(db: SupportSQLiteDatabase) {
+                            super.onCreate(db)
+                            // Seed in background when DB is first created
+                            CoroutineScope(Dispatchers.IO).launch {
+                                INSTANCE?.let { database ->
+                                    seedDatabase(context, database)
+                                }
                             }
                         }
-                    }
-                })
-                .build()
+                    })
+                    .build()
 
                 INSTANCE = instance
                 instance
