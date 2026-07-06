@@ -1,0 +1,45 @@
+# Guards against the two release mistakes that broke F-Droid publishing twice:
+#   1. Tagging without bumping versionName (v2.2.2 shipped as "2.2.2-beta.2")
+#   2. Tagging a commit whose versionCode didn't increase (F-Droid keys off
+#      versionCode exclusively — same code means "nothing new to publish")
+# Runs on every v* tag push and fails loudly BEFORE the F-Droid checkupdates
+# bot or IzzyOnDroid can ingest a mis-versioned release.
+name: Verify release tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history + tags, needed to compare with the previous release
+
+      - name: Tag matches versionName and versionCode increased
+        run: |
+          set -eu
+          TAG="${GITHUB_REF_NAME#v}"
+          NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)
+          CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
+          echo "Tag: v$TAG | versionName: $NAME | versionCode: $CODE"
+
+          if [ "$TAG" != "$NAME" ]; then
+            echo "::error::Tag v$TAG does not match versionName \"$NAME\" in app/build.gradle.kts — bump the version (or tag the right commit) before tagging."
+            exit 1
+          fi
+
+          PREV=$(git tag --list 'v*' --sort=-v:refname | grep -vx "$GITHUB_REF_NAME" | head -1 || true)
+          if [ -n "$PREV" ]; then
+            PREV_CODE=$(git show "$PREV:app/build.gradle.kts" | grep -oP 'versionCode\s*=\s*\K\d+' || echo 0)
+            echo "Previous tag: $PREV | versionCode: $PREV_CODE"
+            if [ "$CODE" -le "$PREV_CODE" ]; then
+              echo "::error::versionCode $CODE is not greater than $PREV_CODE (from $PREV) — F-Droid and app updates go by versionCode, so this release would be invisible."
+              exit 1
+            fi
+          fi
+
+          echo "OK: v$TAG / versionCode $CODE is a valid, publishable release."
