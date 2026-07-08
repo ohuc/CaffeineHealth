@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caffeine Health</string>
     <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
     <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
-
     <!-- Widgets -->
     <string name="widget_caffeine_now_label">Nivel de cafeína</string>
     <string name="widget_caffeine_now_description">Muestra tu nivel actual de cafeína activa de un vistazo.</string>
@@ -12,7 +12,6 @@
     <string name="widget_quick_add_description">Registra tus bebidas recientes directamente desde la pantalla de inicio.</string>
     <string name="widget_combined_label">Panel de Caffeine</string>
     <string name="widget_combined_description">Consulta tu nivel de cafeína y registra bebidas sin abrir la aplicación.</string>
-
     <!-- Common actions -->
     <string name="action_back">Atrás</string>
     <string name="action_yes">Sí</string>
@@ -26,7 +25,6 @@
     <string name="action_close">Cerrar</string>
     <string name="action_continue">Continuar</string>
     <string name="action_skip">Omitir</string>
-
     <!-- Settings -->
     <string name="settings_title">Configuración</string>
     <string name="settings_caffeine_profile_title">Perfil de cafeína</string>
@@ -48,7 +46,6 @@
     <string name="settings_whats_new_summary">Descubre las novedades de la v%s</string>
     <string name="settings_about_version">v%s</string>
     <string name="settings_about_github_cd">Repositorio de GitHub</string>
-
     <!-- Appearance -->
     <string name="appearance_theme_label">Tema</string>
     <string name="appearance_theme_mode_system">Sistema</string>
@@ -56,7 +53,6 @@
     <string name="appearance_theme_mode_dark">Oscuro</string>
     <string name="appearance_dynamic_color_label">Color dinámico</string>
     <string name="appearance_dynamic_color_summary">Adapta el tema a tu fondo de pantalla</string>
-
     <!-- Date and time -->
     <string name="date_time_24h_label">Usar formato de 24 horas</string>
     <string name="date_time_24h_summary">13:00 en lugar de 1:00 PM</string>
@@ -65,18 +61,15 @@
     <string name="date_time_timezone_label">Zona horaria</string>
     <string name="date_time_timezone_sheet_description">Selecciona la zona horaria que la aplicación debe usar para gráficos, cálculos de sueño y límites del día.</string>
     <string name="date_time_timezone_search_label">Buscar zona horaria</string>
-
     <!-- Language -->
     <string name="language_section_title">Idioma</string>
     <string name="language_selected_cd">Seleccionado</string>
     <string name="language_deferred_title">Localización pospuesta</string>
     <string name="language_deferred_description">El inglés seguirá siendo el idioma activo en esta versión.</string>
-
     <!-- Units -->
     <string name="unit_mg">mg</string>
     <string name="caffeine_mg_compact">%1$dmg</string>
     <string name="caffeine_mg">%1$d mg</string>
-
     <!-- Home -->
     <string name="home_title">Inicio</string>
     <string name="home_my_consumptions">Mis consumos</string>
@@ -93,13 +86,11 @@
     <string name="home_edit_drink">Editar %1$s</string>
     <string name="home_serving">Porción</string>
     <string name="home_serving_unavailable">No hay opciones de porción disponibles para esta entrada.</string>
-
     <!-- Sleep forecast -->
     <string name="sleep_forecast_title">Pronóstico de sueño</string>
     <string name="sleep_forecast_safe">Seguro para dormir a las %1$s</string>
     <string name="sleep_forecast_may_affect">Puede afectar el sueño (%1$dmg al acostarte)</string>
     <string name="sleep_forecast_disruption">Es probable que altere el sueño (%1$dmg)</string>
-
     <!-- Add screen -->
     <string name="add_title">Agregar una bebida</string>
     <string name="add_create_custom_cd">Crear bebida personalizada</string>
@@ -115,26 +106,22 @@
     <string name="add_total_caffeine">Cafeína total</string>
     <string name="add_bedtime_warning">A la hora de dormir, aún habrá ~%1$d mg activos, por encima de tu límite de sueño de %2$d mg.</string>
     <string name="add_entry">Agregar registro</string>
-
     <!-- Navigation -->
     <string name="nav_home">Inicio</string>
     <string name="nav_analytics">Análisis</string>
     <string name="nav_settings">Configuración</string>
     <string name="main_add_consumption">Agregar consumo</string>
-
     <!-- Notifications -->
     <string name="notification_channel_daily">Recordatorios diarios</string>
     <string name="notification_channel_daily_description">Recordatorios diarios para registrar cafeína</string>
     <string name="notification_channel_inactivity">Recordatorios de inactividad</string>
     <string name="notification_channel_inactivity_description">Recordatorio cuando no registras cafeína durante un tiempo</string>
-
     <string name="notification_daily_title">Registro de cafeína</string>
     <string name="notification_daily_morning">Es hora de registrar tu café o té de la mañana. Mantén tu consumo de cafeína al día.</string>
     <string name="notification_daily_afternoon">Es hora de registrar tu cafeína de la tarde. Mantén tu seguimiento actualizado.</string>
     <string name="notification_daily_evening">Es hora de registrar tu cafeína nocturna. Obtén predicciones de sueño más precisas.</string>
     <string name="notification_inactivity_title">¿Olvidaste registrar tu cafeína?</string>
     <string name="notification_inactivity_body">Han pasado 5 días desde tu último registro. Abre la aplicación para mantener tu seguimiento preciso.</string>
-
     <!-- Analytics -->
     <string name="analytics_title">Análisis</string>
     <string name="analytics_caffeine_by_source">Cafeína por fuente</string>
@@ -150,14 +137,12 @@
     <string name="analytics_top_source">Fuente principal</string>
     <string name="analytics_sleep_threshold">Límite de sueño</string>
     <string name="analytics_value_mg">%1$d mg</string>
-
     <!-- Analytics ranges -->
     <string name="analytics_range_today">Hoy</string>
     <string name="analytics_range_yesterday">Ayer</string>
     <string name="analytics_range_30_days">30 días</string>
     <string name="analytics_range_90_days">90 días</string>
     <string name="analytics_range_custom">Personalizado</string>
-
     <!-- Onboarding -->
     <string name="onboarding_welcome_kicker">BIENVENIDO</string>
     <string name="onboarding_intro_line_1">Conoce tu\n</string>
@@ -166,10 +151,8 @@
     <string name="onboarding_intro_subtitle">Una vista en tiempo real de lo que aún permanece en tu organismo y de si ese espresso nocturno te costará sueño.</string>
     <string name="onboarding_get_started">Comenzar</string>
     <string name="onboarding_takes_a_minute">Toma aproximadamente un minuto · No se necesita cuenta</string>
-
     <string name="onboarding_step_format">PASO %1$d DE %2$d</string>
     <string name="onboarding_skip_for_now">Omitir por ahora</string>
-
     <!-- Profile -->
     <string name="profile_estimated_half_life">Vida media estimada</string>
     <string name="profile_half_life_value_modified">%1$d h (base %2$d h)</string>
@@ -177,10 +160,8 @@
     <string name="profile_typical_bedtime">Hora habitual de dormir</string>
     <string name="profile_sleep_threshold">Límite de sueño</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
-
     <!-- Common labels -->
     <string name="brand_caffeine_health">Caffeine Health</string>
-
     <!-- Caffeine Coach (HomeScreen card) -->
     <string name="coach_title">Entrenador de cafeína</string>
     <string name="coach_headline_now">Toma unos %1$dmg ahora</string>
@@ -197,4 +178,262 @@
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Entrenador de cafeína</string>
     <string name="coach_setting_description">Sugiere la dosis más pequeña y mejor programada para mantenerte despierto sin perjudicar el sueño</string>
+    <string name="onboarding_weight_field_label"></string>
+    <string name="bedtime_label_10_pm"></string>
+    <string name="stepper_decrease_cd"></string>
+    <string name="onboarding_default_disabled_hint"></string>
+    <string name="profile_smoking_habit_description"></string>
+    <string name="profile_hormonal_status_description"></string>
+    <string name="onboarding_legal_subtitle"></string>
+    <string name="my_data_import_title"></string>
+    <string name="analytics_servings_one"></string>
+    <string name="whats_new_title"></string>
+    <string name="profile_ahr_description"></string>
+    <string name="analytics_source_breakdown"></string>
+    <string name="onboarding_medical_disclaimer_body"></string>
+    <string name="onboarding_weight_section"></string>
+    <string name="my_data_export_title"></string>
+    <string name="onboarding_default_bedtime_hint"></string>
+    <string name="profile_caffeine_half_life"></string>
+    <string name="custom_drink_serving_unit"></string>
+    <string name="home_trend_falling"></string>
+    <string name="analytics_bucket_night_range"></string>
+    <string name="health_connect_not_installed"></string>
+    <string name="my_data_export_failed"></string>
+    <string name="analytics_full_percent" formatted="false"></string>
+    <string name="notifications_daily_section"></string>
+    <string name="add_empty_message_default"></string>
+    <string name="custom_drink_remove"></string>
+    <string name="custom_drink_emoji_label"></string>
+    <string name="analytics_bedtime_calendar_prev_month"></string>
+    <string name="appearance_color_palette_espresso"></string>
+    <string name="profile_medications_description"></string>
+    <string name="custom_drink_name_label"></string>
+    <string name="health_connect_no_permissions_granted"></string>
+    <string name="health_connect_caffeine_active"></string>
+    <string name="profile_redo_onboarding"></string>
+    <string name="home_circular_mg_unit"></string>
+    <string name="profile_liver_context_description"></string>
+    <string name="profile_half_life_description_default"></string>
+    <string name="notifications_no_log_title"></string>
+    <string name="widget_quick_log_toast"></string>
+    <string name="onboarding_lets_start_tracking"></string>
+    <string name="profile_advanced_metabolism_intro"></string>
+    <string name="onboarding_lifestyle_subtitle"></string>
+    <string name="health_connect_no_sleep_warning"></string>
+    <string name="health_connect_bedtime_source"></string>
+    <string name="profile_smoking_habit"></string>
+    <string name="analytics_headline_custom"></string>
+    <string name="profile_clearance_factor_explanation"></string>
+    <string name="notifications_remove_reminder_cd"></string>
+    <string name="profile_heavy_alcohol_description"></string>
+    <string name="my_data_import_merge"></string>
+    <string name="bedtime_label_12_am"></string>
+    <string name="profile_caffeine_half_life_supporting"></string>
+    <string name="add_empty_no_drinks_available"></string>
+    <string name="onboarding_bedtime_aware"></string>
+    <string name="profile_half_life_description_modified"></string>
+    <string name="health_connect_sleep_hint_no_data"></string>
+    <string name="onboarding_dialog_half_life_body"></string>
+    <string name="onboarding_half_life_hours_minutes"></string>
+    <string name="onboarding_medications_section"></string>
+    <string name="age_65_or_older"></string>
+    <string name="appearance_color_palette_ocean"></string>
+    <string name="widget_preview_drink_name_2"></string>
+    <string name="my_data_import_dialog_text"></string>
+    <string name="whats_new_got_it"></string>
+    <string name="celebration_subtitle"></string>
+    <string name="onboarding_sleep_disabled_hint"></string>
+    <string name="appearance_home_view_circular"></string>
+    <string name="home_view_toggle_to_circular_cd"></string>
+    <string name="profile_advanced_metabolism"></string>
+    <string name="analytics_nothing_to_chart"></string>
+    <string name="onboarding_medical_continue_label"></string>
+    <string name="onboarding_medical_disclaimer_title"></string>
+    <string name="onboarding_enter_weight"></string>
+    <string name="profile_re_adjust_description"></string>
+    <string name="smoking_occasional"></string>
+    <string name="medication_other_cyp1a2"></string>
+    <string name="custom_drink_amount_label"></string>
+    <string name="onboarding_clock_11_pm"></string>
+    <string name="health_connect_grant_access"></string>
+    <string name="analytics_view_item"></string>
+    <string name="onboarding_medical_title"></string>
+    <string name="appearance_color_palette_dynamic"></string>
+    <string name="weight_unit_kg"></string>
+    <string name="analytics_custom_range_section"></string>
+    <string name="analytics_empty_body"></string>
+    <string name="medication_none"></string>
+    <string name="celebration_next_log"></string>
+    <string name="add_clear_filters"></string>
+    <string name="custom_drink_save"></string>
+    <string name="appearance_home_view_label"></string>
+    <string name="health_connect_sleep_active"></string>
+    <string name="analytics_bucket_evening_range"></string>
+    <string name="onboarding_lower_weight_cd"></string>
+    <string name="onboarding_brand_logo_cd"></string>
+    <string name="widget_preview_drink_mg_2"></string>
+    <string name="onboarding_age_range_section"></string>
+    <string name="liver_compensated"></string>
+    <string name="onboarding_typical_bedtime_section"></string>
+    <string name="onboarding_legal_acknowledgement"></string>
+    <string name="appearance_color_palette_matcha"></string>
+    <string name="onboarding_profile_ready_enabled_hint"></string>
+    <string name="my_data_export_description"></string>
+    <string name="medication_ciprofloxacin"></string>
+    <string name="profile_liver_context"></string>
+    <string name="onboarding_weight_supporting"></string>
+    <string name="widget_preview_drink_name_1"></string>
+    <string name="profile_health_section"></string>
+    <string name="profile_advanced_metabolism_description"></string>
+    <string name="analytics_streak_count_label"></string>
+    <string name="profile_caffeine_half_life_hint"></string>
+    <string name="custom_drink_pick_image"></string>
+    <string name="profile_sleep_sensitivity"></string>
+    <string name="health_connect_sleep_hint_active"></string>
+    <string name="onboarding_saving_profile"></string>
+    <string name="analytics_bedtime_card_supporting"></string>
+    <string name="widget_caffeine_now_inline_label"></string>
+    <string name="analytics_headline_today"></string>
+    <string name="onboarding_clock_6_am"></string>
+    <string name="custom_drink_new"></string>
+    <string name="analytics_source_breakdown_supporting"></string>
+    <string name="custom_drink_image_picker_cd"></string>
+    <string name="onboarding_alcohol_info"></string>
+    <string name="onboarding_caffeine_info"></string>
+    <string name="onboarding_dialog_bedtime_body"></string>
+    <string name="analytics_streak_sublabel"></string>
+    <string name="onboarding_lifestyle_enabled_hint"></string>
+    <string name="notifications_add_reminder"></string>
+    <string name="my_data_export_error_unknown"></string>
+    <string name="analytics_to"></string>
+    <string name="health_connect_last_night"></string>
+    <string name="onboarding_dialog_sleep_threshold_body"></string>
+    <string name="add_empty_message_filter"></string>
+    <string name="health_connect_uses_recent_session"></string>
+    <string name="profile_heavy_alcohol"></string>
+    <string name="smoking_heavy"></string>
+    <string name="liver_decompensated"></string>
+    <string name="analytics_bedtime_calendar_next_month"></string>
+    <string name="health_connect_caffeine_and_sleep_active"></string>
+    <string name="onboarding_raise_weight_cd"></string>
+    <string name="onboarding_lifestyle_disabled_hint"></string>
+    <string name="smoking_daily"></string>
+    <string name="onboarding_bedtime_axis_label"></string>
+    <string name="onboarding_sleep_title"></string>
+    <string name="profile_redo_onboarding_description"></string>
+    <string name="onboarding_medical_disabled_hint"></string>
+    <string name="analytics_headline_last_90"></string>
+    <string name="home_circular_threshold_format"></string>
+    <string name="analytics_view_category"></string>
+    <string name="profile_high_caffeine_description"></string>
+    <string name="profile_cyp1a2_description"></string>
+    <string name="bedtime_label_11_pm"></string>
+    <string name="my_data_import_could_not_read"></string>
+    <string name="onboarding_sleep_subtitle"></string>
+    <string name="profile_sleep_threshold_hint"></string>
+    <string name="analytics_bucket_morning_range"></string>
+    <string name="onboarding_medications_supporting"></string>
+    <string name="bedtime_label_1_am"></string>
+    <string name="onboarding_legal_title"></string>
+    <string name="onboarding_basic_info_disabled_hint"></string>
+    <string name="custom_drink_change_image"></string>
+    <string name="notifications_no_log_description"></string>
+    <string name="profile_ahr"></string>
+    <string name="analytics_recent_consumptions"></string>
+    <string name="profile_re_adjust_title"></string>
+    <string name="notifications_inactivity_section"></string>
+    <string name="widget_preview_drink_mg_1"></string>
+    <string name="analytics_bucket_afternoon"></string>
+    <string name="onboarding_profile_ready_subtitle"></string>
+    <string name="add_empty_no_drinks_found"></string>
+    <string name="onboarding_lifestyle_title"></string>
+    <string name="celebration_next_log_supporting"></string>
+    <string name="onboarding_metric_bedtime_description"></string>
+    <string name="analytics_headline_yesterday"></string>
+    <string name="widget_preview_safe_before_bed"></string>
+    <string name="analytics_streak_zero_label"></string>
+    <string name="profile_age_range"></string>
+    <string name="onboarding_weight_range_format"></string>
+    <string name="onboarding_basic_info_subtitle"></string>
+    <string name="onboarding_age_range_supporting"></string>
+    <string name="appearance_color_palette_label"></string>
+    <string name="profile_typical_bedtime_description"></string>
+    <string name="analytics_bedtime_threshold_label"></string>
+    <string name="appearance_color_palette_sakura"></string>
+    <string name="age_under_65"></string>
+    <string name="onboarding_about_format"></string>
+    <string name="health_connect_seven_day_avg"></string>
+    <string name="home_trend_rising"></string>
+    <string name="medication_cimetidine"></string>
+    <string name="onboarding_sleep_enabled_hint"></string>
+    <string name="onboarding_metric_half_life_description"></string>
+    <string name="health_connect_description"><![CDATA[]]></string>
+    <string name="medication_fluvoxamine"></string>
+    <string name="custom_drink_caffeine_per_serving"></string>
+    <string name="celebration_profile_saved"></string>
+    <string name="analytics_bedtime_no_data_month"></string>
+    <string name="analytics_categories"></string>
+    <string name="add_create_custom_drink_button"></string>
+    <string name="add_empty_message_filter_search"></string>
+    <string name="onboarding_basic_info_title"></string>
+    <string name="profile_high_caffeine"></string>
+    <string name="analytics_bucket_morning"></string>
+    <string name="onboarding_source_label"></string>
+    <string name="home_trend_steady"></string>
+    <string name="smoking_none"></string>
+    <string name="health_connect_seven_day_avg_description"></string>
+    <string name="whats_new_version_badge"></string>
+    <string name="appearance_home_view_summary"></string>
+    <string name="bedtime_label_9_pm"></string>
+    <string name="analytics_change_range_cd"></string>
+    <string name="my_data_import_description"></string>
+    <string name="analytics_from"></string>
+    <string name="weight_unit_lb"></string>
+    <string name="onboarding_metric_sleep_threshold_description"></string>
+    <string name="onboarding_profile_ready_title"></string>
+    <string name="profile_medications"></string>
+    <string name="home_circular_view_cd"></string>
+    <string name="analytics_bucket_night"></string>
+    <string name="analytics_bucket_evening"></string>
+    <string name="profile_cyp1a2"></string>
+    <string name="profile_sleep_threshold_supporting"></string>
+    <string name="analytics_apply_custom_range"></string>
+    <string name="liver_no_disease"></string>
+    <string name="analytics_bedtime_safe_nights_summary"></string>
+    <string name="medication_oral_contraceptives"></string>
+    <string name="onboarding_basic_info_enabled_hint"></string>
+    <string name="profile_effective_half_life"></string>
+    <string name="notifications_add_daily_dialog_title"></string>
+    <string name="custom_drink_edit_button"></string>
+    <string name="analytics_bucket_afternoon_range"></string>
+    <string name="custom_drink_category"></string>
+    <string name="home_view_toggle_to_graph_cd"></string>
+    <string name="analytics_servings_other"></string>
+    <string name="smoking_some_days"></string>
+    <string name="onboarding_clock_noon"></string>
+    <string name="health_connect_bedtime_reading"></string>
+    <string name="stepper_increase_cd"></string>
+    <string name="widget_refresh_cd"></string>
+    <string name="analytics_custom_range_format"></string>
+    <string name="onboarding_half_life_hours_only"></string>
+    <string name="onboarding_medical_subtitle"></string>
+    <string name="onboarding_sleep_sensitivity_supporting"></string>
+    <string name="analytics_quick_select"></string>
+    <string name="profile_weight"></string>
+    <string name="analytics_headline_last_30"></string>
+    <string name="health_connect_sync_label"></string>
+    <string name="onboarding_medications_info"></string>
+    <string name="my_data_import_replace"></string>
+    <string name="profile_sleep_sensitivity_description"></string>
+    <string name="appearance_home_view_graph"></string>
+    <string name="onboarding_smoking_info"></string>
+    <string name="onboarding_profile_ready_continue_label"></string>
+    <string name="onboarding_medical_enabled_hint"></string>
+    <string name="profile_sleep_threshold_description"></string>
+    <string name="celebration_take_me_home"></string>
+    <string name="onboarding_pick_bedtime"></string>
+    <string name="profile_hormonal_status"></string>
+    <string name="profile_age_range_description"></string>
+    <string name="add_empty_message_search"></string>
 </resources>
