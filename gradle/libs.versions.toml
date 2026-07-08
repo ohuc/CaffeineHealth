@@ -1,6 +1,6 @@
 [versions]
 agp = "9.1.1"
-navigationCompose = "2.10.0-alpha02"
+navigationCompose = "2.10.0-alpha04"
 room = "2.8.4"
 ksp = "2.3.6"
 lifecycleViewmodelCompose = "2.10.0"
