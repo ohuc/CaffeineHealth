@@ -297,8 +297,7 @@
     <!-- Onboarding intro -->
     <string name="onboarding_brand_logo_cd">Caffeine Health लोगो</string>
     <string name="onboarding_welcome_kicker">स्वागत</string>
-    <string name="onboarding_intro_line_1">जानिए अपना
-</string>
+    <string name="onboarding_intro_line_1">जानिए अपना</string>
     <string name="onboarding_intro_line_2">कैफीन.</string>
     <string name="onboarding_intro_line_3">अपनी नींद बचाइए.</string>
     <string name="onboarding_intro_subtitle">देखें कि आपके सिस्टम में अभी क्या बाकी है और क्या आज रात की espresso आपकी नींद बिगाड़ देगी।</string>
