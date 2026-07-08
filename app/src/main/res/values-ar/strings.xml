@@ -402,4 +402,5 @@
     <string name="add_empty_message_search">لا توجد مشروبات تطابق \"%1$s\".</string>
     <string name="appearance_dynamic_color_label">ألوان ديناميكية</string>
     <string name="home_serving_unavailable">خيارات الكمية غير متوفرة لهذا المدخل.</string>
+    <string name="my_data_export_description">حفظ نسخة احتياطية من تاريخك وملفك الشخصي ومشروباتك المخصصة</string>
 </resources>
