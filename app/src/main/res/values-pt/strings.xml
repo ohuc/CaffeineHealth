@@ -475,7 +475,4 @@
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Treinador de cafeína</string>
     <string name="coach_setting_description">Sugere a menor dose, no melhor momento, para manter o foco sem prejudicar o sono</string>
-    <string name="home_trend_falling"></string>
-    <string name="home_trend_rising"></string>
-    <string name="home_trend_steady"></string>
 </resources>
