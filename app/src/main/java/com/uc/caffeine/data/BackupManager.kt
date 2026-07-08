@@ -57,6 +57,7 @@ class BackupManager(
             put("useDynamicColor", settings.useDynamicColor)
             put("use24HourClock", settings.use24HourClock)
             put("dateFormat", settings.dateFormat.name)
+            put("useSystemTimeZone", settings.useSystemTimeZone)
             put("timeZoneId", settings.timeZoneId)
             put("cyp1a2Genotype", settings.cyp1a2Genotype.name)
             put("ahrGenotype", settings.ahrGenotype.name)
@@ -178,6 +179,7 @@ class BackupManager(
                 useDynamicColor = settingsObj.optBoolean("useDynamicColor", true),
                 use24HourClock = settingsObj.optBoolean("use24HourClock", false),
                 dateFormat = AppDateFormat.fromStorage(settingsObj.optString("dateFormat")),
+                useSystemTimeZone = settingsObj.optBoolean("useSystemTimeZone", true),
                 timeZoneId = settingsObj.optString("timeZoneId").ifEmpty { java.time.ZoneId.systemDefault().id },
                 cyp1a2Genotype = Cyp1a2Genotype.fromStorage(settingsObj.optString("cyp1a2Genotype")),
                 ahrGenotype = AhrGenotype.fromStorage(settingsObj.optString("ahrGenotype")),

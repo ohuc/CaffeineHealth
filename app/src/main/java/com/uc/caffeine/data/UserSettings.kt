@@ -129,7 +129,14 @@ data class UserSettings(
     val dateFormat: AppDateFormat = AppDateFormat.MONTH_DAY_YEAR,
 
     /**
-     * Preferred timezone for calculations and user-facing times.
+     * When true (default), all calculations and user-facing times follow the device's
+     * current system time zone, live — so travelling across zones just works. When false,
+     * [timeZoneId] is used as a fixed manual override.
+     */
+    val useSystemTimeZone: Boolean = true,
+
+    /**
+     * Manual timezone override, used only when [useSystemTimeZone] is false.
      * Stored as a full IANA timezone ID.
      */
     val timeZoneId: String = ZoneId.systemDefault().id,

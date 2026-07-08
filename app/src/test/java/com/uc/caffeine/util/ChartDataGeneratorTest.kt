@@ -12,7 +12,7 @@ class ChartDataGeneratorTest {
     private val utcSettings = UserSettings(
         sleepTimeHour = 23,
         sleepTimeMinute = 0,
-        timeZoneId = "UTC",
+        timeZoneId = "UTC", useSystemTimeZone = false,
     )
 
     @Test

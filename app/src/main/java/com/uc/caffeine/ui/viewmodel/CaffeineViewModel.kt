@@ -888,6 +888,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateUseSystemTimeZone(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateUseSystemTimeZone(enabled)
+        }
+    }
+
     fun updateTimeZoneId(timeZoneId: String) {
         viewModelScope.launch {
             settingsRepo.updateTimeZoneId(timeZoneId)

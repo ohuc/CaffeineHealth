@@ -14,7 +14,7 @@ class AnalyticsUtilsTest {
 
     @Test
     fun buildAnalyticsUiState_weekRangeHonorsLocalDayBoundaries() {
-        val settings = UserSettings(timeZoneId = "America/Los_Angeles")
+        val settings = UserSettings(timeZoneId = "America/Los_Angeles", useSystemTimeZone = false)
         val presets = listOf(testPreset(itemId = "coffee-1", category = "coffee"))
         val entries = listOf(
             testEntry(
@@ -56,7 +56,7 @@ class AnalyticsUtilsTest {
                 ),
             ),
             presets = emptyList(),
-            settings = UserSettings(timeZoneId = "UTC"),
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false),
             selectedRange = AnalyticsRange.LAST_30_DAYS,
             nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli(),
             locale = Locale.US,
@@ -78,7 +78,7 @@ class AnalyticsUtilsTest {
                 ),
             ),
             presets = listOf(testPreset(itemId = "coffee-1", category = "coffee")),
-            settings = UserSettings(timeZoneId = "UTC"),
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false),
             selectedRange = AnalyticsRange.LAST_30_DAYS,
             nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli(),
             locale = Locale.US,
@@ -102,7 +102,7 @@ class AnalyticsUtilsTest {
         val uiState = buildAnalyticsUiState(
             entries = entries,
             presets = presets,
-            settings = UserSettings(timeZoneId = "UTC"),
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false),
             selectedRange = AnalyticsRange.LAST_30_DAYS,
             nowMillis = Instant.parse("2026-04-09T22:00:00Z").toEpochMilli(),
             locale = Locale.US,
@@ -123,7 +123,7 @@ class AnalyticsUtilsTest {
             ),
         )
         val nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli()
-        val settings = UserSettings(timeZoneId = "UTC")
+        val settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false)
 
         val todayUiState = buildAnalyticsUiState(
             entries = entries,
@@ -174,7 +174,7 @@ class AnalyticsUtilsTest {
                 sleepThresholdMg = 60,
                 sleepTimeHour = 23,
                 sleepTimeMinute = 0,
-                timeZoneId = "UTC",
+                timeZoneId = "UTC", useSystemTimeZone = false,
             ),
             selectedRange = AnalyticsRange.LAST_30_DAYS,
             nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli(),
@@ -190,7 +190,7 @@ class AnalyticsUtilsTest {
         val uiState = buildAnalyticsUiState(
             entries = emptyList(),
             presets = emptyList(),
-            settings = UserSettings(timeZoneId = "UTC"),
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false),
             selectedRange = AnalyticsRange.LAST_30_DAYS,
             nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli(),
             locale = Locale.US,

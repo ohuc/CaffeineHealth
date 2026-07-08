@@ -15,7 +15,7 @@ class WeeklySleepRotaTest {
     private val baseSettings = UserSettings(
         sleepTimeHour = 23,
         sleepTimeMinute = 0,
-        timeZoneId = "UTC",
+        timeZoneId = "UTC", useSystemTimeZone = false,
     )
 
     @Test

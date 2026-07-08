@@ -33,6 +33,7 @@ object SettingsKeys {
     val USE_DYNAMIC_COLOR = booleanPreferencesKey("use_dynamic_color")
     val USE_24_HOUR_CLOCK = booleanPreferencesKey("use_24_hour_clock")
     val DATE_FORMAT = stringPreferencesKey("date_format")
+    val USE_SYSTEM_TIME_ZONE = booleanPreferencesKey("use_system_time_zone")
     val TIME_ZONE_ID = stringPreferencesKey("time_zone_id")
     val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
     val CYP1A2_GENOTYPE = stringPreferencesKey("cyp1a2_genotype")
@@ -167,9 +168,17 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateUseSystemTimeZone(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.USE_SYSTEM_TIME_ZONE] = enabled
+        }
+    }
+
     suspend fun updateTimeZoneId(timeZoneId: String) {
         context.dataStore.edit { prefs ->
+            // Picking a manual zone implies the user wants to stop matching the system.
             prefs[SettingsKeys.TIME_ZONE_ID] = timeZoneId
+            prefs[SettingsKeys.USE_SYSTEM_TIME_ZONE] = false
         }
     }
 
@@ -317,6 +326,7 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.USE_DYNAMIC_COLOR] = settings.useDynamicColor
             prefs[SettingsKeys.USE_24_HOUR_CLOCK] = settings.use24HourClock
             prefs[SettingsKeys.DATE_FORMAT] = settings.dateFormat.name
+            prefs[SettingsKeys.USE_SYSTEM_TIME_ZONE] = settings.useSystemTimeZone
             prefs[SettingsKeys.TIME_ZONE_ID] = settings.timeZoneId
             prefs[SettingsKeys.CYP1A2_GENOTYPE] = settings.cyp1a2Genotype.name
             prefs[SettingsKeys.AHR_GENOTYPE] = settings.ahrGenotype.name
@@ -357,6 +367,9 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         useDynamicColor = this[SettingsKeys.USE_DYNAMIC_COLOR] ?: defaultSettings.useDynamicColor,
         use24HourClock = this[SettingsKeys.USE_24_HOUR_CLOCK] ?: defaultSettings.use24HourClock,
         dateFormat = AppDateFormat.fromStorage(this[SettingsKeys.DATE_FORMAT]),
+        // Absent for users upgrading from before this option existed → default to matching
+        // the system zone, which fixes the "app zone froze while travelling" report.
+        useSystemTimeZone = this[SettingsKeys.USE_SYSTEM_TIME_ZONE] ?: defaultSettings.useSystemTimeZone,
         timeZoneId = this[SettingsKeys.TIME_ZONE_ID] ?: defaultSettings.timeZoneId,
         isOnboardingComplete = this[SettingsKeys.ONBOARDING_COMPLETE] ?: hasLegacyProfilePrefs,
         profileFactors = this.toProfileFactors(),

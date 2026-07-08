@@ -1,4 +1,6 @@
 • Fix a crash on launch affecting some devices and custom ROMs (splash screen exit)
+• Time zone now follows your device automatically as you travel (new "Match system time zone" option, on by default; turn it off to pin a fixed zone)
+• Cleaned up wording in Caffeine Coach messages
 
 Includes everything from 2.3.0:
 • Caffeine Coach: the smallest, best-timed dose suggestion under your home chart

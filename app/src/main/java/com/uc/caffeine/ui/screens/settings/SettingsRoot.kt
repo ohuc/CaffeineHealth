@@ -121,6 +121,7 @@ fun SettingsScreen(
                         userSettings = userSettings,
                         onUse24HourClockChange = viewModel::updateUse24HourClock,
                         onDateFormatChange = viewModel::updateDateFormat,
+                        onUseSystemTimeZoneChange = viewModel::updateUseSystemTimeZone,
                         onTimeZoneIdChange = viewModel::updateTimeZoneId,
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )

@@ -49,6 +49,8 @@
     <string name="date_time_24h_summary">13:00 instead of 1:00 PM</string>
     <string name="date_time_date_format_label">Date format</string>
     <string name="date_time_date_format_sheet_description">Choose how dates should appear anywhere the app shows them.</string>
+    <string name="date_time_match_system_tz_label">Match system time zone</string>
+    <string name="date_time_match_system_tz_summary">Automatically follow your device\'s time zone as you travel</string>
     <string name="date_time_timezone_label">Timezone</string>
     <string name="date_time_timezone_sheet_description">Pick the timezone the app should use for charts, bedtime calculations, and your day boundaries.</string>
     <string name="date_time_timezone_search_label">Search timezone</string>
@@ -211,18 +213,18 @@
     <string name="coach_title">Caffeine Coach</string>
     <string name="coach_headline_now">Have about %1$dmg now</string>
     <string name="coach_headline_at">Have about %1$dmg around %2$s</string>
-    <string name="coach_reason_sleep_debt">You slept %1$s — the smallest useful dose to help you recover without hurting tonight\'s sleep.</string>
-    <string name="coach_reason_afternoon_dip">Timed for your predicted afternoon dip — the least caffeine to stay sharp through it.</string>
+    <string name="coach_reason_sleep_debt">You slept %1$s. This is the smallest useful dose to help you recover without hurting tonight\'s sleep.</string>
+    <string name="coach_reason_afternoon_dip">Timed for your predicted afternoon dip, the least caffeine to stay sharp through it.</string>
     <string name="coach_reason_stay_sharp">The smallest dose to stay above your focus level through the day.</string>
     <string name="coach_residual_note">Clears to ~%1$dmg by your %2$s bedtime.</string>
-    <string name="coach_hold_already_alert">You\'re set — no caffeine needed right now to stay sharp.</string>
-    <string name="coach_hold_already_alert_debt">Running on %1$s of sleep, but you\'re alert enough right now — hold off for now.</string>
-    <string name="coach_hold_bedtime">Skip caffeine now — it\'s too close to your %1$s bedtime to add any without risking sleep.</string>
+    <string name="coach_hold_already_alert">You\'re set. No caffeine needed right now to stay sharp.</string>
+    <string name="coach_hold_already_alert_debt">Running on %1$s of sleep, but you\'re alert enough right now, so hold off for now.</string>
+    <string name="coach_hold_bedtime">Skip caffeine now. It\'s too close to your %1$s bedtime to add any without risking sleep.</string>
     <string name="coach_connect_sleep">Connect sleep data for a recommendation tuned to how you actually slept.</string>
     <string name="coach_sleep_hours">%1$dh %2$dm</string>
     <string name="coach_chip_recommend_now">Coach · ~%1$dmg now</string>
     <string name="coach_chip_recommend_at">Coach · ~%1$dmg around %2$s</string>
-    <string name="coach_chip_hold_alert">Coach · you\'re set — no caffeine needed</string>
+    <string name="coach_chip_hold_alert">Coach · you\'re set, no caffeine needed</string>
     <string name="coach_chip_hold_bedtime">Coach · winding down for your %1$s bedtime</string>
     <string name="coach_log_dose">Log this dose</string>
     <!-- Caffeine Coach settings -->
@@ -506,7 +508,7 @@
     <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Got it</string>
     <string name="whats_new_coach_title">Meet Caffeine Coach</string>
-    <string name="whats_new_coach_body">A quiet line under your home chart suggests the smallest, best-timed dose to stay sharp — without ever risking tonight\'s sleep. Tap it for the full reasoning and one-tap logging.</string>
+    <string name="whats_new_coach_body">A quiet line under your home chart suggests the smallest, best-timed dose to stay sharp, without ever risking tonight\'s sleep. Tap it for the full reasoning and one-tap logging.</string>
     <string name="whats_new_amounts_title">Log Exact Amounts</string>
     <string name="whats_new_amounts_body">Tap the serving number to type a precise, fractional amount — half a soda, a short espresso, or an exact figure.</string>
     <string name="whats_new_design_title">A Fresh New Look</string>

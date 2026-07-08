@@ -19,6 +19,10 @@ private const val TWENTY_FOUR_HOUR_TIME_PATTERN = "HH:mm"
 private const val CHART_TWENTY_FOUR_HOUR_PATTERN = "HH"
 
 fun UserSettings.resolvedZoneId(): ZoneId {
+    // Read the live system zone each call so travelling across time zones is reflected
+    // without any stored value going stale. The manual override is only consulted when
+    // the user has explicitly opted out of matching the system.
+    if (useSystemTimeZone) return ZoneId.systemDefault()
     return runCatching { ZoneId.of(timeZoneId) }.getOrElse { ZoneId.systemDefault() }
 }
 

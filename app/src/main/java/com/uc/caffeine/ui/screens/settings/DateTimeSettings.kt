@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -46,6 +47,7 @@ internal fun DateTimeSettingsScreen(
     userSettings: UserSettings,
     onUse24HourClockChange: (Boolean) -> Unit,
     onDateFormatChange: (AppDateFormat) -> Unit,
+    onUseSystemTimeZoneChange: (Boolean) -> Unit,
     onTimeZoneIdChange: (String) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -87,7 +89,7 @@ internal fun DateTimeSettingsScreen(
                             },
                         )
                     },
-                    shapes = segmentedListItemShapes(0, 3),
+                    shapes = segmentedListItemShapes(0, 4),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -112,7 +114,7 @@ internal fun DateTimeSettingsScreen(
                             contentDescription = null,
                         )
                     },
-                    shapes = segmentedListItemShapes(1, 3),
+                    shapes = segmentedListItemShapes(1, 4),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
@@ -123,21 +125,62 @@ internal fun DateTimeSettingsScreen(
                 SegmentedListItem(
                     onClick = {
                         haptics.toggle()
-                        showTimeZoneSheet = true
+                        onUseSystemTimeZoneChange(!userSettings.useSystemTimeZone)
                     },
                     content = {
-                        Text(text = stringResource(R.string.date_time_timezone_label))
+                        Text(text = stringResource(R.string.date_time_match_system_tz_label))
                     },
                     supportingContent = {
-                        Text(text = formatTimeZoneName(userSettings.timeZoneId))
+                        Text(text = stringResource(R.string.date_time_match_system_tz_summary))
                     },
                     trailingContent = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                            contentDescription = null,
+                        Switch(
+                            checked = userSettings.useSystemTimeZone,
+                            onCheckedChange = { enabled ->
+                                haptics.toggle()
+                                onUseSystemTimeZoneChange(enabled)
+                            },
                         )
                     },
-                    shapes = segmentedListItemShapes(2, 3),
+                    shapes = segmentedListItemShapes(2, 4),
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                )
+            }
+
+            item {
+                // When matching the system, this row is informational: it shows the live
+                // system zone, muted and non-interactive. Turning the toggle off makes it
+                // the manual picker again.
+                val usingSystem = userSettings.useSystemTimeZone
+                val shownZoneId = if (usingSystem) ZoneId.systemDefault().id else userSettings.timeZoneId
+                val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                SegmentedListItem(
+                    onClick = {
+                        if (!usingSystem) {
+                            haptics.toggle()
+                            showTimeZoneSheet = true
+                        }
+                    },
+                    content = {
+                        Text(
+                            text = stringResource(R.string.date_time_timezone_label),
+                            color = if (usingSystem) mutedColor else Color.Unspecified,
+                        )
+                    },
+                    supportingContent = {
+                        Text(text = formatTimeZoneName(shownZoneId))
+                    },
+                    trailingContent = {
+                        if (!usingSystem) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    shapes = segmentedListItemShapes(3, 4),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),

@@ -5,6 +5,7 @@ import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.ConsumptionEntry
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -12,8 +13,27 @@ import org.junit.Test
 class UserDateTimePreferencesTest {
 
     @Test
+    fun resolvedZoneId_followsSystemWhenMatchingEnabled() {
+        val settings = UserSettings(useSystemTimeZone = true, timeZoneId = "America/Los_Angeles")
+        // Matching the system ignores the stored override and tracks the device zone live.
+        assertEquals(ZoneId.systemDefault(), settings.resolvedZoneId())
+    }
+
+    @Test
+    fun resolvedZoneId_usesManualOverrideWhenMatchingDisabled() {
+        val settings = UserSettings(useSystemTimeZone = false, timeZoneId = "America/Los_Angeles")
+        assertEquals(ZoneId.of("America/Los_Angeles"), settings.resolvedZoneId())
+    }
+
+    @Test
+    fun resolvedZoneId_fallsBackToSystemWhenManualOverrideIsInvalid() {
+        val settings = UserSettings(useSystemTimeZone = false, timeZoneId = "Not/AZone")
+        assertEquals(ZoneId.systemDefault(), settings.resolvedZoneId())
+    }
+
+    @Test
     fun formatConsumptionDateHeader_returnsTodayAndYesterdayLabels() {
-        val settings = UserSettings(timeZoneId = "UTC")
+        val settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false)
         val referenceTimeMillis = Instant.parse("2025-01-07T10:15:00Z").toEpochMilli()
 
         assertEquals(
@@ -47,7 +67,7 @@ class UserDateTimePreferencesTest {
                 date = historicalDate,
                 settings = UserSettings(
                     dateFormat = AppDateFormat.MONTH_DAY_YEAR,
-                    timeZoneId = "UTC"
+                    timeZoneId = "UTC", useSystemTimeZone = false
                 ),
                 referenceTimeMillis = referenceTimeMillis,
                 locale = Locale.US
@@ -59,7 +79,7 @@ class UserDateTimePreferencesTest {
                 date = historicalDate,
                 settings = UserSettings(
                     dateFormat = AppDateFormat.DAY_MONTH_YEAR,
-                    timeZoneId = "UTC"
+                    timeZoneId = "UTC", useSystemTimeZone = false
                 ),
                 referenceTimeMillis = referenceTimeMillis,
                 locale = Locale.US
@@ -71,7 +91,7 @@ class UserDateTimePreferencesTest {
                 date = historicalDate,
                 settings = UserSettings(
                     dateFormat = AppDateFormat.YEAR_MONTH_DAY,
-                    timeZoneId = "UTC"
+                    timeZoneId = "UTC", useSystemTimeZone = false
                 ),
                 referenceTimeMillis = referenceTimeMillis,
                 locale = Locale.US
@@ -87,7 +107,7 @@ class UserDateTimePreferencesTest {
 
         val grouped = groupConsumptionEntriesByLocalDate(
             entries = listOf(jan5Morning, jan6Noon, jan5Evening),
-            settings = UserSettings(timeZoneId = "UTC")
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false)
         )
 
         assertEquals(
@@ -104,7 +124,7 @@ class UserDateTimePreferencesTest {
 
         val grouped = groupConsumptionEntriesByLocalDate(
             entries = listOf(earlierUtcEntry, laterUtcEntry),
-            settings = UserSettings(timeZoneId = "America/Los_Angeles")
+            settings = UserSettings(timeZoneId = "America/Los_Angeles", useSystemTimeZone = false)
         )
 
         assertEquals(listOf(LocalDate.of(2025, 1, 6)), grouped.keys.toList())
@@ -122,11 +142,11 @@ class UserDateTimePreferencesTest {
 
         val utcGrouped = groupConsumptionEntriesByLocalDate(
             entries = entries,
-            settings = UserSettings(timeZoneId = "UTC")
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false)
         )
         val losAngelesGrouped = groupConsumptionEntriesByLocalDate(
             entries = entries,
-            settings = UserSettings(timeZoneId = "America/Los_Angeles")
+            settings = UserSettings(timeZoneId = "America/Los_Angeles", useSystemTimeZone = false)
         )
 
         assertEquals(
