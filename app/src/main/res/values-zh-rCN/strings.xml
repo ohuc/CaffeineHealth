@@ -159,7 +159,7 @@
     <string name="profile_cyp1a2">CYP1A2 rs762551</string>
     <string name="profile_sleep_threshold_supporting">如果你的睡眠更容易受到咖啡因影响则调低数值，反之则调高。</string>
     <string name="caffeine_mg">%1$d 毫克</string>
-    <string name="settings_health_connect_summary">将咖啡因数据同步至“健康数据共享”</string>
+    <string name="settings_health_connect_summary">将咖啡因数据双向同步至\"Health Connect\"</string>
     <string name="profile_effective_half_life">有效半衰期: %1$d 小时 %2$d 分钟</string>
     <string name="notifications_add_daily_dialog_title">添加每日提醒</string>
     <string name="custom_drink_edit_button">编辑自定义摄入</string>
@@ -188,4 +188,15 @@
     <string name="profile_age_range_description">咖啡因在年长者体内停留时间更长。</string>
     <string name="add_empty_message_search">没有摄入匹配\"%1$s\"。</string>
     <string name="appearance_dynamic_color_label">动态色彩</string>
+    <string name="date_time_match_system_tz_label">匹配系统时区</string>
+    <string name="date_time_match_system_tz_summary">当您旅行时自动匹配您设备所在时区</string>
+    <string name="language_selected_cd">已选</string>
+    <string name="profile_weekly_sleep_rota_title">周度睡眠计划</string>
+    <string name="profile_weekly_sleep_rota_summary">为一周中的每一天设置不同的睡眠时间。</string>
+    <string name="weekly_sleep_rota_enable_title">使用周度计划</string>
+    <string name="weekly_sleep_rota_days_section">每日睡眠时间</string>
+    <string name="weekly_sleep_rota_fallback">在没有自定义时间的情况下，将回退到您的常规睡眠时间 (%1$s)。</string>
+    <string name="weekly_sleep_rota_custom_cd">设置自定义睡眠时间为 %1$s</string>
+    <string name="weekly_sleep_rota_clear_cd">将 %1$s 重置为常规睡眠时间</string>
+    <string name="weekly_sleep_rota_disabled_hint">打开周度睡眠计划，给每一天都分别安排睡眠时间。</string>
 </resources>
