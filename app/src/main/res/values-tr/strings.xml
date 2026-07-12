@@ -200,7 +200,7 @@
     <string name="add_filter_all">Tümü</string>
     <string name="add_recent_servings">Son porsiyonlar</string>
     <string name="add_logged_toast">%1$s kaydedildi</string>
-    <string name="add_log_serving_of">%1$s porsiyonunu kaydet:</string>
+    <string name="add_log_serving_of">%1$s porsiyonunu kaydet</string>
     <string name="add_no_serving_options">Bu içecek için henüz porsiyon seçeneği yok.</string>
     <string name="add_choose_unit">Birim seçin</string>
     <string name="add_total_caffeine">Toplam kafein</string>
@@ -437,7 +437,7 @@
     <string name="appearance_color_palette_label">Renk paleti</string>
     <string name="appearance_color_palette_dynamic">Dinamik</string>
     <string name="appearance_color_palette_espresso">Espresso</string>
-    <string name="appearance_color_palette_matcha">Matcha</string>
+    <string name="appearance_color_palette_matcha">Maça</string>
     <string name="appearance_color_palette_ocean">Okyanus</string>
     <string name="appearance_color_palette_sakura">Sakura</string>
     <string name="home_circular_view_cd">Kafein ilerleme göstergesi</string>
