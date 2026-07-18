@@ -36,7 +36,7 @@
     <string name="settings_date_time_title">Fecha y hora</string>
     <string name="settings_date_time_summary">Reloj, formato de fecha y zona horaria</string>
     <string name="settings_health_connect_title">Health Connect</string>
-    <string name="settings_health_connect_summary">Sincroniza los datos de cafeína con Health Connect</string>
+    <string name="settings_health_connect_summary">Sincroniza la cafeína en ambos sentidos con Health Connect</string>
     <string name="settings_my_data_title">Mis datos</string>
     <string name="settings_my_data_summary">Exporta e importa tus datos</string>
     <string name="settings_notifications_title">Notificaciones</string>
@@ -178,4 +178,13 @@
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Entrenador de cafeína</string>
     <string name="coach_setting_description">Sugiere la dosis más pequeña y mejor programada para mantenerte despierto sin perjudicar el sueño</string>
+    <string name="date_time_match_system_tz_label">Zona horaria del sistema de coincidencia</string>
+    <string name="date_time_match_system_tz_summary">Sigue automáticamente la zona horaria de tu dispositivo mientras viajas</string>
+    <string name="profile_half_life_description_modified">Ajustada para tus modificadores genéticos y hormonales.</string>
+    <string name="profile_half_life_description_default">Cuanto tiempo suele permanecer la cafeína en el organismo.</string>
+    <string name="profile_typical_bedtime_description">Se utiliza como marcador de la hora de acostarse y para predecir el sueño.</string>
+    <string name="profile_sleep_threshold_description">El objetivo de cafeína activa con el que se compara la guía de sueño.</string>
+    <string name="profile_re_adjust_title">Reajustar el perfil de salud de la cafeína</string>
+    <string name="profile_re_adjust_description">Ajusta con precisión la vida media, los ajustes del sueño y los factores metabólicos.</string>
+    <string name="profile_redo_onboarding">Repetir el proceso de incorporación</string>
 </resources>
