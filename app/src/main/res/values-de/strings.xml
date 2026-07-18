@@ -168,4 +168,8 @@
     <string name="date_time_match_system_tz_summary">Automatisch der Zeitzone der Zeitzone des Systems folgen</string>
     <string name="date_time_timezone_label">Zeitzone</string>
     <string name="date_time_timezone_sheet_description">Wählen Sie die Zeitzone, die die App für Diagramme, Zeitberechnungen und Ihre Tagesgrenzen verwenden sollte.</string>
+    <string name="date_time_date_format_label">Datumsformat</string>
+    <string name="date_time_timezone_search_label">Durchsuche Zeitzonen</string>
+    <string name="language_section_title">Sprache</string>
+    <string name="language_selected_cd">Ausgewählt</string>
 </resources>
