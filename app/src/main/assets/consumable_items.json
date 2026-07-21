@@ -6159,5 +6159,42 @@
                 "unit_text_key": "shot"
             }
         ]
+    },
+    "arizona-arnold-palmer": {
+        "90_absorption_rate": 45,
+        "category": "tea",
+        "consumption_method": "drink",
+        "default_unit": "can",
+        "description": "A refreshing half iced tea and half lemonade, perfect for cooling down on a hot day.",
+        "id": "arizona-arnold-palmer",
+        "image_src": "arizona-arnold-palmer.png",
+        "name": "Arizona Arnold Palmer Half and Half",
+        "relevance": 19,
+        "units": [
+            {
+                "caffeine_content": 0.03,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "ml"
+            },
+            {
+                "caffeine_content": 10.68,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "can"
+            },
+            {
+                "caffeine_content": 30.06,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "liter"
+            },
+            {
+                "caffeine_content": 0.89,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "fl oz"
+            }
+        ]
     }
 }
