@@ -6,4 +6,10 @@
     <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
     <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
     <string name="widget_caffeine_now_label">Рівень кофеїну</string>
+    <string name="action_back">Назад</string>
+    <string name="settings_title">Налаштування</string>
+    <string name="settings_language_title">Мова</string>
+    <string name="settings_language_summary">Оберіть вашу мову</string>
+    <string name="settings_date_time_title">Час та дата</string>
+    <string name="settings_date_time_summary">Час, формат дати, часова зона</string>
 </resources>
