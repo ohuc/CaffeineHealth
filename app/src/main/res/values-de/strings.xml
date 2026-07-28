@@ -174,4 +174,5 @@
     <string name="language_selected_cd">Ausgewählt</string>
     <string name="profile_half_life_description_modified">Angepasst an deine genetischen und hormonellen Faktoren.</string>
     <string name="profile_half_life_description_default">Wie lange Coffein vorraussichtlich in deinem Körper verweilt.</string>
+    <string name="profile_re_adjust_description">Passe deine Halbwertszeit, Schlafeinstellung und Metabolismus Faktoren genau an.</string>
 </resources>
