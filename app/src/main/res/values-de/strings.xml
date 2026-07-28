@@ -162,7 +162,7 @@
     <string name="coach_setting_label">Koffein-Coach</string>
     <string name="coach_setting_description">Schlägt die kleinste, optimal getimte Dosis vor, um wach zu bleiben, ohne den Schlaf zu stören</string>
     <string name="date_time_24h_summary">13:00 anstelle von 1:00 PM</string>
-    <string name="date_time_24h_label">24 Std. Format benutzen</string>
+    <string name="date_time_24h_label">24-Stunden Format verwenden</string>
     <string name="date_time_date_format_sheet_description">Wählen Sie aus, wie Datumsanzeigen angezeigt werden sollen.</string>
     <string name="date_time_match_system_tz_label">Zeitzone vom System übernehmen</string>
     <string name="date_time_match_system_tz_summary">Automatisch der Zeitzone der Zeitzone des Systems folgen</string>
@@ -172,4 +172,6 @@
     <string name="date_time_timezone_search_label">Durchsuche Zeitzonen</string>
     <string name="language_section_title">Sprache</string>
     <string name="language_selected_cd">Ausgewählt</string>
+    <string name="profile_half_life_description_modified">Angepasst an deine genetischen und hormonellen Faktoren.</string>
+    <string name="profile_half_life_description_default">Wie lange Coffein vorraussichtlich in deinem Körper verweilt.</string>
 </resources>
