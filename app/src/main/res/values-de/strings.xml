@@ -175,4 +175,6 @@
     <string name="profile_half_life_description_modified">Angepasst an deine genetischen und hormonellen Faktoren.</string>
     <string name="profile_half_life_description_default">Wie lange Coffein vorraussichtlich in deinem Körper verweilt.</string>
     <string name="profile_re_adjust_description">Passe deine Halbwertszeit, Schlafeinstellung und Metabolismus Faktoren genau an.</string>
+    <string name="profile_redo_onboarding">Einrichtung wiederholen</string>
+    <string name="profile_redo_onboarding_description">Wiederhole die Profileinrichtung, ohne bereits gespeicherte Getränke zu löschen.</string>
 </resources>
