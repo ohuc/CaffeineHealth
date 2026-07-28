@@ -177,4 +177,5 @@
     <string name="profile_re_adjust_description">Passe deine Halbwertszeit, Schlafeinstellung und Metabolismus Faktoren genau an.</string>
     <string name="profile_redo_onboarding">Einrichtung wiederholen</string>
     <string name="profile_redo_onboarding_description">Wiederhole die Profileinrichtung, ohne bereits gespeicherte Getränke zu löschen.</string>
+    <string name="profile_caffeine_half_life">Coffein Halbwertszeit</string>
 </resources>
