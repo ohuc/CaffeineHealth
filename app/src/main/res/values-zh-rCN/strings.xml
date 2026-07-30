@@ -199,4 +199,5 @@
     <string name="weekly_sleep_rota_custom_cd">设置自定义睡眠时间为 %1$s</string>
     <string name="weekly_sleep_rota_clear_cd">将 %1$s 重置为常规睡眠时间</string>
     <string name="weekly_sleep_rota_disabled_hint">打开周度睡眠计划，给每一天都分别安排睡眠时间。</string>
+    <string name="language_deferred_description">英语将是本版本的主要语言。</string>
 </resources>
