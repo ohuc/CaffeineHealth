@@ -3,12 +3,15 @@ package com.uc.caffeine.data
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.NutritionRecord
+import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.metadata.Metadata as HCMetadata
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Mass
+import androidx.health.connect.client.units.Volume
 import com.uc.caffeine.data.model.ConsumptionEntry
 import java.time.Duration
 import java.time.Instant
@@ -36,8 +39,9 @@ class HealthConnectManager(private val context: Context) {
     private val nutritionWrite = HealthPermission.getWritePermission(NutritionRecord::class)
     private val nutritionRead  = HealthPermission.getReadPermission(NutritionRecord::class)
     private val sleepRead      = HealthPermission.getReadPermission(SleepSessionRecord::class)
+    private val hydrationWrite = HealthPermission.getWritePermission(HydrationRecord::class)
 
-    val allPermissions = setOf(nutritionWrite, nutritionRead, sleepRead)
+    val allPermissions = setOf(nutritionWrite, nutritionRead, sleepRead, hydrationWrite)
     val sleepPermissions = setOf(sleepRead)
 
     fun isAvailable(): Boolean =
@@ -62,11 +66,15 @@ class HealthConnectManager(private val context: Context) {
     suspend fun hasSleepPermission(): Boolean =
         grantedPermissionsOrNull()?.contains(sleepRead) == true
 
+    suspend fun hasHydrationWritePermission(): Boolean =
+        grantedPermissionsOrNull()?.contains(hydrationWrite) == true
+
     /** True only when Health Connect answered and the sleep permission is definitively not granted. */
     suspend fun isSleepPermissionRevoked(): Boolean =
         grantedPermissionsOrNull()?.let { sleepRead !in it } == true
 
     private fun clientRecordId(entryId: Int): String = "caffeine_entry_$entryId"
+    private fun clientHydrationRecordId(entryId: Int): String = "caffeine_entry_${entryId}_hydration"
 
     private fun ConsumptionEntry.toNutritionRecord(zoneId: ZoneId): NutritionRecord {
         val start = Instant.ofEpochMilli(startedAtMillis)
@@ -86,14 +94,37 @@ class HealthConnectManager(private val context: Context) {
         )
     }
 
-    suspend fun writeEntry(entry: ConsumptionEntry, zoneId: ZoneId = ZoneId.systemDefault()) {
+    private fun ConsumptionEntry.toHydrationRecord(volumeMl: Double, zoneId: ZoneId): HydrationRecord {
+        val start = Instant.ofEpochMilli(startedAtMillis)
+        val end = start.plusSeconds(normalizedDurationMinutes * 60L)
+        val zoneRules = zoneId.rules
+        return HydrationRecord(
+            startTime = start,
+            endTime = end,
+            volume = Volume.liters(volumeMl / 1000.0),
+            startZoneOffset = zoneRules.getOffset(start),
+            endZoneOffset = zoneRules.getOffset(end),
+            metadata = HCMetadata.manualEntry(
+                clientRecordId = clientHydrationRecordId(id),
+                clientRecordVersion = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    suspend fun writeEntry(
+        entry: ConsumptionEntry,
+        zoneId: ZoneId = ZoneId.systemDefault(),
+        volumeMl: Double? = null,
+    ) {
         val c = client ?: return
         // Imported records are owned by another app — never echo them back
         if (entry.healthConnectRecordId != null) return
         if (!hasPermission()) return
-        runCatching {
-            c.insertRecords(listOf(entry.toNutritionRecord(zoneId)))
+        val records = mutableListOf<Record>(entry.toNutritionRecord(zoneId))
+        if (volumeMl != null && volumeMl > 0.0 && hasHydrationWritePermission()) {
+            records.add(entry.toHydrationRecord(volumeMl, zoneId))
         }
+        runCatching { c.insertRecords(records) }
     }
 
     suspend fun syncAll(entries: List<ConsumptionEntry>, zoneId: ZoneId = ZoneId.systemDefault()) {
@@ -128,6 +159,13 @@ class HealthConnectManager(private val context: Context) {
         val clientIds = entryIds.map { clientRecordId(it) }
         runCatching {
             c.deleteRecords(NutritionRecord::class, emptyList(), clientIds)
+        }
+        // Also delete corresponding hydration records
+        if (hasHydrationWritePermission()) {
+            val hydrationClientIds = entryIds.map { clientHydrationRecordId(it) }
+            runCatching {
+                c.deleteRecords(HydrationRecord::class, emptyList(), hydrationClientIds)
+            }
         }
     }
 
