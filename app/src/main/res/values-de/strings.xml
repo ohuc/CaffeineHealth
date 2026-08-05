@@ -279,4 +279,5 @@
     <string name="custom_drink_change_image">Veränderung</string>
     <string name="custom_drink_remove">Entfernen</string>
     <string name="custom_drink_category">Kategorie</string>
+    <string name="profile_re_adjust_title">Coffein-Gesundheitsprofil neu anpassen</string>
 </resources>
