@@ -35,7 +35,7 @@
     <string name="settings_language_summary">Wähle deine Sprache</string>
     <string name="settings_date_time_title">Datum und Uhrzeit</string>
     <string name="settings_date_time_summary">Uhrzeit, Datumsformat und Zeitzone</string>
-    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_title">Health-Connect</string>
     <string name="settings_health_connect_summary">Koffeindaten mit Health Connect synchronisieren</string>
     <string name="settings_my_data_title">Meine Daten</string>
     <string name="settings_my_data_summary">Daten exportieren und importieren</string>
@@ -139,7 +139,7 @@
     <!-- Profile -->
     <string name="profile_estimated_half_life">Geschätzte Halbwertszeit</string>
     <string name="profile_half_life_value_modified">%1$d Std. (Basis %2$d Std.)</string>
-    <string name="profile_half_life_value">%1$d Std.</string>
+    <string name="profile_half_life_value">%1$d Stunden</string>
     <string name="profile_typical_bedtime">Übliche Schlafenszeit</string>
     <string name="profile_sleep_threshold">Schlafgrenze</string>
     <string name="profile_sleep_threshold_value">%1$d mg</string>
@@ -162,12 +162,12 @@
     <string name="coach_setting_label">Koffein-Coach</string>
     <string name="coach_setting_description">Schlägt die kleinste, optimal getimte Dosis vor, um wach zu bleiben, ohne den Schlaf zu stören</string>
     <string name="date_time_24h_summary">13:00 anstelle von 1:00 PM</string>
-    <string name="date_time_24h_label">24-Stunden Format verwenden</string>
+    <string name="date_time_24h_label">Verwende 24-Stunden Format</string>
     <string name="date_time_date_format_sheet_description">Wählen Sie aus, wie Datumsanzeigen angezeigt werden sollen.</string>
     <string name="date_time_match_system_tz_label">Zeitzone vom System übernehmen</string>
     <string name="date_time_match_system_tz_summary">Automatisch der Zeitzone der Zeitzone des Systems folgen</string>
     <string name="date_time_timezone_label">Zeitzone</string>
-    <string name="date_time_timezone_sheet_description">Wählen Sie die Zeitzone, die die App für Diagramme, Zeitberechnungen und Ihre Tagesgrenzen verwenden sollte.</string>
+    <string name="date_time_timezone_sheet_description">Wählen Sie die Zeitzone, welche die App für Diagramme, Zeitberechnungen und Ihre Tagesgrenzen verwenden sollte.</string>
     <string name="date_time_date_format_label">Datumsformat</string>
     <string name="date_time_timezone_search_label">Durchsuche Zeitzonen</string>
     <string name="language_section_title">Sprache</string>
@@ -205,7 +205,7 @@
     <string name="profile_advanced_metabolism">Erweiterter Stoffwechsel</string>
     <string name="profile_advanced_metabolism_description">Optionale genetische und hormonelle Faktoren, die Ihre Halbwertszeit-Schätzung präzisieren.</string>
     <string name="profile_advanced_metabolism_intro">Wenn Sie Ihren CYP1A2- oder AHR-Genotyp kennen (z.B. von 23andMe oder einem ähnlichen Anbieter), können Sie ihn hier eingeben. Diese Angaben sind jedoch völlig optional.</string>
-    <string name="profile_cyp1a2">CYP1A2 rs762551</string>
+    <string name="profile_cyp1a2">CYP1A2-rs762551</string>
     <string name="profile_cyp1a2_description">Steuert die Geschwindigkeit des Koffeinstoffwechsels. A/A dient als Referenz für den schnellen Stoffwechsel.</string>
     <string name="profile_ahr_description">Beeinflusst die Expressionsstärke von CYP1A2. G/G ist normal.</string>
     <string name="profile_hormonal_status">Hormonstatus</string>
@@ -236,7 +236,7 @@
     <string name="my_data_import_title">Daten importieren</string>
     <string name="my_data_import_description">Aus einem früheren Backup wiederherstellen</string>
     <string name="language_deferred_description">Englisch bleibt in dieser Version die aktive Sprache.</string>
-    <string name="profile_typical_bedtime_description">Wird zur Erfassung der Schlafenszeit und zur Vorhersage der Schlafdauer verwendet.</string>
+    <string name="profile_typical_bedtime_description">Wird für die Schlafenszeit-Markierung und die Schlafvorhersage verwendet.</string>
     <string name="profile_caffeine_half_life_supporting">Im Durchschnitt sind es etwa 5 Stunden, aber hier kannst du es individueller gestalten.</string>
     <string name="profile_caffeine_half_life_hint">In 1-Stunden-Schritten anpassen</string>
     <string name="profile_sleep_threshold_supporting">Halten Sie diesen Wert niedriger, wenn Koffein Ihren Schlaf leicht beeinträchtigt, und höher, wenn Sie in dieser Hinsicht normalerweise weniger empfindlich sind.</string>
@@ -244,7 +244,7 @@
     <string name="profile_heavy_alcohol_description">Starker Alkoholkonsum kann die Ausscheidung verlangsamen und Ihre effektive Schwelle senken.</string>
     <string name="stepper_decrease_cd">Senkung um %1$s</string>
     <string name="stepper_increase_cd">Anstieg um %1$s</string>
-    <string name="profile_ahr">AHR rs2066853</string>
+    <string name="profile_ahr">AHR-rs2066853</string>
     <string name="profile_hormonal_status_description">Eine Schwangerschaft und orale Verhütungsmittel können die Ausscheidung von Koffein erheblich verlangsamen.</string>
     <string name="profile_clearance_factor_explanation">Basiswert von %1$d Std., angepasst durch einen kombinierten Abbaufaktor von \\%2$s.</string>
     <string name="health_connect_bedtime_reading">Wert zur Schlafenszeit: %1$s</string>
@@ -417,7 +417,7 @@
     <string name="medication_none">Keine</string>
     <string name="medication_cimetidine">Cimetidin</string>
     <string name="medication_oral_contraceptives">Hormonelle Verhütung</string>
-    <string name="medication_ciprofloxacin">Ciprofloxacin</string>
+    <string name="medication_ciprofloxacin">Wirkstoff: Ciprofloxacin</string>
     <string name="medication_fluvoxamine">Fluvoxamin</string>
     <string name="medication_other_cyp1a2">Sonstiger CYP1A2-Hemmer</string>
     <string name="health_connect_sleep_hint_active">Health Connect liefert diesen Wert</string>
@@ -431,7 +431,7 @@
     <string name="whats_new_amounts_body">Tippe auf die Portionsanzahl, um eine exakte Menge oder Bruchteile einzugeben – eine halbe Limo, einen kurzen Espresso oder einen ganz genauen Wert.</string>
     <string name="whats_new_design_title">Ein frisches, neues Design</string>
     <string name="whats_new_design_body">Ein neues Pulse Cup-App-Icon mit Support für dynamische Material You-Icons und ein animierter Startbildschirm, der dich mit einem Herzschlag begrüßt.</string>
-    <string name="whats_new_sleep_title">Wöchentlicher Schlafrhythmus</string>
+    <string name="whats_new_sleep_title">Wöchentlicher Schlafplan</string>
     <string name="whats_new_sleep_body">Lege individuelle Schlafenszeiten für jeden Wochentag fest. Deine Koffein-Grenze und die Schlafenszeit-Prognosen folgen dann genau deinem echten Alltag.</string>
     <string name="home_trend_rising">Steigend</string>
     <string name="home_trend_steady">Stabil</string>
@@ -442,20 +442,20 @@
     <string name="celebration_next_log_supporting">Ein Tippen auf dem Startbildschirm genügt. Die Kurve füllt sich dann wie von selbst.</string>
     <string name="celebration_take_me_home">Zur Startseite</string>
     <string name="widget_preview_safe_before_bed">Sicher vor dem Schlafen</string>
-    <string name="widget_preview_drink_name_1">Espresso</string>
+    <string name="widget_preview_drink_name_1">Der Espresso</string>
     <string name="widget_preview_drink_mg_1">63 mg</string>
     <string name="widget_preview_drink_name_2">Grüner Tee</string>
     <string name="widget_preview_drink_mg_2">30 mg</string>
     <string name="appearance_home_view_label">Startseiten-Design</string>
     <string name="appearance_home_view_summary">Wählen Sie, wie Koffein auf der Startseite angezeigt wird</string>
-    <string name="appearance_home_view_graph">Graph</string>
+    <string name="appearance_home_view_graph">Diagramm</string>
     <string name="appearance_home_view_circular">Kreisförmig</string>
     <string name="appearance_color_palette_label">Farbpalette</string>
     <string name="appearance_color_palette_dynamic">Dynamisch</string>
-    <string name="appearance_color_palette_espresso">Espresso</string>
-    <string name="appearance_color_palette_matcha">Matcha</string>
+    <string name="appearance_color_palette_espresso">Der Espresso</string>
+    <string name="appearance_color_palette_matcha">Der Matcha</string>
     <string name="appearance_color_palette_ocean">Ozean</string>
-    <string name="appearance_color_palette_sakura">Sakura</string>
+    <string name="appearance_color_palette_sakura">Kirschblütenrosa</string>
     <string name="home_circular_view_cd">Koffein-Fortschrittsanzeige</string>
     <string name="home_circular_mg_unit">mg</string>
     <string name="home_circular_threshold_format">von %1$d mg</string>
