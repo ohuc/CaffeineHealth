@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="my_data_export_description">备份你的摄入历史、健康档案和自定义饮品</string>
+    <string name="my_data_export_description">备份所有数据</string>
     <string name="profile_half_life_value">%1$d 小时</string>
     <string name="stepper_decrease_cd">减少 %1$s</string>
     <string name="profile_smoking_habit_description">吸烟会通过抑制代谢酶CYP1A2，来加快咖啡因代谢清除。</string>
@@ -200,4 +200,29 @@
     <string name="weekly_sleep_rota_clear_cd">将 %1$s 重置为常规睡眠时间</string>
     <string name="weekly_sleep_rota_disabled_hint">打开周度睡眠计划，给每一天都分别安排睡眠时间。</string>
     <string name="language_deferred_description">英语将是本版本的主要语言。</string>
+    <string name="weekly_sleep_rota_enable_description">开启后,每一天都会使用单独的就寝时间进行睡眠指导。若当天未设置就寝时间，则会使用您的常规就寝时间。</string>
+    <string name="weekly_sleep_rota_pick_title">%1$s 的就寝时间</string>
+    <string name="weekly_sleep_rota_nav_on">开启 — 每天使用单独的就寝时间</string>
+    <string name="profile_sleep_time_rota_hint">周睡眠轮值表已打开 — 具有单独设置就寝时间的天将覆盖此时间</string>
+    <string name="health_connect_imported_drink_name">咖啡因</string>
+    <string name="home_serving">份</string>
+    <string name="home_serving_unavailable">此条目不可调整份设置。</string>
+    <string name="coach_title">咖啡因助手</string>
+    <string name="coach_headline_now">现在摄入约 %1$d毫克</string>
+    <string name="coach_headline_at">在大约 %2$s 时摄入 %1$d毫克</string>
+    <string name="coach_reason_sleep_debt">你睡了%1$s。这是既能帮你恢复精力，又不影响今晚睡眠的最低有效时长。</string>
+    <string name="coach_reason_afternoon_dip">专为你午后易犯困的时段设计，帮你保持清醒度过这段时间的最低咖啡因含量。</string>
+    <string name="coach_reason_stay_sharp">能让你一整天保持专注状态的最小含量。</string>
+    <string name="coach_residual_note">到你%2$s 的就寝时间时，将减少至约%1$d。</string>
+    <string name="coach_hold_already_alert">你已经准备就绪了，现在完全不需要靠咖啡因来保持头脑清醒。</string>
+    <string name="coach_hold_bedtime">现在别喝咖啡因饮品了，距离你%1$s的就寝时间太近，再摄入的话会影响睡眠。</string>
+    <string name="coach_connect_sleep">关联睡眠数据，获取贴合你实际睡眠状况的个性化建议。</string>
+    <string name="coach_sleep_hours">%1$d小时 %2$d分钟</string>
+    <string name="coach_chip_recommend_now">助手 · 现在摄入 约%1$d毫克</string>
+    <string name="coach_chip_recommend_at">助手 · 在大约%2$s时摄入 约%1$d毫克</string>
+    <string name="coach_chip_hold_alert">助手 · 无需再摄入咖啡因</string>
+    <string name="coach_log_dose">记录此次摄入</string>
+    <string name="coach_setting_label">咖啡因助手</string>
+    <string name="coach_setting_description">推荐剂量最小、时机最佳的服用方案，既能保持头脑清醒，又不会影响睡眠。</string>
+    <string name="add_recent_servings">最近的几份</string>
 </resources>
