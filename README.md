@@ -179,6 +179,17 @@ cd CaffeineHealth
 
 > **Note:** The app requires Android 12 (API 31) or higher. `compileSdk` targets API 36 - use an emulator with API 31+ to run it.
 
+### Release checklist
+
+1. Pull the latest translation changes into a clean working tree (`git pull --ff-only origin master`).
+2. Bump `versionName` and increase `versionCode`, then add the matching Fastlane changelog at `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`.
+3. Run a clean build before every release: `./gradlew clean --no-daemon`.
+4. For a publisher-signed APK, provide all four signing values only through the environment (`SIGNING_STORE_FILE`, `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS`, and `SIGNING_KEY_PASSWORD`) and run `./gradlew assembleSignedRelease --no-daemon`. The task fails early if any value is missing.
+5. Verify the resulting signed APK with Android SDK `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`.
+6. Commit the source release, tag it as `v<versionName>`, and push both `master` and the tag. The GitHub workflow rejects a tag whose name or version code is not publishable.
+
+`assembleRelease` deliberately remains unsigned when no signing environment is supplied. This is the expected input for F-Droid/IzzyOnDroid source builds; those repositories sign the APKs they build themselves. Android only permits in-place updates signed by the same certificate, so publisher-signed GitHub APKs and repository-signed APKs are separate update paths unless a reproducible publisher-signed APK is accepted by the repository.
+
 ### Project Structure
 
 ```

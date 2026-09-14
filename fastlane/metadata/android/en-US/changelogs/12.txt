@@ -1,0 +1,2 @@
+• Updated all community translations from Weblate, including new Czech, Russian, Turkish, and Ukrainian locales
+• Improved existing translations across supported languages

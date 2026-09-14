@@ -5,6 +5,27 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Keep release credentials out of source control. An unsigned release is
+// intentional for F-Droid/IzzyOnDroid source builds; local publisher builds
+// use the explicit assembleSignedRelease task below.
+val signingEnvironmentNames = listOf(
+    "SIGNING_STORE_FILE",
+    "SIGNING_STORE_PASSWORD",
+    "SIGNING_KEY_ALIAS",
+    "SIGNING_KEY_PASSWORD"
+)
+val configuredSigningEnvironmentNames = signingEnvironmentNames.filter {
+    !System.getenv(it).isNullOrBlank()
+}
+check(
+    configuredSigningEnvironmentNames.isEmpty() ||
+        configuredSigningEnvironmentNames.size == signingEnvironmentNames.size
+) {
+    "Configure all release-signing environment variables or none: " +
+        signingEnvironmentNames.joinToString()
+}
+val hasReleaseSigning = configuredSigningEnvironmentNames.size == signingEnvironmentNames.size
+
 android {
     namespace = "com.uc.caffeine"
     compileSdk = 36
@@ -13,24 +34,28 @@ android {
         applicationId = "com.uc.caffeine"
         minSdk = 31
         targetSdk = 36
-        versionCode = 11
-        versionName = "2.3.1"
+        versionCode = 12
+        versionName = "2.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = System.getenv("SIGNING_STORE_FILE")?.let { file(it) }
-            storePassword = System.getenv("SIGNING_STORE_PASSWORD")
-            keyAlias = System.getenv("SIGNING_KEY_ALIAS")
-            keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(requireNotNull(System.getenv("SIGNING_STORE_FILE")))
+                storePassword = requireNotNull(System.getenv("SIGNING_STORE_PASSWORD"))
+                keyAlias = requireNotNull(System.getenv("SIGNING_KEY_ALIAS"))
+                keyPassword = requireNotNull(System.getenv("SIGNING_KEY_PASSWORD"))
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs["release"].takeIf { it.storeFile != null }
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs["release"]
+            }
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -50,6 +75,22 @@ android {
         includeInApk = false
         includeInBundle = false
     }
+}
+
+tasks.register("verifyReleaseSigning") {
+    group = "verification"
+    description = "Fails unless all release-signing environment variables are configured."
+    doLast {
+        check(hasReleaseSigning) {
+            "Signed builds require: ${signingEnvironmentNames.joinToString()}"
+        }
+    }
+}
+
+tasks.register("assembleSignedRelease") {
+    group = "build"
+    description = "Builds a locally signed release APK; use assembleRelease for F-Droid source builds."
+    dependsOn("verifyReleaseSigning", "assembleRelease")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

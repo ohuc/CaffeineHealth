@@ -49,11 +49,21 @@ private val supportedLanguages = listOf(
     AppLanguage("es", "🇪🇸", "Español"),
     AppLanguage("pt", "🇵🇹", "Português"),
     AppLanguage("fr", "🇫🇷", "Français"),
+    AppLanguage("it", "🇮🇹", "Italiano"),
+    AppLanguage("pl", "🇵🇱", "Polski"),
+    AppLanguage("cs", "🇨🇿", "Čeština"),
+    AppLanguage("ro", "🇷🇴", "Română"),
+    AppLanguage("tr", "🇹🇷", "Türkçe"),
+    AppLanguage("ru", "🇷🇺", "Русский"),
+    AppLanguage("uk", "🇺🇦", "Українська"),
+    AppLanguage("ar", "🇸🇦", "العربية"),
+    AppLanguage("bn", "🇧🇩", "বাংলা"),
     AppLanguage("hi", "🇮🇳", "हिंदी"),
     AppLanguage("ml", "🇮🇳", "മലയാളം"),
     AppLanguage("kn", "🇮🇳", "ಕನ್ನಡ"),
     AppLanguage("te", "🇮🇳", "తెలుగు"),
     AppLanguage("ta", "🇮🇳", "தமிழ்"),
+    AppLanguage("zh-CN", "🇨🇳", "简体中文"),
 ).let { all ->
     val pinned = listOf("en", "hi")
     all.filter { it.tag in pinned }.sortedBy { pinned.indexOf(it.tag) } +
@@ -69,13 +79,20 @@ internal fun LanguageSettingsScreen(
     val haptics = rememberAppHaptics()
 
     val currentTag = remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val appLocaleTag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val appLocales = context.getSystemService(android.app.LocaleManager::class.java)
                 .applicationLocales
-            if (appLocales.isEmpty) null else appLocales[0]?.language
+            if (appLocales.isEmpty) null else appLocales[0]?.toLanguageTag()
         } else {
             null
         } ?: java.util.Locale.getDefault().language
+        // App locale tags are region-qualified only where the entry needs it (e.g. zh-CN);
+        // fall back to a base-language match so a plain system locale (e.g. "zh") still highlights it.
+        supportedLanguages.firstOrNull { it.tag == appLocaleTag }?.tag
+            ?: supportedLanguages.firstOrNull {
+                it.tag.substringBefore('-') == appLocaleTag.substringBefore('-')
+            }?.tag
+            ?: appLocaleTag
     }
     var selectedTag by remember { mutableStateOf(currentTag) }
 

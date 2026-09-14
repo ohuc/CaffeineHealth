@@ -32,6 +32,20 @@ gradle/gradle-daemon-jvm.properties
 tmp_vico/
 artifacts/
 
+# Never commit signing keys, release credentials, or local secret files.
+# The signing configuration intentionally reads only environment variables.
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.env
+.env.*
+/key.properties
+/signing.properties
+/local-signing.properties
+
 # Backup files
 *- Backup*
 *- Copy*
