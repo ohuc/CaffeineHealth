@@ -71,6 +71,13 @@ android {
         compose = true
         buildConfig = true
     }
+    androidResources {
+        // Derives res/xml/_generated_res_locale_config.xml (wired into the manifest's
+        // android:localeConfig automatically) from the values-<locale> dirs that exist
+        // at build time, so a new Weblate translation lands in the supported-locale list
+        // without a manual edit here.
+        generateLocaleConfig = true
+    }
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false

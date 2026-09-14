@@ -1,5 +1,6 @@
 package com.uc.caffeine.ui.screens.settings
 
+import android.content.Context
 import android.os.Build
 import android.os.LocaleList
 import java.text.Collator
@@ -37,37 +38,63 @@ private data class AppLanguage(
     val nativeName: String,
 )
 
-private val supportedLanguages = listOf(
-    AppLanguage("en", "🇬🇧", "English"),
-    AppLanguage("nl", "🇳🇱", "Nederlands"),
-    AppLanguage("de", "🇩🇪", "Deutsch"),
-    AppLanguage("da", "🇩🇰", "Dansk"),
-    AppLanguage("is", "🇮🇸", "Íslenska"),
-    AppLanguage("sv", "🇸🇪", "Svenska"),
-    AppLanguage("nb", "🇳🇴", "Norsk"),
-    AppLanguage("fi", "🇫🇮", "Suomi"),
-    AppLanguage("es", "🇪🇸", "Español"),
-    AppLanguage("pt", "🇵🇹", "Português"),
-    AppLanguage("fr", "🇫🇷", "Français"),
-    AppLanguage("it", "🇮🇹", "Italiano"),
-    AppLanguage("pl", "🇵🇱", "Polski"),
-    AppLanguage("cs", "🇨🇿", "Čeština"),
-    AppLanguage("ro", "🇷🇴", "Română"),
-    AppLanguage("tr", "🇹🇷", "Türkçe"),
-    AppLanguage("ru", "🇷🇺", "Русский"),
-    AppLanguage("uk", "🇺🇦", "Українська"),
-    AppLanguage("ar", "🇸🇦", "العربية"),
-    AppLanguage("bn", "🇧🇩", "বাংলা"),
-    AppLanguage("hi", "🇮🇳", "हिंदी"),
-    AppLanguage("ml", "🇮🇳", "മലയാളം"),
-    AppLanguage("kn", "🇮🇳", "ಕನ್ನಡ"),
-    AppLanguage("te", "🇮🇳", "తెలుగు"),
-    AppLanguage("ta", "🇮🇳", "தமிழ்"),
-    AppLanguage("zh-CN", "🇨🇳", "简体中文"),
-).let { all ->
+private data class LanguageDisplay(val flag: String, val nativeName: String)
+
+// Which locales the app ships is derived at runtime from the translated resources actually
+// packaged in the APK (see buildSupportedLanguages) — the same values-<locale> directories
+// AGP's generateLocaleConfig (app/build.gradle.kts) reads to build the OS-level locale list.
+// This map only overrides display: a flag emoji (a language isn't a country, so it can't be
+// derived) and a native name where Java's Locale display name isn't the one we want to show.
+private val languageDisplayOverrides = mapOf(
+    "en" to LanguageDisplay("🇬🇧", "English"),
+    "nl" to LanguageDisplay("🇳🇱", "Nederlands"),
+    "de" to LanguageDisplay("🇩🇪", "Deutsch"),
+    "da" to LanguageDisplay("🇩🇰", "Dansk"),
+    "is" to LanguageDisplay("🇮🇸", "Íslenska"),
+    "sv" to LanguageDisplay("🇸🇪", "Svenska"),
+    "nb" to LanguageDisplay("🇳🇴", "Norsk"),
+    "fi" to LanguageDisplay("🇫🇮", "Suomi"),
+    "es" to LanguageDisplay("🇪🇸", "Español"),
+    "pt" to LanguageDisplay("🇵🇹", "Português"),
+    "fr" to LanguageDisplay("🇫🇷", "Français"),
+    "it" to LanguageDisplay("🇮🇹", "Italiano"),
+    "pl" to LanguageDisplay("🇵🇱", "Polski"),
+    "cs" to LanguageDisplay("🇨🇿", "Čeština"),
+    "ro" to LanguageDisplay("🇷🇴", "Română"),
+    "tr" to LanguageDisplay("🇹🇷", "Türkçe"),
+    "ru" to LanguageDisplay("🇷🇺", "Русский"),
+    "uk" to LanguageDisplay("🇺🇦", "Українська"),
+    "ar" to LanguageDisplay("🇸🇦", "العربية"),
+    "bn" to LanguageDisplay("🇧🇩", "বাংলা"),
+    "hi" to LanguageDisplay("🇮🇳", "हिंदी"),
+    "ml" to LanguageDisplay("🇮🇳", "മലയാളം"),
+    "kn" to LanguageDisplay("🇮🇳", "ಕನ್ನಡ"),
+    "te" to LanguageDisplay("🇮🇳", "తెలుగు"),
+    "ta" to LanguageDisplay("🇮🇳", "தமிழ்"),
+    "zh-CN" to LanguageDisplay("🇨🇳", "简体中文"),
+)
+
+private const val FALLBACK_FLAG = "🌐"
+
+private fun buildSupportedLanguages(context: Context): List<AppLanguage> {
+    // AssetManager reports every locale that has at least one packaged resource, i.e. every
+    // values-<locale> directory bundled into this build — the base values/ (English) directory
+    // carries no locale qualifier and isn't included, so it's added back explicitly.
+    val tags = context.assets.locales.toSet() + "en"
+    val all = tags.map { tag ->
+        val override = languageDisplayOverrides[tag]
+        AppLanguage(
+            tag = tag,
+            flag = override?.flag ?: FALLBACK_FLAG,
+            nativeName = override?.nativeName ?: run {
+                val locale = Locale.forLanguageTag(tag)
+                locale.getDisplayName(locale).replaceFirstChar { it.titlecase(locale) }
+            },
+        )
+    }
     val pinned = listOf("en", "hi")
-    all.filter { it.tag in pinned }.sortedBy { pinned.indexOf(it.tag) } +
-    all.filter { it.tag !in pinned }.sortedWith(compareBy(Collator.getInstance(Locale.ENGLISH)) { it.nativeName })
+    return all.filter { it.tag in pinned }.sortedBy { pinned.indexOf(it.tag) } +
+        all.filter { it.tag !in pinned }.sortedWith(compareBy(Collator.getInstance(Locale.ENGLISH)) { it.nativeName })
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -77,6 +104,8 @@ internal fun LanguageSettingsScreen(
 ) {
     val context = LocalContext.current
     val haptics = rememberAppHaptics()
+
+    val supportedLanguages = remember { buildSupportedLanguages(context) }
 
     val currentTag = remember {
         val appLocaleTag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
