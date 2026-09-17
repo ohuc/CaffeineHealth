@@ -576,7 +576,8 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = settings.resolvedZoneId()
-                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
+                val volumeMl = defaultUnit.milliliters
+                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId, volumeMl) }
             }
         }
     }
@@ -602,7 +603,8 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = settings.resolvedZoneId()
-                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
+                val volumeMl = unit.milliliters?.let { it * quantity }
+                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId, volumeMl) }
             }
         }
     }
@@ -703,7 +705,8 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     durationMinutes = coercedDuration,
                 )
                 val zoneId = settings.resolvedZoneId()
-                runCatching { healthConnectManager.writeEntry(updatedEntry, zoneId) }
+                val volumeMl = unit.milliliters?.let { it * quantity }
+                runCatching { healthConnectManager.writeEntry(updatedEntry, zoneId, volumeMl) }
             }
         }
     }
