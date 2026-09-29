@@ -423,16 +423,7 @@
     <string name="health_connect_sleep_hint_active">Health Connect liefert diesen Wert</string>
     <string name="health_connect_sleep_hint_no_data">Keine Schlafdaten in Health Connect gefunden – es wird auf deine Einstellung zurückgegriffen</string>
     <string name="whats_new_title">Neuigkeiten</string>
-    <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Verstanden</string>
-    <string name="whats_new_coach_title">Lerne den Koffein-Coach kennen</string>
-    <string name="whats_new_coach_body">Eine subtile Anzeige unter dem Diagramm schlägt die optimale, kleinste Dosis vor, mit der du wach bleibst, ohne deinen Schlaf zu riskieren. Tippe darauf für die Erklärung und das 1-Klick-Tracking.</string>
-    <string name="whats_new_amounts_title">Genaue Mengen protokollieren</string>
-    <string name="whats_new_amounts_body">Tippe auf die Portionsanzahl, um eine exakte Menge oder Bruchteile einzugeben – eine halbe Limo, einen kurzen Espresso oder einen ganz genauen Wert.</string>
-    <string name="whats_new_design_title">Ein frisches, neues Design</string>
-    <string name="whats_new_design_body">Ein neues Pulse Cup-App-Icon mit Support für dynamische Material You-Icons und ein animierter Startbildschirm, der dich mit einem Herzschlag begrüßt.</string>
-    <string name="whats_new_sleep_title">Wöchentlicher Schlafplan</string>
-    <string name="whats_new_sleep_body">Lege individuelle Schlafenszeiten für jeden Wochentag fest. Deine Koffein-Grenze und die Schlafenszeit-Prognosen folgen dann genau deinem echten Alltag.</string>
     <string name="home_trend_rising">Steigend</string>
     <string name="home_trend_steady">Stabil</string>
     <string name="home_trend_falling">Sinkend</string>

@@ -1,0 +1,6 @@
+• Automation: Tasker, MacroDroid or NFC tags can log drinks (opt-in, Settings → Automation)
+• Home screen scrolls as a whole, so your log isn't hidden behind the chart on small screens or large text (#45)
+• Choose how many recent servings show as shortcuts on the Add screen
+• Profile now covers medicines that speed up caffeine clearance
+• New items: Arizona Arnold Palmer, Stacker 2 pills, shot and gummies
+• Language picker only lists languages the app is translated into

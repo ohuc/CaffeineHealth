@@ -28,6 +28,7 @@ private enum class SettingsDestination : NavKey {
     HealthConnect,
     MyData,
     Notifications,
+    Automation,
 }
 
 @Composable
@@ -87,6 +88,9 @@ fun SettingsScreen(
                         onNotificationsClick = {
                             nestedBackStack.add(SettingsDestination.Notifications)
                         },
+                        onAutomationClick = {
+                            nestedBackStack.add(SettingsDestination.Automation)
+                        },
                     )
 
                     SettingsDestination.CaffeineProfile -> CaffeineProfileSettingsScreen(
@@ -110,6 +114,7 @@ fun SettingsScreen(
                         onThemeModeChange = viewModel::updateThemeMode,
                         onHomeViewModeChange = viewModel::updateHomeViewMode,
                         onColorPaletteChange = viewModel::updateColorPalette,
+                        onRecentServingsCountChange = viewModel::updateRecentServingsCount,
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )
 
@@ -144,6 +149,12 @@ fun SettingsScreen(
                         userSettings = userSettings,
                         onInactivityReminderToggle = viewModel::updateInactivityReminderEnabled,
                         onDailyReminderTimesChange = viewModel::updateDailyReminderTimes,
+                        onBack = { nestedBackStack.removeLastOrNull() },
+                    )
+
+                    SettingsDestination.Automation -> AutomationSettingsScreen(
+                        userSettings = userSettings,
+                        onAutomationEnabledChange = viewModel::updateAutomationEnabled,
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )
                 }

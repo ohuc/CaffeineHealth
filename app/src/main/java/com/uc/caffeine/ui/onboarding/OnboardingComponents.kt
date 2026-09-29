@@ -801,6 +801,17 @@ internal fun OnboardingSection(
     )
 }
 
+/** Sub-heading that splits a multi-select grid into groups, e.g. inhibitors vs inducers. */
+@Composable
+internal fun MedicationGroupLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 6.dp),
+    )
+}
+
 @Composable
 internal fun OnboardingInfoBadge(
     label: String,

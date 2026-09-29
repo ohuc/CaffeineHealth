@@ -407,16 +407,7 @@
     <string name="health_connect_sleep_hint_active">Bu değer Health Connect tarafından sağlanıyor</string>
     <string name="health_connect_sleep_hint_no_data">Health Connect\'te henüz uyku verisi yok — yedek olarak ayarınız kullanılıyor</string>
     <string name="whats_new_title">Yenilikler</string>
-    <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Anladım</string>
-    <string name="whats_new_coach_title">Kafein Koçu\'yla Tanışın</string>
-    <string name="whats_new_coach_body">Ana ekran grafiğinizin altındaki sessiz bir çizgi, bu geceki uykunuzu asla riske atmadan zinde kalmanız için en küçük, en iyi zamanlanmış dozu önerir. Tam gerekçe ve tek dokunuşla kayıt için dokunun.</string>
-    <string name="whats_new_amounts_title">Tam Miktarları Kaydedin</string>
-    <string name="whats_new_amounts_body">Kesin, kesirli bir miktar girmek için porsiyon sayısına dokunun — yarım gazoz, kısa bir espresso veya tam bir rakam.</string>
-    <string name="whats_new_design_title">Yepyeni Bir Görünüm</string>
-    <string name="whats_new_design_body">Material You temalı simge desteğiyle yeni bir Pulse Cup uygulama simgesi ve sizi bir kalp atışıyla karşılayan animasyonlu bir açılış ekranı.</string>
-    <string name="whats_new_sleep_title">Haftalık Uyku Çizelgesi</string>
-    <string name="whats_new_sleep_body">Haftanın her günü için farklı bir yatma saati belirleyin; kafein kesim saatiniz ve yatma saati tahminleriniz gerçek programınızı takip etsin.</string>
     <string name="home_trend_rising">Yükseliyor</string>
     <string name="home_trend_steady">Sabit</string>
     <string name="home_trend_falling">Düşüyor</string>

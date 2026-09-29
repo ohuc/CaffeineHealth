@@ -6196,5 +6196,119 @@
                 "unit_text_key": "fl oz"
             }
         ]
+    },
+    "stacker2-energy-pill": {
+        "90_absorption_rate": 45,
+        "category": "pill",
+        "consumption_method": "eat",
+        "default_unit": "pill",
+        "description": "Stacker 2 caffeine capsules are an over-the-counter energy supplement sold widely at U.S. gas stations and discount stores. Each pill contains 200 mg of caffeine, about two cups of drip coffee.",
+        "id": "stacker2-energy-pill",
+        "image_src": "",
+        "name": "Stacker 2 Energy Pill",
+        "relevance": 0,
+        "units": [
+            {
+                "caffeine_content": 200,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "pill"
+            }
+        ]
+    },
+    "stacker2-b12-pill": {
+        "90_absorption_rate": 45,
+        "category": "pill",
+        "consumption_method": "eat",
+        "default_unit": "pill",
+        "description": "Stacker 2 B12 Extreme Energy capsules pair caffeine with a high dose of vitamin B12. Each pill contains 150 mg of caffeine.",
+        "id": "stacker2-b12-pill",
+        "image_src": "",
+        "name": "Stacker 2 B12 Energy Pill",
+        "relevance": 0,
+        "units": [
+            {
+                "caffeine_content": 150,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "pill"
+            }
+        ]
+    },
+    "stacker2-xtra-energy-shot": {
+        "90_absorption_rate": 35,
+        "category": "energy_drink",
+        "consumption_method": "drink",
+        "default_unit": "shot",
+        "description": "Stacker 2 Xtra is an extra-strength liquid energy shot. Each shot contains 235 mg of caffeine, slightly more than a 5-hour Energy Extra Strength.",
+        "id": "stacker2-xtra-energy-shot",
+        "image_src": "",
+        "name": "Stacker 2 Xtra Energy Shot",
+        "relevance": 0,
+        "units": [
+            {
+                "caffeine_content": 235,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "shot"
+            }
+        ]
+    },
+    "stacker2-b12-energy-gummy": {
+        "90_absorption_rate": 45,
+        "category": "pill",
+        "consumption_method": "eat",
+        "default_unit": "gummy",
+        "description": "Stacker 2 Chew B12 energy gummies are chewable caffeine supplements with vitamin B12. Each gummy contains 100 mg of caffeine.",
+        "id": "stacker2-b12-energy-gummy",
+        "image_src": "",
+        "name": "Stacker 2 B12 Energy Gummy",
+        "relevance": 0,
+        "units": [
+            {
+                "caffeine_content": 100,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "gummy"
+            }
+        ]
+    },
+    "stacker2-diet-energy-gummy": {
+        "90_absorption_rate": 45,
+        "category": "pill",
+        "consumption_method": "eat",
+        "default_unit": "gummy",
+        "description": "Stacker 2 Chew Diet & Energy gummies are chewable caffeine supplements. Each gummy contains 112.5 mg of caffeine.",
+        "id": "stacker2-diet-energy-gummy",
+        "image_src": "",
+        "name": "Stacker 2 Diet & Energy Gummy",
+        "relevance": 0,
+        "units": [
+            {
+                "caffeine_content": 112.5,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "gummy"
+            }
+        ]
+    },
+    "stacker2-extreme-energizer-gummy": {
+        "90_absorption_rate": 45,
+        "category": "pill",
+        "consumption_method": "eat",
+        "default_unit": "gummy",
+        "description": "Stacker 2 Chew Extreme Energizer gummies are the strongest gummies in the Stacker 2 range. Each gummy contains 125 mg of caffeine.",
+        "id": "stacker2-extreme-energizer-gummy",
+        "image_src": "",
+        "name": "Stacker 2 Extreme Energizer Gummy",
+        "relevance": 0,
+        "units": [
+            {
+                "caffeine_content": 125,
+                "grams": null,
+                "milliliters": null,
+                "unit_text_key": "gummy"
+            }
+        ]
     }
 }

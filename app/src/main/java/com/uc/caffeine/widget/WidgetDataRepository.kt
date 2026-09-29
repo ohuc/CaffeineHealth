@@ -30,7 +30,8 @@ class WidgetDataRepository(private val context: Context) {
         val settings = SettingsRepository(context).settingsFlow.first()
         val db = CaffeineDatabase.getDatabase(context)
         val entries = db.consumptionLogDao().getAllEntriesOnce()
-        val recentDrinks = db.consumptionLogDao().getRecentlyUsedDrinksOnce()
+        // Widget layouts are sized for two rows; the Add-screen count setting doesn't apply here.
+        val recentDrinks = db.consumptionLogDao().getRecentlyUsedDrinksOnce(limit = 2)
             .map { WidgetDrink(info = it, icon = loadDrinkIcon(it.imageName)) }
         val now = System.currentTimeMillis()
         val bedtimeMillis = calculateNextBedtimeMillis(now, settings)

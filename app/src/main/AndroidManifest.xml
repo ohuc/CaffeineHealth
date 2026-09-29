@@ -52,6 +52,17 @@
             </intent-filter>
         </receiver>
 
+        <!-- Automation API (Tasker etc.). Exported on purpose; the receiver ignores every
+             request unless the user enables Settings → Automation. -->
+        <receiver
+            android:name=".automation.LogDrinkReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.uc.caffeine.action.LOG_DRINK" />
+            </intent-filter>
+        </receiver>
+
         <!-- Widgets -->
         <receiver
             android:name=".widget.CaffeineNowWidgetReceiver"

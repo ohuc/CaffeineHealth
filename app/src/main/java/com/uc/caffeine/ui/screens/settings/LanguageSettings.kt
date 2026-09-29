@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.LocaleList
 import java.text.Collator
 import java.util.Locale
+import org.xmlpull.v1.XmlPullParser
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -76,11 +77,30 @@ private val languageDisplayOverrides = mapOf(
 
 private const val FALLBACK_FLAG = "🌐"
 
+/**
+ * Reads the locale-config AGP generates from this module's own values-<locale> directories
+ * (generateLocaleConfig in app/build.gradle.kts) — the same list the OS shows in its
+ * per-app language settings. Don't use AssetManager.getLocales() here: it also reports every
+ * locale shipped by AndroidX/Material resources and the en-XA / ar-XB pseudo-locales.
+ */
+private fun readLocaleConfigTags(context: Context): List<String> {
+    val tags = mutableListOf<String>()
+    context.resources.getXml(R.xml._generated_res_locale_config).use { parser ->
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+            if (parser.eventType == XmlPullParser.START_TAG && parser.name == "locale") {
+                parser.getAttributeValue(ANDROID_XML_NAMESPACE, "name")?.let(tags::add)
+            }
+        }
+    }
+    return tags
+}
+
+private const val ANDROID_XML_NAMESPACE = "http://schemas.android.com/apk/res/android"
+
 private fun buildSupportedLanguages(context: Context): List<AppLanguage> {
-    // AssetManager reports every locale that has at least one packaged resource, i.e. every
-    // values-<locale> directory bundled into this build — the base values/ (English) directory
-    // carries no locale qualifier and isn't included, so it's added back explicitly.
-    val tags = context.assets.locales.toSet() + "en"
+    // The base values/ (English) directory is declared via resources.properties and is
+    // normally listed already; add it defensively so English is always selectable.
+    val tags = (readLocaleConfigTags(context) + "en").distinct()
     val all = tags.map { tag ->
         val override = languageDisplayOverrides[tag]
         AppLanguage(

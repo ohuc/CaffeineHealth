@@ -53,6 +53,8 @@ object SettingsKeys {
     val WEEKLY_SLEEP_ROTA_ENABLED = booleanPreferencesKey("weekly_sleep_rota_enabled")
     val WEEKLY_SLEEP_ROTA = stringSetPreferencesKey("weekly_sleep_rota")
     val CAFFEINE_COACH_ENABLED = booleanPreferencesKey("caffeine_coach_enabled")
+    val RECENT_SERVINGS_COUNT = intPreferencesKey("recent_servings_count")
+    val AUTOMATION_ENABLED = booleanPreferencesKey("automation_enabled")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -301,6 +303,18 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateRecentServingsCount(count: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.RECENT_SERVINGS_COUNT] = count.coerceIn(0, MAX_RECENT_SERVINGS)
+        }
+    }
+
+    suspend fun updateAutomationEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.AUTOMATION_ENABLED] = enabled
+        }
+    }
+
     suspend fun recordAppOpened() {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.LAST_APP_OPENED_AT] = System.currentTimeMillis()
@@ -347,6 +361,9 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] = settings.weeklySleepRotaEnabled
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = encodeWeeklySleepRota(settings.weeklySleepRota)
             prefs[SettingsKeys.CAFFEINE_COACH_ENABLED] = settings.caffeineCoachEnabled
+            prefs[SettingsKeys.RECENT_SERVINGS_COUNT] = settings.recentServingsCount.coerceIn(0, MAX_RECENT_SERVINGS)
+            // Automation opt-in is not imported: letting other apps write to the log is a
+            // per-device trust decision, like the Health Connect grants below.
             // HC enabled flags and cached sleep time are deliberately not imported —
             // they're bound to this device's Health Connect permission grants.
             prefs[SettingsKeys.HC_SLEEP_MODE] = settings.hcSleepMode.name
@@ -391,6 +408,9 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         weeklySleepRotaEnabled = this[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] ?: false,
         weeklySleepRota = decodeWeeklySleepRota(this[SettingsKeys.WEEKLY_SLEEP_ROTA]),
         caffeineCoachEnabled = this[SettingsKeys.CAFFEINE_COACH_ENABLED] ?: defaultSettings.caffeineCoachEnabled,
+        recentServingsCount = (this[SettingsKeys.RECENT_SERVINGS_COUNT] ?: defaultSettings.recentServingsCount)
+            .coerceIn(0, MAX_RECENT_SERVINGS),
+        automationEnabled = this[SettingsKeys.AUTOMATION_ENABLED] ?: false,
     )
 }
 

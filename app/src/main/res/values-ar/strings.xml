@@ -311,7 +311,6 @@
     <string name="date_time_timezone_sheet_description">اختر المنطقة الزمنية لاستخدامها في الرسوم البيانية، وحسابات وقت النوم، وحدود اليوم.</string>
     <string name="profile_sleep_threshold_value">%1$d ملغ</string>
     <string name="main_add_consumption">إضافة استهلاك</string>
-    <string name="whats_new_version_badge">الإصدار 2.2</string>
     <string name="appearance_home_view_summary">اختر كيفية عرض الكافيين على الشاشة الرئيسية</string>
     <string name="bedtime_label_9_pm">9 م</string>
     <string name="home_action_delete">حذف</string>

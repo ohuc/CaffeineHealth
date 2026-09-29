@@ -74,6 +74,7 @@ class BackupManager(
             put("profileMedications", JSONArray(pf.medications.toList()))
             put("hcSleepMode", settings.hcSleepMode.name)
             put("caffeineCoachEnabled", settings.caffeineCoachEnabled)
+            put("recentServingsCount", settings.recentServingsCount)
             put("weeklySleepRotaEnabled", settings.weeklySleepRotaEnabled)
             put("weeklySleepRota", JSONObject().apply {
                 settings.weeklySleepRota.forEach { (day, time) ->
@@ -187,6 +188,7 @@ class BackupManager(
                 hcSleepMode = HcSleepMode.fromStorage(settingsObj.optString("hcSleepMode")),
                 profileFactors = pf,
                 caffeineCoachEnabled = settingsObj.optBoolean("caffeineCoachEnabled", true),
+                recentServingsCount = settingsObj.optInt("recentServingsCount", DEFAULT_RECENT_SERVINGS),
                 weeklySleepRotaEnabled = settingsObj.optBoolean("weeklySleepRotaEnabled", false),
                 weeklySleepRota = settingsObj.optJSONObject("weeklySleepRota")?.let { obj ->
                     buildMap {

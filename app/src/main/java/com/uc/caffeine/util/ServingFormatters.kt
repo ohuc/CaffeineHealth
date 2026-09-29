@@ -1,5 +1,7 @@
 package com.uc.caffeine.util
 
+import com.uc.caffeine.data.model.ConsumptionEntry
+import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import java.text.DecimalFormat
 import kotlin.math.abs
@@ -29,6 +31,30 @@ fun calculateServingTotalCaffeine(
     unitCaffeineMg: Double,
 ): Int {
     return (quantity.coerceAtLeast(MIN_SERVING_QUANTITY) * unitCaffeineMg).roundToInt()
+}
+
+/** Builds the log entry for [quantity] × [unit] of a catalog or custom [preset]. */
+fun buildPresetConsumptionEntry(
+    preset: DrinkPreset,
+    quantity: Double,
+    unit: DrinkUnit,
+    startedAtMillis: Long,
+    durationMinutes: Int,
+): ConsumptionEntry {
+    val safeQuantity = quantity.coerceAtLeast(MIN_SERVING_QUANTITY)
+    return ConsumptionEntry(
+        drinkName = preset.name,
+        caffeineMg = calculateServingTotalCaffeine(safeQuantity, unit.caffeineMg),
+        emoji = preset.emoji,
+        presetItemId = preset.itemId,
+        quantity = safeQuantity,
+        unitKey = unit.unitKey,
+        unitCaffeineMg = unit.caffeineMg,
+        imageName = preset.imageName,
+        absorptionRate = preset.absorptionRate,
+        startedAtMillis = startedAtMillis,
+        durationMinutes = durationMinutes.coerceAtLeast(1),
+    )
 }
 
 fun formatCaffeineAmount(value: Double): String {
@@ -84,6 +110,7 @@ private fun pluralizeUnitKey(
         "ml" -> "ml"
         "fl oz" -> "fl oz"
         "piece" -> "pieces"
+        "gummy" -> "gummies"
         else -> "${base}s"
     }
 

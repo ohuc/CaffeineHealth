@@ -403,7 +403,6 @@
     <string name="health_connect_sleep_hint_active">Health Connect tillhandahåller detta värde</string>
     <string name="health_connect_sleep_hint_no_data">Inga sömndata i Health Connect ännu – din inställning används som reserv</string>
     <string name="whats_new_title">Nyheter</string>
-    <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Jag förstår</string>
     <string name="celebration_profile_saved">Profilen har sparats.</string>
     <string name="celebration_subtitle">Caffeine Health är redo när du är det.</string>
@@ -453,12 +452,4 @@
     <string name="coach_chip_hold_alert">Coach · du är klar, inget koffein behövs</string>
     <string name="coach_chip_hold_bedtime">Coach · varvar ned inför läggdags kl. %1$s</string>
     <string name="coach_log_dose">Registrera denna dos</string>
-    <string name="whats_new_coach_title">Möt Caffeine Coach</string>
-    <string name="whats_new_coach_body">En diskret rad under diagrammet på startsidan föreslår den minsta dosen vid bästa tidpunkt för att behålla skärpan utan att riskera nattens sömn. Tryck på den för fullständig förklaring och registrering med ett tryck.</string>
-    <string name="whats_new_amounts_title">Registrera exakta mängder</string>
-    <string name="whats_new_amounts_body">Tryck på portionsantalet för att ange en exakt mängd med decimaler – en halv läsk, en kort espresso eller ett exakt värde.</string>
-    <string name="whats_new_design_title">Ett nytt fräscht utseende</string>
-    <string name="whats_new_design_body">En ny Pulse Cup-appikon med stöd för temaikoner i Material You och en animerad startskärm som hälsar med ett hjärtslag.</string>
-    <string name="whats_new_sleep_title">Veckoschema för sömn</string>
-    <string name="whats_new_sleep_body">Ange en annan läggdags för varje veckodag, så följer koffeingränsen och uppskattningarna för läggdags ditt verkliga schema.</string>
 </resources>

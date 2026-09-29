@@ -415,16 +415,7 @@
     <string name="health_connect_sleep_hint_active">Health Connect apporte cette valeur</string>
     <string name="health_connect_sleep_hint_no_data">Pas de donnée de sommeil dans Health Connect — votre paramètre est utilisé par défaut</string>
     <string name="whats_new_title">Quoi de neuf</string>
-    <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Ok</string>
-    <string name="whats_new_coach_title">Rencontrez le coach Caffeine</string>
-    <string name="whats_new_coach_body">Une ligne sous votre graphique personnel indique la dose minimale efficace, au moment idéal, pour rester alerte sans compromettre votre sommeil. Appuyez dessus pour afficher l\'explication complète et enregistrer vos prises en un clic.</string>
-    <string name="whats_new_amounts_title">Enregistrer le montant exact</string>
-    <string name="whats_new_amounts_body">Appuyez sur le numéro de portion pour saisir une quantité précise et fractionnaire : un demi-soda, un petit expresso ou un chiffre exact.</string>
-    <string name="whats_new_design_title">Un tout nouveau look</string>
-    <string name="whats_new_design_body">Une nouvelle icône de tasse pulsante compatible avec les icônes thématiques Material You, et un écran de démarrage animé qui vous accueille avec un battement de cœur.</string>
-    <string name="whats_new_sleep_title">Cycle de sommeil hebdomadaire</string>
-    <string name="whats_new_sleep_body">Définissez une heure de coucher différente pour chaque jour de la semaine, et vos estimations de limite de caféine et d\'heure de coucher suivront votre emploi du temps réel.</string>
     <string name="home_trend_rising">En augmentation</string>
     <string name="home_trend_steady">Stable</string>
     <string name="home_trend_falling">En diminution</string>

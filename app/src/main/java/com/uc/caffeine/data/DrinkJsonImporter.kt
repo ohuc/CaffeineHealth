@@ -114,7 +114,8 @@ object DrinkJsonImporter {
             "nespresso"  to "Nespresso",
             "red-bull"   to "Red Bull",
             "monster"    to "Monster",
-            "caffe-nero" to "Caffé Nero"
+            "caffe-nero" to "Caffé Nero",
+            "stacker2"   to "Stacker 2"
         )
         return brands.entries.firstOrNull { itemId.startsWith(it.key) }?.value ?: ""
     }

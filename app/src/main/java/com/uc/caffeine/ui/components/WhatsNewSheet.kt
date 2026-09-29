@@ -14,10 +14,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material.icons.filled.SwipeVertical
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.uc.caffeine.BuildConfig
 import com.uc.caffeine.R
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 import kotlinx.coroutines.launch
@@ -50,10 +52,11 @@ private data class FeatureItem(
 )
 
 private val features = listOf(
-    FeatureItem(Icons.Filled.Bolt, R.string.whats_new_coach_title, R.string.whats_new_coach_body),
-    FeatureItem(Icons.Filled.Tune, R.string.whats_new_amounts_title, R.string.whats_new_amounts_body),
-    FeatureItem(Icons.Filled.AutoAwesome, R.string.whats_new_design_title, R.string.whats_new_design_body),
-    FeatureItem(Icons.Filled.Bedtime, R.string.whats_new_sleep_title, R.string.whats_new_sleep_body),
+    FeatureItem(Icons.Filled.Nfc, R.string.whats_new_automation_title, R.string.whats_new_automation_body),
+    FeatureItem(Icons.Filled.History, R.string.whats_new_recents_title, R.string.whats_new_recents_body),
+    FeatureItem(Icons.Filled.Medication, R.string.whats_new_inducers_title, R.string.whats_new_inducers_body),
+    FeatureItem(Icons.Filled.SwipeVertical, R.string.whats_new_scroll_title, R.string.whats_new_scroll_body),
+    FeatureItem(Icons.Filled.LocalCafe, R.string.whats_new_drinks_title, R.string.whats_new_drinks_body),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,7 +101,7 @@ fun WhatsNewSheet(onDismiss: () -> Unit) {
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Text(
-                        text = stringResource(R.string.whats_new_version_badge),
+                        text = stringResource(R.string.whats_new_version_label, BuildConfig.VERSION_NAME),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.Bold,

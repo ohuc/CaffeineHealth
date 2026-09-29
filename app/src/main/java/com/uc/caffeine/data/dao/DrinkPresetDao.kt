@@ -32,6 +32,11 @@ interface DrinkPresetDao {
     @Query("SELECT * FROM drink_presets WHERE itemId = :itemId LIMIT 1")
     suspend fun getPresetByItemId(itemId: String): DrinkPreset?
 
+    // Case-insensitive exact name match for automation intents; a user's own custom drink
+    // wins over a catalog drink with the same name.
+    @Query("SELECT * FROM drink_presets WHERE name = :name COLLATE NOCASE ORDER BY isCustom DESC, relevance DESC LIMIT 1")
+    suspend fun getPresetByName(name: String): DrinkPreset?
+
     @Query("SELECT COUNT(*) FROM drink_presets")
     suspend fun getCount(): Int
 

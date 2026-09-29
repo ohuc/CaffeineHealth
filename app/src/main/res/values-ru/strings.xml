@@ -406,16 +406,7 @@
     <string name="health_connect_sleep_hint_active">Данные предоставлены приложением Health Connect</string>
     <string name="health_connect_sleep_hint_no_data">В Health Connect пока нет данных о сне — используется ваше резервное значение</string>
     <string name="whats_new_title">Что нового</string>
-    <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Понял</string>
-    <string name="whats_new_coach_title">Встречайте - Кофеиновый тренер</string>
-    <string name="whats_new_coach_body">Заметил тонкую линию под графиком? Она показывает идеальную микродозу кофеина, которая взбодрит тебя прямо сейчас и не испортит сон ночью. Тыкни по ней, чтобы узнать подробности и сразу записать напиток.</string>
-    <string name="whats_new_amounts_title">Точный ввод объёма</string>
-    <string name="whats_new_amounts_body">Нажмите на число порций, чтобы ввести точное или дробное количество — половину банки газировки, маленький эспрессо или точную цифру.</string>
-    <string name="whats_new_design_title">Совершенно новый дизайн</string>
-    <string name="whats_new_design_body">Новая иконка приложения в виде Чашки с пульсом с поддержкой тем Material You и анимированный экран приветствия, который встречает вас биением сердца.</string>
-    <string name="whats_new_sleep_title">График сна на неделю</string>
-    <string name="whats_new_sleep_body">Настройте разное время сна для каждого дня недели, и приложение адаптирует лимиты кофеина и прогнозы под ваше реальное расписание.</string>
     <string name="home_trend_rising">Повышение</string>
     <string name="home_trend_steady">Стабилен</string>
     <string name="home_trend_falling">Падение</string>

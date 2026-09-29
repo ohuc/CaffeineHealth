@@ -73,7 +73,7 @@ interface ConsumptionLogDao {
     @Query("DELETE FROM consumption_log")
     suspend fun deleteAll()
 
-    // The 2 most recently logged DISTINCT serving combos — used for Add screen quick add
+    // The most recently logged DISTINCT serving combos — used for Add screen quick add
     // The subquery finds the max timestamp for each saved serving selection
     // The outer query joins back to get all column values from that specific row
     // One-shot version used by widgets (no Flow, no lifecycle needed)
@@ -103,9 +103,9 @@ interface ConsumptionLogDao {
             AND c1.durationMinutes = c2.durationMinutes
             AND c1.startedAtMillis = c2.maxStartedAtMillis
         ORDER BY c1.startedAtMillis DESC
-        LIMIT 2
+        LIMIT :limit
     """)
-    suspend fun getRecentlyUsedDrinksOnce(): List<RecentDrink>
+    suspend fun getRecentlyUsedDrinksOnce(limit: Int): List<RecentDrink>
 
     @Query("""
         SELECT
@@ -133,7 +133,7 @@ interface ConsumptionLogDao {
             AND c1.durationMinutes = c2.durationMinutes
             AND c1.startedAtMillis = c2.maxStartedAtMillis
         ORDER BY c1.startedAtMillis DESC
-        LIMIT 2
+        LIMIT :limit
     """)
-    fun getRecentlyUsedDrinks(): Flow<List<RecentDrink>>
+    fun getRecentlyUsedDrinks(limit: Int): Flow<List<RecentDrink>>
 }

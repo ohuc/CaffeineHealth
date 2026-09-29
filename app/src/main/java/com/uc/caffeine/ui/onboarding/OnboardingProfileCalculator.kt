@@ -67,9 +67,14 @@ object OnboardingProfileCalculator {
             null -> Unit
         }
 
-        halfLifeMinutes += answers.medications.maxOfOrNull { medication ->
-            medication.halfLifeDeltaMinutes
-        } ?: 0
+        // Overlapping drugs on the same side don't stack linearly, so only the strongest
+        // inhibitor and the strongest inducer count; opposing effects partly cancel.
+        halfLifeMinutes += answers.medications
+            .filter { it.effect == MedicationEffect.Inhibitor }
+            .maxOfOrNull { it.halfLifeDeltaMinutes } ?: 0
+        halfLifeMinutes += answers.medications
+            .filter { it.effect == MedicationEffect.Inducer }
+            .minOfOrNull { it.halfLifeDeltaMinutes } ?: 0
 
         val sleepTime = answers.sleepTime
 

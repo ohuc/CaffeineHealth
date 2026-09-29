@@ -70,16 +70,45 @@ enum class LiverDisease(@StringRes val labelRes: Int) {
     Decompensated(R.string.liver_decompensated),
 }
 
+/** Direction a medication pushes CYP1A2 activity, and therefore caffeine clearance. */
+enum class MedicationEffect {
+    None,
+
+    /** Slows clearance — caffeine lingers longer. */
+    Inhibitor,
+
+    /** Speeds clearance — caffeine is eliminated faster. */
+    Inducer,
+}
+
 enum class Medication(
     @StringRes val labelRes: Int,
     val halfLifeDeltaMinutes: Int,
+    val effect: MedicationEffect,
 ) {
-    None(R.string.medication_none, 0),
-    Cimetidine(R.string.medication_cimetidine, 45),
-    OralContraceptives(R.string.medication_oral_contraceptives, 0),
-    Ciprofloxacin(R.string.medication_ciprofloxacin, 120),
-    Fluvoxamine(R.string.medication_fluvoxamine, 180),
-    OtherCyp1A2Inhibitor(R.string.medication_other_cyp1a2, 60),
+    None(R.string.medication_none, 0, MedicationEffect.None),
+    Cimetidine(R.string.medication_cimetidine, 45, MedicationEffect.Inhibitor),
+    // Modelled through HormonalStatus.ORAL_CONTRACEPTIVES rather than a flat delta.
+    OralContraceptives(R.string.medication_oral_contraceptives, 0, MedicationEffect.Inhibitor),
+    Ciprofloxacin(R.string.medication_ciprofloxacin, 120, MedicationEffect.Inhibitor),
+    Fluvoxamine(R.string.medication_fluvoxamine, 180, MedicationEffect.Inhibitor),
+    OtherCyp1A2Inhibitor(R.string.medication_other_cyp1a2, 60, MedicationEffect.Inhibitor),
+
+    // Enzyme-inducing anticonvulsants roughly double caffeine clearance;
+    // rifampicin and phenobarbital are more moderate CYP1A2 inducers.
+    Carbamazepine(R.string.medication_carbamazepine, -120, MedicationEffect.Inducer),
+    Phenytoin(R.string.medication_phenytoin, -120, MedicationEffect.Inducer),
+    Phenobarbital(R.string.medication_phenobarbital, -60, MedicationEffect.Inducer),
+    Rifampicin(R.string.medication_rifampicin, -60, MedicationEffect.Inducer),
+    OtherCyp1A2Inducer(R.string.medication_other_cyp1a2_inducer, -60, MedicationEffect.Inducer),
+    ;
+
+    companion object {
+        /** "None" plus everything that slows clearance, in display order. */
+        val noneAndInhibitors: List<Medication> = entries.filter { it.effect != MedicationEffect.Inducer }
+
+        val inducers: List<Medication> = entries.filter { it.effect == MedicationEffect.Inducer }
+    }
 }
 
 data class OnboardingAnswers(

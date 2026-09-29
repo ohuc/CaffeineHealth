@@ -30,6 +30,29 @@
     <string name="settings_my_data_summary">Export and import your data</string>
     <string name="settings_notifications_title">Notifications</string>
     <string name="settings_notifications_summary">Daily reminders and inactivity alerts</string>
+    <string name="settings_automation_title">Automation</string>
+    <string name="settings_automation_summary">Log drinks from Tasker, NFC tags and other apps</string>
+    <string name="automation_enable_title">Allow other apps to log drinks</string>
+    <string name="automation_enable_description">Apps like Tasker or MacroDroid can add entries by sending a broadcast intent. Only turn this on if you use them.</string>
+    <string name="automation_setup_section">Intent setup</string>
+    <string name="automation_action_label">Action</string>
+    <string name="automation_package_label">Package</string>
+    <string name="automation_target_label">Target</string>
+    <string name="automation_target_value">Broadcast receiver</string>
+    <string name="automation_copy_cd">Copy</string>
+    <string name="automation_copied">Copied to clipboard</string>
+    <string name="automation_extras_section">Extras</string>
+    <string name="automation_extra_drink_name">Drink name exactly as shown in the app, e.g. Espresso. Required unless drink_id is set.</string>
+    <string name="automation_extra_unit">Serving, e.g. shot, can or cup (large). Uses the default serving if left out.</string>
+    <string name="automation_extra_quantity">Number of servings. Default 1.</string>
+    <string name="automation_extra_caffeine_mg">Total caffeine in mg. Overrides the catalog amount and lets you log drinks that aren\'t in the catalog.</string>
+    <string name="automation_extra_timestamp" formatted="false">When you started drinking, as epoch milliseconds or seconds (Tasker: %TIMEMS). Default now.</string>
+    <string name="automation_extra_duration_minutes">Minutes taken to finish the drink. Default 10.</string>
+    <string name="automation_example_section">Tasker example</string>
+    <string name="automation_example_body">Task → Add action → System → Send Intent. Set Action and Package as above, Target to Broadcast Receiver, and fill the Extra fields as key:value, e.g. drink_name:Espresso and quantity:2. Pair it with an NFC tag profile to log with a tap.</string>
+    <string name="automation_logged_toast">Logged %1$s (%2$d mg)</string>
+    <string name="automation_disabled_toast">Caffeine Health: automation is off. Turn it on in Settings → Automation.</string>
+    <string name="automation_error_toast">Caffeine Health couldn\'t log that: %1$s</string>
     <string name="settings_about_title">About</string>
     <string name="settings_whats_new_title">What\'s New</string>
     <string name="settings_whats_new_summary">See what\'s new in v%s</string>
@@ -108,7 +131,7 @@
     <string name="profile_liver_context">Liver context</string>
     <string name="profile_liver_context_description">Liver disease can substantially slow caffeine clearance.</string>
     <string name="profile_medications">Medications</string>
-    <string name="profile_medications_description">Pick any that may slow caffeine clearance. Select None if none apply.</string>
+    <string name="profile_medications_description">Pick any that may slow or speed up caffeine clearance. Select None if none apply.</string>
     <string name="stepper_decrease_cd">Decrease %1$s</string>
     <string name="stepper_increase_cd">Increase %1$s</string>
 
@@ -426,9 +449,9 @@
     <string name="onboarding_medical_continue_label">See my profile</string>
     <string name="onboarding_medical_disabled_hint">Pick liver context and any medicines that matter here.</string>
     <string name="onboarding_medical_enabled_hint">This only sets a safer starting profile.</string>
-    <string name="onboarding_medications_section">Medicines that may slow caffeine clearance</string>
+    <string name="onboarding_medications_section">Medicines that affect caffeine clearance</string>
     <string name="onboarding_medications_supporting">Pick any that apply. If none do, select None.</string>
-    <string name="onboarding_medications_info">Some CYP1A2 inhibitors can make caffeine hang around much longer than usual.</string>
+    <string name="onboarding_medications_info">CYP1A2 inhibitors can make caffeine hang around much longer than usual, while inducers such as some anticonvulsants clear it faster.</string>
 
     <!-- Profile ready -->
     <string name="onboarding_profile_ready_title">Profile ready</string>
@@ -498,6 +521,12 @@
     <string name="medication_ciprofloxacin">Ciprofloxacin</string>
     <string name="medication_fluvoxamine">Fluvoxamine</string>
     <string name="medication_other_cyp1a2">Other CYP1A2 inhibitor</string>
+    <string name="medication_carbamazepine">Carbamazepine</string>
+    <string name="medication_phenytoin">Phenytoin</string>
+    <string name="medication_phenobarbital">Phenobarbital</string>
+    <string name="medication_rifampicin">Rifampicin</string>
+    <string name="medication_other_cyp1a2_inducer">Other CYP1A2 inducer</string>
+    <string name="medication_group_inducers">May speed up caffeine clearance</string>
 
     <!-- Health Connect hints in profile (deferred from batch 2) -->
     <string name="health_connect_sleep_hint_active">Health Connect is providing this value</string>
@@ -505,16 +534,18 @@
 
     <!-- What's New changelog sheet -->
     <string name="whats_new_title">What\'s New</string>
-    <string name="whats_new_version_badge">v2.3</string>
+    <string name="whats_new_version_label">v%1$s</string>
     <string name="whats_new_got_it">Got it</string>
-    <string name="whats_new_coach_title">Meet Caffeine Coach</string>
-    <string name="whats_new_coach_body">A quiet line under your home chart suggests the smallest, best-timed dose to stay sharp, without ever risking tonight\'s sleep. Tap it for the full reasoning and one-tap logging.</string>
-    <string name="whats_new_amounts_title">Log Exact Amounts</string>
-    <string name="whats_new_amounts_body">Tap the serving number to type a precise, fractional amount — half a soda, a short espresso, or an exact figure.</string>
-    <string name="whats_new_design_title">A Fresh New Look</string>
-    <string name="whats_new_design_body">A new Pulse Cup app icon with Material You themed-icon support, and an animated splash screen that greets you with a heartbeat.</string>
-    <string name="whats_new_sleep_title">Weekly Sleep Rota</string>
-    <string name="whats_new_sleep_body">Set a different bedtime for each day of the week, and your caffeine cut-off and bedtime estimates follow your real schedule.</string>
+    <string name="whats_new_automation_title">Log Drinks Automatically</string>
+    <string name="whats_new_automation_body">Tasker, MacroDroid or an NFC tag can now log drinks for you. Turn it on in Settings → Automation, where you\'ll find everything needed to set it up.</string>
+    <string name="whats_new_recents_title">Your Recent Servings</string>
+    <string name="whats_new_recents_body">Pick how many of your latest servings appear as one-tap shortcuts on the Add screen, or turn them off, in Settings → Appearance.</string>
+    <string name="whats_new_inducers_title">Medicines That Speed Clearance</string>
+    <string name="whats_new_inducers_body">Your caffeine profile now covers medicines like carbamazepine and rifampicin, which clear caffeine faster, so your half-life estimate is more accurate.</string>
+    <string name="whats_new_scroll_title">Room for Your Log</string>
+    <string name="whats_new_scroll_body">The home screen now scrolls as a whole, so the chart moves out of the way and your consumption list is easy to read on any screen or text size.</string>
+    <string name="whats_new_drinks_title">New Drinks</string>
+    <string name="whats_new_drinks_body">Arizona Arnold Palmer and the Stacker 2 range of pills, shots and gummies are now in the catalog.</string>
     <!-- Circular home view trend indicator -->
     <string name="home_trend_rising">Rising</string>
     <string name="home_trend_steady">Steady</string>
@@ -539,6 +570,9 @@
     <string name="appearance_home_view_summary">Choose how caffeine is shown on the home screen</string>
     <string name="appearance_home_view_graph">Graph</string>
     <string name="appearance_home_view_circular">Circular</string>
+    <string name="appearance_recent_servings_label">Recent servings</string>
+    <string name="appearance_recent_servings_summary">How many of your latest servings to offer as one-tap shortcuts on the Add screen</string>
+    <string name="appearance_recent_servings_off">Off</string>
     <string name="appearance_color_palette_label">Color palette</string>
     <string name="appearance_color_palette_dynamic">Dynamic</string>
     <string name="appearance_color_palette_espresso">Espresso</string>

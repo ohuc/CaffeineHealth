@@ -66,6 +66,9 @@ enum class HcSleepMode {
     }
 }
 
+const val DEFAULT_RECENT_SERVINGS = 2
+const val MAX_RECENT_SERVINGS = 5
+
 /**
  * User preferences for personalized caffeine tracking.
  *
@@ -184,6 +187,18 @@ data class UserSettings(
      * personalized recommendation; otherwise falls back to the typical schedule.
      */
     val caffeineCoachEnabled: Boolean = true,
+
+    /**
+     * How many recent servings the Add screen offers as one-tap shortcuts.
+     * 0 hides the section. Capped at [MAX_RECENT_SERVINGS] so the catalog stays reachable.
+     */
+    val recentServingsCount: Int = DEFAULT_RECENT_SERVINGS,
+
+    /**
+     * Whether other apps (Tasker, NFC tag launchers, …) may log drinks by broadcasting
+     * [com.uc.caffeine.automation.AutomationContract.ACTION_LOG_DRINK]. Off by default.
+     */
+    val automationEnabled: Boolean = false,
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.

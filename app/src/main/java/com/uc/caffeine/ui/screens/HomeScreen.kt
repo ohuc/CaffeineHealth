@@ -209,89 +209,99 @@ fun HomeScreen(
             }
         }
     ) { bottomPadding ->
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = CaffeineSurfaceDefaults.chartContainerColor,
-            ),
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (isConsumptionEntriesLoading) {
-                    ContainedLoadingIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                } else {
-                    AnimatedContent(
-                        targetState = userSettings.homeViewMode,
-                        transitionSpec = {
-                            (fadeIn(animationSpec = tween(220, delayMillis = 90))) togetherWith
-                                fadeOut(animationSpec = tween(90))
-                        },
-                        label = "home_view_mode",
-                    ) { viewMode ->
-                        when (viewMode) {
-                            HomeViewMode.GRAPH -> CaffeineChart(
-                                chartData = chartData,
-                                modelProducer = viewModel.chartModelProducer,
-                                userSettings = userSettings,
-                                liveNowMillis = liveNowMillis,
-                                currentCaffeineLevel = currentLevel,
-                                predictedBedtimeCaffeineLevel = bedtimeForecast.first,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
-                                onEntryClick = { entryId ->
-                                    val entry = groupedConsumptionEntries.values
-                                        .flatten()
-                                        .find { it.id == entryId }
-                                    if (entry != null) {
-                                        haptics.navigation()
-                                        selectedEntry = entry
-                                    }
-                                }
-                            )
-                            HomeViewMode.CIRCULAR -> CaffeineCircularView(
-                                currentMg = currentLevel,
-                                maxMg = userSettings.sleepThresholdMg.toDouble(),
-                                trend = caffeineTrend,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        coachRecommendation?.let { recommendation ->
-            Spacer(modifier = Modifier.height(12.dp))
-            CaffeineCoachChip(
-                recommendation = recommendation,
-                userSettings = userSettings,
-                onClick = {
-                    haptics.navigation()
-                    showCoachSheet = true
-                },
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = stringResource(R.string.home_my_consumptions),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
+        // Everything scrolls as one list: pinning the chart + coach above a weighted list left
+        // almost no visible list area on short screens or large font/display scaling (#45).
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f, fill = true),
             contentPadding = PaddingValues(bottom = bottomPadding + 16.dp)
         ) {
+            item(key = "home-chart", contentType = "home-chart") {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = CaffeineSurfaceDefaults.chartContainerColor,
+                    ),
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (isConsumptionEntriesLoading) {
+                            ContainedLoadingIndicator(
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        } else {
+                            AnimatedContent(
+                                targetState = userSettings.homeViewMode,
+                                transitionSpec = {
+                                    (fadeIn(animationSpec = tween(220, delayMillis = 90))) togetherWith
+                                        fadeOut(animationSpec = tween(90))
+                                },
+                                label = "home_view_mode",
+                            ) { viewMode ->
+                                when (viewMode) {
+                                    HomeViewMode.GRAPH -> CaffeineChart(
+                                        chartData = chartData,
+                                        modelProducer = viewModel.chartModelProducer,
+                                        userSettings = userSettings,
+                                        liveNowMillis = liveNowMillis,
+                                        currentCaffeineLevel = currentLevel,
+                                        predictedBedtimeCaffeineLevel = bedtimeForecast.first,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
+                                        onEntryClick = { entryId ->
+                                            val entry = groupedConsumptionEntries.values
+                                                .flatten()
+                                                .find { it.id == entryId }
+                                            if (entry != null) {
+                                                haptics.navigation()
+                                                selectedEntry = entry
+                                            }
+                                        }
+                                    )
+                                    HomeViewMode.CIRCULAR -> CaffeineCircularView(
+                                        currentMg = currentLevel,
+                                        maxMg = userSettings.sleepThresholdMg.toDouble(),
+                                        trend = caffeineTrend,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            coachRecommendation?.let { recommendation ->
+                item(key = "home-coach", contentType = "home-coach") {
+                    Column {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        CaffeineCoachChip(
+                            recommendation = recommendation,
+                            userSettings = userSettings,
+                            onClick = {
+                                haptics.navigation()
+                                showCoachSheet = true
+                            },
+                        )
+                    }
+                }
+            }
+
+            item(key = "home-history-title", contentType = "home-history-title") {
+                Column {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.home_my_consumptions),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
             if (isConsumptionEntriesLoading) {
                 item(key = "history-loading") {
                     Box(

@@ -32,6 +32,12 @@
 </p>
 
 <p align="center">
+  <a href="https://apt.izzysoft.de/packages/com.uc.caffeine">
+    <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png" alt="Get it on IzzyOnDroid" width="200" />
+  </a>
+</p>
+
+<p align="center">
   <a href="https://hosted.weblate.org/engage/caffeine-health/">
     <img src="https://hosted.weblate.org/widget/caffeine-health/strings/287x66-grey.png" alt="Translation status" />
   </a>
@@ -71,10 +77,11 @@ Log drinks from a curated catalog, watch your active caffeine level in real time
 - **Search & filter:** Material 3 search bar with expressive category filter chips
 - **One-tap logging:** log a drink with a single tap and get snackbar confirmation
 - **Custom serving sizes:** adjust caffeine amount and timing before logging
+- **Recent servings:** your latest servings as one-tap shortcuts (choose how many in Settings → Appearance)
 
 ### 🧬 Personalized Onboarding
 - **Guided profiling flow:** set your age range, weight, bedtime, sleep sensitivity, lifestyle factors, and relevant medications
-- **Pharmacokinetic modeling:** the app calculates a personalized caffeine half-life based on real-world factors (smoking, alcohol, CYP1A2 inhibitors)
+- **Pharmacokinetic modeling:** the app calculates a personalized caffeine half-life based on real-world factors (smoking, alcohol, CYP1A2 inhibitors and inducers)
 - **Science-backed sources:** every lifestyle adjustment links to its pharmacological source
 - **Skip-friendly:** sensible defaults if you prefer to get started immediately
 
@@ -84,6 +91,23 @@ Log drinks from a curated catalog, watch your active caffeine level in real time
 - **Sleep threshold:** define the milligram level you consider safe before bed
 - **Appearance:** theme and display preferences
 - **Date & time format:** 12-hour / 24-hour clock, date format customization
+- **Automation:** opt-in broadcast intent so Tasker, MacroDroid or an NFC tag can log drinks for you
+
+### 🤖 Automation (Tasker, NFC tags)
+Enable **Settings → Automation**, then send a broadcast:
+
+| Field | Value |
+|---|---|
+| Action | `com.uc.caffeine.action.LOG_DRINK` |
+| Package | `com.uc.caffeine` |
+| Target | Broadcast receiver |
+
+Extras (strings or numbers): `drink_name` (as shown in the app) or `drink_id`, plus optional `unit` (`shot`, `can`, `cup (large)`…), `quantity` (default 1), `caffeine_mg` (overrides the catalog amount; required for drinks not in the catalog), `timestamp` (epoch ms or s, default now) and `duration_minutes` (default 10).
+
+```sh
+adb shell am broadcast -a com.uc.caffeine.action.LOG_DRINK -p com.uc.caffeine \
+  --es drink_name Espresso --es quantity 2
+```
 
 ---
 

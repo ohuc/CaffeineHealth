@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.NewReleases
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.SettingsRemote
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -72,6 +73,7 @@ internal fun SettingsListScreen(
     onHealthConnectClick: () -> Unit,
     onMyDataClick: () -> Unit,
     onNotificationsClick: () -> Unit,
+    onAutomationClick: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
     var showWhatsNewSheet by remember { mutableStateOf(false) }
@@ -117,6 +119,12 @@ internal fun SettingsListScreen(
             summary = stringResource(R.string.settings_notifications_summary),
             icon = Icons.Rounded.NotificationsActive,
             onClick = onNotificationsClick,
+        ),
+        SettingsCategoryItem(
+            title = stringResource(R.string.settings_automation_title),
+            summary = stringResource(R.string.settings_automation_summary),
+            icon = Icons.Rounded.SettingsRemote,
+            onClick = onAutomationClick,
         ),
     )
 

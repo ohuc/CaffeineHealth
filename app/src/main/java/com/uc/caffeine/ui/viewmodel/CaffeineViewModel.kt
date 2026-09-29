@@ -41,7 +41,7 @@ import com.uc.caffeine.util.AnalyticsUiState
 import com.uc.caffeine.util.calculateNextBedtimeMillis
 import com.uc.caffeine.util.combineDateWithTime
 import com.uc.caffeine.util.calculateServingTotalCaffeine
-import com.uc.caffeine.util.MIN_SERVING_QUANTITY
+import com.uc.caffeine.util.buildPresetConsumptionEntry
 import com.uc.caffeine.data.DrinkCatalogSync
 import com.uc.caffeine.util.buildAnalyticsUiState
 import com.uc.caffeine.util.CategoryUtils
@@ -249,9 +249,15 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         initialValue = emptyList()
     )
 
-    // The 2 most recently logged serving combos — used by quick add on AddScreen.
-    val recentDrinks: StateFlow<List<RecentDrink>> = logDao
-        .getRecentlyUsedDrinks()
+    // The most recently logged serving combos — used by quick add on AddScreen.
+    // How many is a user setting; 0 hides the section entirely.
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val recentDrinks: StateFlow<List<RecentDrink>> = userSettings
+        .map { it.recentServingsCount }
+        .distinctUntilChanged()
+        .flatMapLatest { count ->
+            if (count <= 0) flowOf(emptyList()) else logDao.getRecentlyUsedDrinks(count)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -564,7 +570,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val defaultUnit = unitDao.getDefaultUnit(preset.id)
                 ?: fallbackUnitForPreset(preset)
-            val entry = buildConsumptionEntry(
+            val entry = buildPresetConsumptionEntry(
                 preset = preset,
                 quantity = 1.0,
                 unit = defaultUnit,
@@ -590,7 +596,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         durationMinutes: Int,
     ) {
         viewModelScope.launch {
-            val entry = buildConsumptionEntry(
+            val entry = buildPresetConsumptionEntry(
                 preset = preset,
                 quantity = quantity,
                 unit = unit,
@@ -923,6 +929,18 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateRecentServingsCount(count: Int) {
+        viewModelScope.launch {
+            settingsRepo.updateRecentServingsCount(count)
+        }
+    }
+
+    fun updateAutomationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateAutomationEnabled(enabled)
+        }
+    }
+
     fun updateCaffeineCoachEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepo.updateCaffeineCoachEnabled(enabled)
@@ -1251,29 +1269,6 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 )
             )
         }
-    }
-
-    private fun buildConsumptionEntry(
-        preset: DrinkPreset,
-        quantity: Double,
-        unit: DrinkUnit,
-        startedAtMillis: Long,
-        durationMinutes: Int,
-    ): ConsumptionEntry {
-        val safeQuantity = quantity.coerceAtLeast(MIN_SERVING_QUANTITY)
-        return ConsumptionEntry(
-            drinkName = preset.name,
-            caffeineMg = calculateServingTotalCaffeine(safeQuantity, unit.caffeineMg),
-            emoji = preset.emoji,
-            presetItemId = preset.itemId,
-            quantity = safeQuantity,
-            unitKey = unit.unitKey,
-            unitCaffeineMg = unit.caffeineMg,
-            imageName = preset.imageName,
-            absorptionRate = preset.absorptionRate,
-            startedAtMillis = startedAtMillis,
-            durationMinutes = durationMinutes.coerceAtLeast(1),
-        )
     }
 
     private fun fallbackUnitForPreset(preset: DrinkPreset): DrinkUnit {

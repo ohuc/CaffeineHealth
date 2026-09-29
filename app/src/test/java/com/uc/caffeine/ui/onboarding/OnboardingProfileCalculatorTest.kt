@@ -2,6 +2,7 @@ package com.uc.caffeine.ui.onboarding
 
 import java.time.LocalTime
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OnboardingProfileCalculatorTest {
@@ -114,4 +115,68 @@ class OnboardingProfileCalculatorTest {
         assertEquals(23, profile.sleepTimeHour)
         assertEquals(0, profile.sleepTimeMinute)
     }
+
+    @Test
+    fun calculateProfile_inducerShortensHalfLife() {
+        val profile = OnboardingProfileCalculator.calculateProfile(
+            baselineAnswers(medications = setOf(Medication.Rifampicin)),
+        )
+
+        assertEquals(240, profile.halfLifeMinutes)
+    }
+
+    @Test
+    fun calculateProfile_usesLargestInducerAdjustmentOnly() {
+        val profile = OnboardingProfileCalculator.calculateProfile(
+            baselineAnswers(
+                medications = setOf(
+                    Medication.Phenobarbital,
+                    Medication.Carbamazepine,
+                    Medication.OtherCyp1A2Inducer,
+                ),
+            ),
+        )
+
+        assertEquals(180, profile.halfLifeMinutes)
+    }
+
+    @Test
+    fun calculateProfile_combinesStrongestInhibitorAndStrongestInducer() {
+        val profile = OnboardingProfileCalculator.calculateProfile(
+            baselineAnswers(
+                medications = setOf(
+                    Medication.Fluvoxamine,
+                    Medication.Cimetidine,
+                    Medication.Rifampicin,
+                ),
+            ),
+        )
+
+        // 300 base + 180 (fluvoxamine) − 60 (rifampicin)
+        assertEquals(420, profile.halfLifeMinutes)
+    }
+
+    @Test
+    fun medicationEffects_signMatchesDirection() {
+        Medication.entries.forEach { medication ->
+            when (medication.effect) {
+                MedicationEffect.None -> assertEquals(0, medication.halfLifeDeltaMinutes)
+                MedicationEffect.Inhibitor -> assertTrue(medication.halfLifeDeltaMinutes >= 0)
+                MedicationEffect.Inducer -> assertTrue(medication.halfLifeDeltaMinutes < 0)
+            }
+        }
+    }
+
+    private fun baselineAnswers(medications: Set<Medication>) = OnboardingAnswers(
+        ageBucket = AgeBucket.Under65,
+        weightValue = 70,
+        weightUnit = WeightUnit.Kilograms,
+        sleepTime = LocalTime.of(23, 0),
+        hasInsomnia = false,
+        smokingHabit = SmokingHabit.None,
+        heavyAlcohol = false,
+        heavyCaffeine = false,
+        liverDisease = LiverDisease.None,
+        medications = medications,
+    )
 }

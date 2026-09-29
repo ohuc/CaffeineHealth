@@ -416,7 +416,14 @@ internal fun MedicalScreen(
             supportingText = stringResource(R.string.onboarding_medications_supporting),
         ) {
             GridMultiSelectButtonGroup(
-                options = Medication.entries,
+                options = Medication.noneAndInhibitors,
+                selectedOptions = uiState.answers.medications,
+                labelFor = { medication -> medicationLabels[medication] ?: "" },
+                onOptionToggled = onMedicationToggled,
+            )
+            MedicationGroupLabel(text = stringResource(R.string.medication_group_inducers))
+            GridMultiSelectButtonGroup(
+                options = Medication.inducers,
                 selectedOptions = uiState.answers.medications,
                 labelFor = { medication -> medicationLabels[medication] ?: "" },
                 onOptionToggled = onMedicationToggled,

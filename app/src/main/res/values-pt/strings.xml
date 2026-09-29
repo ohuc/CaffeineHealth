@@ -420,16 +420,7 @@
     <string name="health_connect_sleep_hint_no_data">Ainda não há dados de sono no Health Connect - sua configuração é usada como fallback</string>
     <!-- What's New changelog sheet -->
     <string name="whats_new_title">Novidades</string>
-    <string name="whats_new_version_badge">v2.2</string>
     <string name="whats_new_got_it">Entendi</string>
-    <string name="whats_new_coach_title">Conheça o Caffeine Coach</string>
-    <string name="whats_new_coach_body">Uma linha discreta sob o gráfico inicial sugere a menor dose no melhor horário para manter o foco — sem nunca arriscar o sono desta noite. Toque para ver o raciocínio completo e registrar com um toque.</string>
-    <string name="whats_new_amounts_title">Registre Quantidades Exatas</string>
-    <string name="whats_new_amounts_body">Toque no número da porção para digitar uma quantidade precisa e fracionada — meio refrigerante, um espresso curto ou um valor exato.</string>
-    <string name="whats_new_design_title">Um Visual Renovado</string>
-    <string name="whats_new_design_body">Um novo ícone Pulse Cup com suporte a ícones temáticos do Material You, e uma tela de abertura animada que te recebe com um batimento.</string>
-    <string name="whats_new_sleep_title">Escala de Sono Semanal</string>
-    <string name="whats_new_sleep_body">Defina um horário de dormir diferente para cada dia da semana, e os limites de cafeína e as previsões de hora de dormir seguem sua rotina real.</string>
     <!-- Completion celebration -->
     <string name="celebration_profile_saved">Perfil salvo.</string>
     <string name="celebration_subtitle">A Caffeine Health está pronta quando você estiver.</string>

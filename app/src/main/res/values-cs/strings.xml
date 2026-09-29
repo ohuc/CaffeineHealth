@@ -407,16 +407,7 @@
     <string name="health_connect_sleep_hint_active">Tuto hodnotu poskytuje Health Connect</string>
     <string name="health_connect_sleep_hint_no_data">V Health Connect zatím nejsou údaje o spánku — použije se vaše nastavení</string>
     <string name="whats_new_title">Co je nového</string>
-    <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Rozumím</string>
-    <string name="whats_new_coach_title">Seznamte se s Kofeinovým poradcem</string>
-    <string name="whats_new_coach_body">Nenápadný řádek pod grafem na domovské obrazovce navrhuje nejmenší vhodně načasovanou dávku pro udržení soustředění bez ohrožení dnešního spánku. Klepnutím zobrazíte celé odůvodnění a můžete dávku rovnou zaznamenat.</string>
-    <string name="whats_new_amounts_title">Zaznamenávejte přesná množství</string>
-    <string name="whats_new_amounts_body">Klepněte na počet porcí a zadejte přesné desetinné množství — polovinu limonády, malé espresso nebo přesný údaj.</string>
-    <string name="whats_new_design_title">Nový svěží vzhled</string>
-    <string name="whats_new_design_body">Nová ikona aplikace Pulse Cup s podporou tematických ikon Material You a animovaná úvodní obrazovka, která vás přivítá tlukotem srdce.</string>
-    <string name="whats_new_sleep_title">Týdenní rozvrh spánku</string>
-    <string name="whats_new_sleep_body">Nastavte pro každý den týdne jiný čas ulehnutí. Doporučený konec příjmu kofeinu a odhady pro spánek se přizpůsobí vašemu skutečnému rozvrhu.</string>
     <string name="home_trend_rising">Stoupá</string>
     <string name="home_trend_steady">Stabilní</string>
     <string name="home_trend_falling">Klesá</string>

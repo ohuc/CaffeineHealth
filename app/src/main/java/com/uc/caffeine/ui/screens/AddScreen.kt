@@ -928,7 +928,7 @@ private fun CreateCustomDrinkSheet(
     val categoryKeys = CategoryUtils.getCategoryOrder()
     val unitKeys = listOf(
         "cup", "shot", "can", "bottle", "mug", "ml", "fl oz", "liter",
-        "g", "pod", "teabag", "pill", "piece", "bar", "scoop",
+        "g", "pod", "teabag", "pill", "gummy", "piece", "bar", "scoop",
     )
 
     Column(
@@ -1150,7 +1150,7 @@ private fun EditCustomDrinkSheet(
     val categoryKeys = CategoryUtils.getCategoryOrder()
     val unitKeys = listOf(
         "cup", "shot", "can", "bottle", "mug", "ml", "fl oz", "liter",
-        "g", "pod", "teabag", "pill", "piece", "bar", "scoop",
+        "g", "pod", "teabag", "pill", "gummy", "piece", "bar", "scoop",
     )
 
     Column(

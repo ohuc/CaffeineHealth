@@ -27,6 +27,7 @@ import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DonutLarge
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.ButtonGroupDefaults
@@ -37,13 +38,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,8 +58,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.R
+import kotlin.math.roundToInt
 import com.uc.caffeine.data.AppColorPalette
 import com.uc.caffeine.data.HomeViewMode
+import com.uc.caffeine.data.MAX_RECENT_SERVINGS
 import com.uc.caffeine.data.ThemeMode
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.SettingsPageScaffold
@@ -72,6 +79,7 @@ internal fun AppearanceSettingsScreen(
     onThemeModeChange: (ThemeMode) -> Unit,
     onHomeViewModeChange: (HomeViewMode) -> Unit,
     onColorPaletteChange: (AppColorPalette) -> Unit,
+    onRecentServingsCountChange: (Int) -> Unit,
     onBack: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
@@ -268,8 +276,81 @@ internal fun AppearanceSettingsScreen(
                     ),
                 )
             }
+
+            RecentServingsCountItem(
+                count = userSettings.recentServingsCount,
+                onCountChange = onRecentServingsCountChange,
+            )
         }
     }
+}
+
+@Composable
+private fun RecentServingsCountItem(
+    count: Int,
+    onCountChange: (Int) -> Unit,
+) {
+    val haptics = rememberAppHaptics()
+    // Local drag state so the DataStore is written once per gesture, not on every frame.
+    var sliderValue by remember(count) { mutableFloatStateOf(count.toFloat()) }
+    var lastHapticStep by remember(count) { mutableIntStateOf(count) }
+    val displayedCount = sliderValue.roundToInt()
+
+    ListItem(
+        headlineContent = {
+            Text(
+                text = stringResource(R.string.appearance_recent_servings_label),
+                style = MaterialTheme.typography.titleMedium,
+            )
+        },
+        modifier = Modifier.clip(MaterialTheme.shapes.large),
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Rounded.History,
+                contentDescription = null,
+            )
+        },
+        trailingContent = {
+            Text(
+                text = if (displayedCount == 0) {
+                    stringResource(R.string.appearance_recent_servings_off)
+                } else {
+                    displayedCount.toString()
+                },
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        },
+        supportingContent = {
+            Column(modifier = Modifier.padding(top = 4.dp)) {
+                Text(
+                    text = stringResource(R.string.appearance_recent_servings_summary),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Slider(
+                    value = sliderValue,
+                    onValueChange = { value ->
+                        sliderValue = value
+                        val step = value.roundToInt()
+                        if (step != lastHapticStep) {
+                            haptics.tick()
+                            lastHapticStep = step
+                        }
+                    },
+                    onValueChangeFinished = {
+                        val newCount = sliderValue.roundToInt()
+                        if (newCount != count) onCountChange(newCount)
+                    },
+                    valueRange = 0f..MAX_RECENT_SERVINGS.toFloat(),
+                    steps = MAX_RECENT_SERVINGS - 1,
+                )
+            }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
+        ),
+    )
 }
 
 @Composable

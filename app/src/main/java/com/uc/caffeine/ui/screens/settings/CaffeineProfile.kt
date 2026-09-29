@@ -58,6 +58,7 @@ import com.uc.caffeine.ui.onboarding.GridMultiSelectButtonGroup
 import com.uc.caffeine.ui.onboarding.GridSingleSelectButtonGroup
 import com.uc.caffeine.ui.onboarding.LiverDisease
 import com.uc.caffeine.ui.onboarding.Medication
+import com.uc.caffeine.ui.onboarding.MedicationGroupLabel
 import com.uc.caffeine.ui.onboarding.SleepTimePickerCard
 import com.uc.caffeine.ui.onboarding.SmokingHabit
 import com.uc.caffeine.ui.onboarding.WeightStepperCard
@@ -530,7 +531,14 @@ private fun ReAdjustHealthProfileCard(
                         description = stringResource(R.string.profile_medications_description),
                     ) {
                         GridMultiSelectButtonGroup(
-                            options = Medication.entries,
+                            options = Medication.noneAndInhibitors,
+                            selectedOptions = currentMedications,
+                            labelFor = { medicationLabels[it] ?: "" },
+                            onOptionToggled = { viewModel.toggleProfileMedication(it) },
+                        )
+                        MedicationGroupLabel(text = stringResource(R.string.medication_group_inducers))
+                        GridMultiSelectButtonGroup(
+                            options = Medication.inducers,
                             selectedOptions = currentMedications,
                             labelFor = { medicationLabels[it] ?: "" },
                             onOptionToggled = { viewModel.toggleProfileMedication(it) },
