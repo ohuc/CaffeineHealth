@@ -536,6 +536,15 @@
     <string name="whats_new_title">What\'s New</string>
     <string name="whats_new_version_label">v%1$s</string>
     <string name="whats_new_got_it">Got it</string>
+    <string name="whats_new_quick_start_title">Logged It Late? One Tap</string>
+    <string name="whats_new_quick_start_body">Pick Now, 10 min, 30 min or 1 h ago when adding a drink. Changing the time now opens straight on the clock, with the date one tap away.</string>
+    <string name="whats_new_duration_title">Your Own Time to Finish</string>
+    <string name="whats_new_duration_body">Set how long you usually take to finish a drink: one default, per category, or for a single drink. Pills default to 1 min. Find it in Settings → Time to finish.</string>
+    <string name="whats_new_average_title">A Fairer Daily Average</string>
+    <string name="whats_new_average_body">Your average per day now only counts days you logged something, so days off caffeine no longer drag it down.</string>
+    <string name="whats_new_redesign_title">A Fresh Add Drink Sheet</string>
+    <string name="whats_new_redesign_body">Redesigned with Material 3 Expressive: a new slider that ticks as you drag, button groups for amounts and start times, and a clearer total.</string>
+    <!-- Previous release's items: unused, kept because translations (e.g. Czech) still contain them -->
     <string name="whats_new_automation_title">Log Drinks Automatically</string>
     <string name="whats_new_automation_body">Tasker, MacroDroid or an NFC tag can now log drinks for you. Turn it on in Settings → Automation, where you\'ll find everything needed to set it up.</string>
     <string name="whats_new_recents_title">Your Recent Servings</string>

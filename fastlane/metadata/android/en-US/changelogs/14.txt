@@ -1,0 +1,5 @@
+• Quick start times when adding a drink: Now, 10 min, 30 min or 1 h ago; editing the time opens on the clock first (#48)
+• Set your own "Time to finish": a default, per category or per drink, with pills defaulting to 1 min (#46)
+• Average per day only counts days you logged something (#47)
+• Redesigned Add drink sheet with Material 3 Expressive: new haptic slider, button groups, capitalised units
+• Updated translations from Weblate

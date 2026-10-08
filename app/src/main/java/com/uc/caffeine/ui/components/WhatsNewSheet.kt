@@ -15,10 +15,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.LocalCafe
-import androidx.compose.material.icons.filled.Medication
-import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material.icons.filled.SwipeVertical
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,11 +51,10 @@ private data class FeatureItem(
 )
 
 private val features = listOf(
-    FeatureItem(Icons.Filled.Nfc, R.string.whats_new_automation_title, R.string.whats_new_automation_body),
-    FeatureItem(Icons.Filled.History, R.string.whats_new_recents_title, R.string.whats_new_recents_body),
-    FeatureItem(Icons.Filled.Medication, R.string.whats_new_inducers_title, R.string.whats_new_inducers_body),
-    FeatureItem(Icons.Filled.SwipeVertical, R.string.whats_new_scroll_title, R.string.whats_new_scroll_body),
-    FeatureItem(Icons.Filled.LocalCafe, R.string.whats_new_drinks_title, R.string.whats_new_drinks_body),
+    FeatureItem(Icons.Filled.History, R.string.whats_new_quick_start_title, R.string.whats_new_quick_start_body),
+    FeatureItem(Icons.Filled.Timer, R.string.whats_new_duration_title, R.string.whats_new_duration_body),
+    FeatureItem(Icons.Filled.Insights, R.string.whats_new_average_title, R.string.whats_new_average_body),
+    FeatureItem(Icons.Filled.Palette, R.string.whats_new_redesign_title, R.string.whats_new_redesign_body),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
