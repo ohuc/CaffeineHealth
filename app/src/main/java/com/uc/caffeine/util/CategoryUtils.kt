@@ -79,6 +79,22 @@ object CategoryUtils {
     }
 
     /**
+     * Normalise a stored category ("Coffee", "energy-drink", "pills"…) to one of the keys in
+     * [getCategoryOrder], or null when it doesn't match any known category.
+     */
+    fun normalizeCategoryKey(category: String): String? {
+        return when (category.trim().lowercase().replace(" ", "_").replace("-", "_")) {
+            "coffee" -> "coffee"
+            "energy", "energy_drink", "energy_drinks" -> "energy_drink"
+            "soft_drink", "soft_drinks", "softdrink", "soda" -> "soft_drink"
+            "tea" -> "tea"
+            "chocolate" -> "chocolate"
+            "pill", "pills" -> "pill"
+            else -> null
+        }
+    }
+
+    /**
      * Sort a list of items by category order
      * @param items List of items to sort
      * @param categorySelector Function to extract category from an item

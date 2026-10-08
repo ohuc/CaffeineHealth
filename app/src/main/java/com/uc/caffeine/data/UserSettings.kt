@@ -1,5 +1,6 @@
 package com.uc.caffeine.data
 
+import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.ZoneId
@@ -199,6 +200,19 @@ data class UserSettings(
      * [com.uc.caffeine.automation.AutomationContract.ACTION_LOG_DRINK]. Off by default.
      */
     val automationEnabled: Boolean = false,
+
+    /**
+     * Global default "time to finish" in minutes, pre-filled when logging a drink.
+     * Category and per-drink overrides below take precedence — see
+     * [com.uc.caffeine.util.defaultDurationFor].
+     */
+    val defaultDurationMinutes: Int = DEFAULT_CONSUMPTION_DURATION_MINUTES,
+
+    /** User overrides of the default "time to finish", keyed by category key ("coffee", "pill"…). */
+    val categoryDurationMinutes: Map<String, Int> = emptyMap(),
+
+    /** User overrides of the default "time to finish", keyed by [com.uc.caffeine.data.model.DrinkPreset.itemId]. */
+    val drinkDurationMinutes: Map<String, Int> = emptyMap(),
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.

@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.uc.caffeine.util.coerceConsumptionDuration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -55,6 +56,9 @@ object SettingsKeys {
     val CAFFEINE_COACH_ENABLED = booleanPreferencesKey("caffeine_coach_enabled")
     val RECENT_SERVINGS_COUNT = intPreferencesKey("recent_servings_count")
     val AUTOMATION_ENABLED = booleanPreferencesKey("automation_enabled")
+    val DEFAULT_DURATION_MINUTES = intPreferencesKey("default_duration_minutes")
+    val CATEGORY_DURATION_MINUTES = stringSetPreferencesKey("category_duration_minutes")
+    val DRINK_DURATION_MINUTES = stringSetPreferencesKey("drink_duration_minutes")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -315,6 +319,35 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateDefaultDurationMinutes(minutes: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.DEFAULT_DURATION_MINUTES] = coerceConsumptionDuration(minutes)
+        }
+    }
+
+    /** Sets (or with null, clears) the default "time to finish" for one category. */
+    suspend fun setCategoryDurationMinutes(categoryKey: String, minutes: Int?) {
+        editDurationMap(SettingsKeys.CATEGORY_DURATION_MINUTES, categoryKey, minutes)
+    }
+
+    /** Sets (or with null, clears) the default "time to finish" for one drink, by item ID. */
+    suspend fun setDrinkDurationMinutes(itemId: String, minutes: Int?) {
+        if (itemId.isBlank()) return
+        editDurationMap(SettingsKeys.DRINK_DURATION_MINUTES, itemId, minutes)
+    }
+
+    private suspend fun editDurationMap(
+        key: Preferences.Key<Set<String>>,
+        mapKey: String,
+        minutes: Int?,
+    ) {
+        context.dataStore.edit { prefs ->
+            val current = decodeDurationMap(prefs[key]).toMutableMap()
+            if (minutes == null) current.remove(mapKey) else current[mapKey] = minutes
+            prefs[key] = encodeDurationMap(current)
+        }
+    }
+
     suspend fun recordAppOpened() {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.LAST_APP_OPENED_AT] = System.currentTimeMillis()
@@ -362,6 +395,9 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = encodeWeeklySleepRota(settings.weeklySleepRota)
             prefs[SettingsKeys.CAFFEINE_COACH_ENABLED] = settings.caffeineCoachEnabled
             prefs[SettingsKeys.RECENT_SERVINGS_COUNT] = settings.recentServingsCount.coerceIn(0, MAX_RECENT_SERVINGS)
+            prefs[SettingsKeys.DEFAULT_DURATION_MINUTES] = coerceConsumptionDuration(settings.defaultDurationMinutes)
+            prefs[SettingsKeys.CATEGORY_DURATION_MINUTES] = encodeDurationMap(settings.categoryDurationMinutes)
+            prefs[SettingsKeys.DRINK_DURATION_MINUTES] = encodeDurationMap(settings.drinkDurationMinutes)
             // Automation opt-in is not imported: letting other apps write to the log is a
             // per-device trust decision, like the Health Connect grants below.
             // HC enabled flags and cached sleep time are deliberately not imported —
@@ -411,7 +447,26 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         recentServingsCount = (this[SettingsKeys.RECENT_SERVINGS_COUNT] ?: defaultSettings.recentServingsCount)
             .coerceIn(0, MAX_RECENT_SERVINGS),
         automationEnabled = this[SettingsKeys.AUTOMATION_ENABLED] ?: false,
+        defaultDurationMinutes = coerceConsumptionDuration(
+            this[SettingsKeys.DEFAULT_DURATION_MINUTES] ?: defaultSettings.defaultDurationMinutes,
+        ),
+        categoryDurationMinutes = decodeDurationMap(this[SettingsKeys.CATEGORY_DURATION_MINUTES]),
+        drinkDurationMinutes = decodeDurationMap(this[SettingsKeys.DRINK_DURATION_MINUTES]),
     )
+}
+
+/** Stored as "key=minutes" strings; the key is split off at the last '=' so it may contain one. */
+internal fun encodeDurationMap(map: Map<String, Int>): Set<String> =
+    map.entries.map { (key, minutes) -> "$key=${coerceConsumptionDuration(minutes)}" }.toSet()
+
+internal fun decodeDurationMap(raw: Set<String>?): Map<String, Int> {
+    if (raw.isNullOrEmpty()) return emptyMap()
+    return raw.mapNotNull { entry ->
+        val key = entry.substringBeforeLast('=', missingDelimiterValue = "").takeIf { it.isNotBlank() }
+            ?: return@mapNotNull null
+        val minutes = entry.substringAfterLast('=').toIntOrNull() ?: return@mapNotNull null
+        key to coerceConsumptionDuration(minutes)
+    }.toMap()
 }
 
 internal fun encodeWeeklySleepRota(rota: Map<DayOfWeek, LocalTime>): Set<String> =

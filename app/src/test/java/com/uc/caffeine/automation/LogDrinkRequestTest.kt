@@ -1,5 +1,6 @@
 package com.uc.caffeine.automation
 
+import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
@@ -33,7 +34,8 @@ class LogDrinkRequestTest {
         assertEquals(1.0, request.quantity, 0.0)
         assertNull(request.caffeineMg)
         assertEquals(now, request.startedAtMillis)
-        assertEquals(DEFAULT_CONSUMPTION_DURATION_MINUTES, request.durationMinutes)
+        // No duration sent → left for the user's "time to finish" setting to fill in.
+        assertNull(request.durationMinutes)
     }
 
     @Test
@@ -104,6 +106,35 @@ class LogDrinkRequestTest {
         assertEquals(154, result.entry.caffeineMg)
         assertEquals(40, result.entry.absorptionRate)
         assertEquals(60.0, result.volumeMl!!, 0.0)
+    }
+
+    @Test
+    fun resolve_missingDurationUsesUserDefaults() {
+        val request = parseValid(mapOf("drink_id" to "espresso"))
+
+        val global = resolveAutomationEntry(
+            request, espresso, espressoUnits, UserSettings(defaultDurationMinutes = 3),
+        ) as AutomationEntryResolution.Resolved
+        assertEquals(3, global.entry.durationMinutes)
+
+        val perDrink = resolveAutomationEntry(
+            request, espresso, espressoUnits,
+            UserSettings(defaultDurationMinutes = 3, drinkDurationMinutes = mapOf("espresso" to 2)),
+        ) as AutomationEntryResolution.Resolved
+        assertEquals(2, perDrink.entry.durationMinutes)
+
+        val defaults = resolveAutomationEntry(request, espresso, espressoUnits) as AutomationEntryResolution.Resolved
+        assertEquals(DEFAULT_CONSUMPTION_DURATION_MINUTES, defaults.entry.durationMinutes)
+    }
+
+    @Test
+    fun resolve_explicitDurationBeatsUserDefaults() {
+        val request = parseValid(mapOf("drink_id" to "espresso", "duration_minutes" to 25))
+        val result = resolveAutomationEntry(
+            request, espresso, espressoUnits, UserSettings(drinkDurationMinutes = mapOf("espresso" to 2)),
+        ) as AutomationEntryResolution.Resolved
+
+        assertEquals(25, result.entry.durationMinutes)
     }
 
     @Test

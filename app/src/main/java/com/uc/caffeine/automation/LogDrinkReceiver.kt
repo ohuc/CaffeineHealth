@@ -63,7 +63,7 @@ class LogDrinkReceiver : BroadcastReceiver() {
             ?: request.drinkName?.let { db.drinkPresetDao().getPresetByName(it) }
         val units = preset?.let { db.drinkUnitDao().getUnitsForDrink(it.id) }.orEmpty()
 
-        val resolved = when (val resolution = resolveAutomationEntry(request, preset, units)) {
+        val resolved = when (val resolution = resolveAutomationEntry(request, preset, units, settings)) {
             is AutomationEntryResolution.Failed -> return fail(context, resolution.reason)
             is AutomationEntryResolution.Resolved -> resolution
         }

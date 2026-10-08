@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.SettingsRemote
 import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -67,6 +68,7 @@ private data class SettingsCategoryItem(
 @Composable
 internal fun SettingsListScreen(
     onCaffeineProfileClick: () -> Unit,
+    onDurationClick: () -> Unit,
     onAppearanceClick: () -> Unit,
     onLanguageClick: () -> Unit,
     onDateTimeClick: () -> Unit,
@@ -83,6 +85,12 @@ internal fun SettingsListScreen(
             summary = stringResource(R.string.settings_caffeine_profile_summary),
             icon = Icons.Rounded.Tune,
             onClick = onCaffeineProfileClick,
+        ),
+        SettingsCategoryItem(
+            title = stringResource(R.string.settings_duration_title),
+            summary = stringResource(R.string.settings_duration_summary),
+            icon = Icons.Rounded.Timer,
+            onClick = onDurationClick,
         ),
         SettingsCategoryItem(
             title = stringResource(R.string.settings_appearance_title),

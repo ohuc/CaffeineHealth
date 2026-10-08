@@ -88,7 +88,6 @@ import androidx.lifecycle.lifecycleScope
 import com.uc.caffeine.LocalSnackbarHostState
 import com.uc.caffeine.R
 import com.uc.caffeine.data.model.ConsumptionEntry
-import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.data.model.RecentDrink
@@ -97,6 +96,8 @@ import com.uc.caffeine.util.calculateNextBedtimeMillis
 import kotlin.math.roundToInt
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
 import com.uc.caffeine.ui.components.ConsumptionTimingSection
+import com.uc.caffeine.ui.components.DrinkDurationDefault
+import com.uc.caffeine.util.defaultDurationFor
 import com.uc.caffeine.ui.components.DrinkIcon
 import com.uc.caffeine.ui.components.ExpressiveIconBadge
 import com.uc.caffeine.ui.components.RollingNumberText
@@ -530,7 +531,14 @@ private fun AddDrinkServingSheet(
     var quantity by remember(preset.id) { mutableStateOf(1.0) }
     var startedAtMillis by remember(preset.id) { mutableStateOf(System.currentTimeMillis()) }
     var durationMinutes by remember(preset.id) {
-        mutableIntStateOf(DEFAULT_CONSUMPTION_DURATION_MINUTES)
+        mutableIntStateOf(userSettings.defaultDurationFor(preset))
+    }
+    val drinkDurationDefault = preset.itemId.takeIf { it.isNotBlank() }?.let { itemId ->
+        DrinkDurationDefault(
+            drinkName = preset.name,
+            isSet = itemId in userSettings.drinkDurationMinutes,
+            onChange = { minutes -> viewModel.setDrinkDurationMinutes(itemId, minutes) },
+        )
     }
     val defaultUnit = remember(units) {
         units?.firstOrNull { it.isDefault } ?: units?.firstOrNull()
@@ -556,7 +564,7 @@ private fun AddDrinkServingSheet(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -589,8 +597,6 @@ private fun AddDrinkServingSheet(
             }
         }
 
-        HorizontalDivider()
-
         if (units == null) {
             Box(
                 modifier = Modifier
@@ -606,8 +612,6 @@ private fun AddDrinkServingSheet(
                 unitKey = selectedUnit?.unitKey ?: preset.defaultUnit,
                 onQuantityChange = { quantity = it },
             )
-
-            HorizontalDivider()
 
             if (units.isNullOrEmpty()) {
                 Text(
@@ -629,26 +633,27 @@ private fun AddDrinkServingSheet(
                 }
             }
 
-            HorizontalDivider()
-
-            Row(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
-                Text(
-                    text = stringResource(R.string.add_total_caffeine),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                RollingNumberText(
-                    text = stringResource(R.string.caffeine_mg, totalCaffeineMg),
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                    ),
-                    labelPrefix = "add_sheet_total",
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.add_total_caffeine),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    RollingNumberText(
+                        text = stringResource(R.string.caffeine_mg, totalCaffeineMg),
+                        style = MaterialTheme.typography.headlineMediumEmphasized,
+                        labelPrefix = "add_sheet_total",
+                    )
+                }
             }
 
             val caffeineAtBedtimeMg = remember(
@@ -702,42 +707,49 @@ private fun AddDrinkServingSheet(
                 }
             }
 
-            HorizontalDivider()
-
             ConsumptionTimingSection(
                 startedAtMillis = startedAtMillis,
                 durationMinutes = durationMinutes,
                 settings = userSettings,
                 onStartedAtChange = { startedAtMillis = it },
                 onDurationChange = { durationMinutes = it },
+                drinkDurationDefault = drinkDurationDefault,
             )
 
-            Button(
-                onClick = {
-                    selectedUnit?.let {
-                        onAdd(quantity, it, startedAtMillis, durationMinutes)
-                    }
-                },
-                enabled = selectedUnit != null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-            ) {
-                Text(stringResource(R.string.add_entry))
-            }
-
-            if (onEditCustomDrink != null) {
-                TextButton(
-                    onClick = onEditCustomDrink,
-                    modifier = Modifier.fillMaxWidth(),
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        selectedUnit?.let {
+                            onAdd(quantity, it, startedAtMillis, durationMinutes)
+                        }
+                    },
+                    enabled = selectedUnit != null,
+                    shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
+                    contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = ButtonDefaults.MediumContainerHeight),
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    Text(
+                        text = stringResource(R.string.add_entry),
+                        style = ButtonDefaults.textStyleFor(ButtonDefaults.MediumContainerHeight),
                     )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.custom_drink_edit_button))
+                }
+
+                if (onEditCustomDrink != null) {
+                    TextButton(
+                        onClick = onEditCustomDrink,
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(ButtonDefaults.IconSize),
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.custom_drink_edit_button))
+                    }
                 }
             }
         }

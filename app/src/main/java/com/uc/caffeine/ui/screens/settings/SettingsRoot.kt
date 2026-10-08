@@ -7,6 +7,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,6 +23,7 @@ private enum class SettingsDestination : NavKey {
     Main,
     CaffeineProfile,
     WeeklySleepRota,
+    Duration,
     Appearance,
     Language,
     DateTime,
@@ -38,6 +40,10 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
+    val drinkPresets by viewModel.drinkPresets.collectAsStateWithLifecycle()
+    val drinkNamesByItemId = remember(drinkPresets) {
+        drinkPresets.filter { it.itemId.isNotBlank() }.associate { it.itemId to it.name }
+    }
     val nestedBackStack = rememberNavBackStack(SettingsDestination.Main)
 
     NavDisplay(
@@ -69,6 +75,9 @@ fun SettingsScreen(
                     SettingsDestination.Main -> SettingsListScreen(
                         onCaffeineProfileClick = {
                             nestedBackStack.add(SettingsDestination.CaffeineProfile)
+                        },
+                        onDurationClick = {
+                            nestedBackStack.add(SettingsDestination.Duration)
                         },
                         onAppearanceClick = {
                             nestedBackStack.add(SettingsDestination.Appearance)
@@ -106,6 +115,15 @@ fun SettingsScreen(
                         onRotaEnabledChange = viewModel::updateWeeklySleepRotaEnabled,
                         onDayTimeChange = viewModel::setWeeklySleepRotaEntry,
                         onDayTimeClear = viewModel::clearWeeklySleepRotaEntry,
+                        onBack = { nestedBackStack.removeLastOrNull() },
+                    )
+
+                    SettingsDestination.Duration -> DurationSettingsScreen(
+                        userSettings = userSettings,
+                        drinkNamesByItemId = drinkNamesByItemId,
+                        onDefaultDurationChange = viewModel::updateDefaultDurationMinutes,
+                        onCategoryDurationChange = viewModel::setCategoryDurationMinutes,
+                        onDrinkDurationChange = viewModel::setDrinkDurationMinutes,
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )
 

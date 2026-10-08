@@ -102,7 +102,7 @@ Enable **Settings → Automation**, then send a broadcast:
 | Package | `com.uc.caffeine` |
 | Target | Broadcast receiver |
 
-Extras (strings or numbers): `drink_name` (as shown in the app) or `drink_id`, plus optional `unit` (`shot`, `can`, `cup (large)`…), `quantity` (default 1), `caffeine_mg` (overrides the catalog amount; required for drinks not in the catalog), `timestamp` (epoch ms or s, default now) and `duration_minutes` (default 10).
+Extras (strings or numbers): `drink_name` (as shown in the app) or `drink_id`, plus optional `unit` (`shot`, `can`, `cup (large)`…), `quantity` (default 1), `caffeine_mg` (overrides the catalog amount; required for drinks not in the catalog), `timestamp` (epoch ms or s, default now) and `duration_minutes` (defaults to your *Time to finish* setting for that drink).
 
 ```sh
 adb shell am broadcast -a com.uc.caffeine.action.LOG_DRINK -p com.uc.caffeine \

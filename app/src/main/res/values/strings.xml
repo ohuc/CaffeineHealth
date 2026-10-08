@@ -47,7 +47,7 @@
     <string name="automation_extra_quantity">Number of servings. Default 1.</string>
     <string name="automation_extra_caffeine_mg">Total caffeine in mg. Overrides the catalog amount and lets you log drinks that aren\'t in the catalog.</string>
     <string name="automation_extra_timestamp" formatted="false">When you started drinking, as epoch milliseconds or seconds (Tasker: %TIMEMS). Default now.</string>
-    <string name="automation_extra_duration_minutes">Minutes taken to finish the drink. Default 10.</string>
+    <string name="automation_extra_duration_minutes">Minutes taken to finish the drink. Defaults to your Time to finish setting.</string>
     <string name="automation_example_section">Tasker example</string>
     <string name="automation_example_body">Task → Add action → System → Send Intent. Set Action and Package as above, Target to Broadcast Receiver, and fill the Extra fields as key:value, e.g. drink_name:Espresso and quantity:2. Pair it with an NFC tag profile to log with a tap.</string>
     <string name="automation_logged_toast">Logged %1$s (%2$d mg)</string>
@@ -586,4 +586,30 @@
     <string name="home_circular_threshold_format">of %1$d mg</string>
     <string name="home_view_toggle_to_circular_cd">Switch to circular view</string>
     <string name="home_view_toggle_to_graph_cd">Switch to graph view</string>
+
+    <!-- Drink timing (start time + time to finish) -->
+    <string name="timing_started_drinking">Started drinking</string>
+    <string name="timing_time_to_finish">Time to finish</string>
+    <string name="timing_quick_now">Now</string>
+    <string name="timing_quick_minutes_ago">%1$d min ago</string>
+    <string name="timing_quick_hours_ago">%1$d h ago</string>
+    <string name="timing_change_date">Date: %1$s</string>
+    <string name="timing_start_time">Start time</string>
+    <string name="timing_day_and_time">%1$s, %2$s</string>
+    <string name="timing_duration_decrease_cd">One minute less</string>
+    <string name="timing_duration_increase_cd">One minute more</string>
+    <string name="timing_duration_hint">Use a longer finish time to spread the caffeine intake over the drink window.</string>
+    <string name="timing_always_use_for_drink">Always use for %1$s</string>
+
+    <!-- Settings → Time to finish -->
+    <string name="settings_duration_title">Time to finish</string>
+    <string name="settings_duration_summary">How long you usually take per drink</string>
+    <string name="duration_settings_default_title">Default</string>
+    <string name="duration_settings_default_description">Used for any drink without its own setting</string>
+    <string name="duration_settings_categories_section">By category</string>
+    <string name="duration_settings_categories_hint">Overrides the default for every drink in that category.</string>
+    <string name="duration_settings_drinks_section">Individual drinks</string>
+    <string name="duration_settings_drinks_empty">To give a drink its own time, tick “Always use for…” in the Time to finish picker when adding it.</string>
+    <string name="duration_settings_reset_cd">Reset %1$s</string>
+    <string name="duration_settings_remove_cd">Remove %1$s</string>
 </resources>

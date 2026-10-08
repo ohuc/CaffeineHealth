@@ -130,8 +130,14 @@ fun buildAnalyticsUiState(
         locale = locale,
     )
     val totalCaffeineMg = entriesInRange.sumOf(ConsumptionEntry::caffeineMg)
-    val averageCaffeinePerDayMg = if (datesInWindow.isNotEmpty()) {
-        (totalCaffeineMg.toDouble() / datesInWindow.size.toDouble()).roundToInt()
+    // Average over days that actually have a log entry — days with nothing logged would
+    // otherwise drag the figure down (e.g. 3 coffees in a 30-day window ≠ "10 mg/day").
+    val daysWithEntries = entriesInRange
+        .map { entry -> Instant.ofEpochMilli(entry.startedAtMillis).atZone(zoneId).toLocalDate() }
+        .distinct()
+        .size
+    val averageCaffeinePerDayMg = if (daysWithEntries > 0) {
+        (totalCaffeineMg.toDouble() / daysWithEntries.toDouble()).roundToInt()
     } else {
         0
     }
@@ -351,15 +357,7 @@ private fun datesInWindow(
 }
 
 private fun normalizeCategoryKey(category: String): String {
-    return when (category.trim().lowercase().replace(" ", "_").replace("-", "_")) {
-        "coffee" -> "coffee"
-        "energy", "energy_drink", "energy_drinks" -> "energy_drink"
-        "soft_drink", "soft_drinks", "softdrink", "soda" -> "soft_drink"
-        "tea" -> "tea"
-        "chocolate" -> "chocolate"
-        "pill", "pills" -> "pill"
-        else -> OtherCategoryKey
-    }
+    return CategoryUtils.normalizeCategoryKey(category) ?: OtherCategoryKey
 }
 
 private fun categorySortOrder(categoryKey: String): Int {

@@ -202,6 +202,40 @@ class AnalyticsUtilsTest {
         assertTrue(uiState.bedtimeAxisLabels.isEmpty())
     }
 
+    @Test
+    fun buildAnalyticsUiState_averagePerDayIgnoresDaysWithNothingLogged() {
+        // 3 entries over 2 distinct days inside a 30-day window → 300 mg / 2 days, not / 30.
+        val uiState = buildAnalyticsUiState(
+            entries = listOf(
+                testEntry(id = 1, startedAt = "2026-04-02T08:00:00Z", caffeineMg = 100, presetItemId = "c"),
+                testEntry(id = 2, startedAt = "2026-04-02T14:00:00Z", caffeineMg = 50, presetItemId = "c"),
+                testEntry(id = 3, startedAt = "2026-04-08T09:00:00Z", caffeineMg = 150, presetItemId = "c"),
+            ),
+            presets = emptyList(),
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false),
+            selectedRange = AnalyticsRange.LAST_30_DAYS,
+            nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli(),
+            locale = Locale.US,
+        )
+
+        assertEquals(300, uiState.totalCaffeineMg)
+        assertEquals(150, uiState.averageCaffeinePerDayMg)
+    }
+
+    @Test
+    fun buildAnalyticsUiState_averagePerDayIsZeroWithoutEntries() {
+        val uiState = buildAnalyticsUiState(
+            entries = emptyList(),
+            presets = emptyList(),
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false),
+            selectedRange = AnalyticsRange.LAST_90_DAYS,
+            nowMillis = Instant.parse("2026-04-09T12:00:00Z").toEpochMilli(),
+            locale = Locale.US,
+        )
+
+        assertEquals(0, uiState.averageCaffeinePerDayMg)
+    }
+
     private fun testPreset(
         itemId: String,
         category: String,

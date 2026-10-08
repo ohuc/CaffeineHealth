@@ -1,7 +1,6 @@
 package com.uc.caffeine.ui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,24 +8,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.util.MIN_SERVING_QUANTITY
 import com.uc.caffeine.util.formatQuantity
+import com.uc.caffeine.util.formatUnitButtonLabel
 import com.uc.caffeine.util.formatUnitLabel
 import com.uc.caffeine.util.quantityStepFor
 import com.uc.caffeine.util.quickPickQuantitiesFor
@@ -52,6 +53,7 @@ fun ServingQuantityStepper(
     onQuantityChange: (Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = rememberAppHaptics()
     var showInput by remember { mutableStateOf(false) }
     val step = quantityStepFor(unitKey)
     val quickPicks = remember(unitKey) { quickPickQuantitiesFor(unitKey) }
@@ -65,14 +67,21 @@ fun ServingQuantityStepper(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(
-                onClick = { onQuantityChange((quantity - step).coerceAtLeast(step)) },
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.tick()
+                    onQuantityChange((quantity - step).coerceAtLeast(step))
+                },
                 enabled = quantity > step,
+                shapes = IconButtonDefaults.shapes(),
+                modifier = Modifier.size(
+                    IconButtonDefaults.mediumContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide),
+                ),
             ) {
                 Icon(
-                    imageVector = Icons.Default.Remove,
+                    imageVector = Icons.Rounded.Remove,
                     contentDescription = "Decrease quantity",
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(IconButtonDefaults.mediumIconSize),
                 )
             }
 
@@ -101,27 +110,46 @@ fun ServingQuantityStepper(
                 )
             }
 
-            IconButton(onClick = { onQuantityChange(quantity + step) }) {
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.tick()
+                    onQuantityChange(quantity + step)
+                },
+                shapes = IconButtonDefaults.shapes(),
+                modifier = Modifier.size(
+                    IconButtonDefaults.mediumContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide),
+                ),
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = Icons.Rounded.Add,
                     contentDescription = "Increase quantity",
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(IconButtonDefaults.mediumIconSize),
                 )
             }
         }
 
         if (quickPicks.isNotEmpty()) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
             ) {
-                quickPicks.forEach { value ->
-                    SuggestionChip(
-                        onClick = { onQuantityChange(value) },
-                        label = { Text("${formatQuantity(value)} ${formatUnitLabel(unitKey)}") },
-                    )
+                quickPicks.forEachIndexed { index, value ->
+                    ToggleButton(
+                        checked = quantity == value,
+                        onCheckedChange = {
+                            haptics.toggle()
+                            onQuantityChange(value)
+                        },
+                        modifier = Modifier.weight(1f),
+                        shapes = connectedButtonShapes(index, quickPicks.size),
+                        contentPadding = ButtonDefaults.ExtraSmallContentPadding,
+                    ) {
+                        Text(
+                            text = "${formatQuantity(value)} ${formatUnitLabel(unitKey)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
@@ -197,6 +225,7 @@ fun ServingUnitSelector(
     onUnitSelected: (DrinkUnit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = rememberAppHaptics()
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
@@ -204,20 +233,30 @@ fun ServingUnitSelector(
         units.forEachIndexed { index, unit ->
             ToggleButton(
                 checked = unit.unitKey == selectedUnit?.unitKey,
-                onCheckedChange = { if (it) onUnitSelected(unit) },
-                modifier = Modifier.weight(1f),
-                shapes = when (index) {
-                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    units.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                onCheckedChange = {
+                    if (it) {
+                        haptics.toggle()
+                        onUnitSelected(unit)
+                    }
                 },
+                modifier = Modifier.weight(1f),
+                shapes = connectedButtonShapes(index, units.size),
             ) {
                 Text(
-                    text = formatUnitLabel(unit.unitKey),
+                    text = formatUnitButtonLabel(unit.unitKey),
                     style = MaterialTheme.typography.labelMedium,
                     maxLines = 1,
                 )
             }
         }
     }
+}
+
+/** Shapes for item [index] of a connected [ToggleButton] row of [count] buttons. */
+@Composable
+fun connectedButtonShapes(index: Int, count: Int) = when {
+    count == 1 -> ToggleButtonDefaults.shapes()
+    index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+    index == count - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
 }

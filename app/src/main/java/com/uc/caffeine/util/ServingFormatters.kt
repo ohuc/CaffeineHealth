@@ -11,6 +11,11 @@ fun formatUnitLabel(unitKey: String): String {
     return unitKey.replace("(", " (")
 }
 
+/** Unit label for standalone UI like the unit picker ("Cup (large)"), where lowercase looks off. */
+fun formatUnitButtonLabel(unitKey: String): String {
+    return formatUnitLabel(unitKey).replaceFirstChar { it.titlecase() }
+}
+
 // Renders a possibly-fractional quantity without a trailing ".0" for whole numbers.
 // 1.0 -> "1", 1.5 -> "1.5", 30.0 -> "30", 12.25 -> "12.25"
 fun formatQuantity(quantity: Double): String {

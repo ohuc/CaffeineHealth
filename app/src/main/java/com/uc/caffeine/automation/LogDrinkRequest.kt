@@ -1,11 +1,12 @@
 package com.uc.caffeine.automation
 
 import com.uc.caffeine.data.model.ConsumptionEntry
-import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
+import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.util.MIN_SERVING_QUANTITY
 import com.uc.caffeine.util.buildPresetConsumptionEntry
+import com.uc.caffeine.util.defaultDurationFor
 
 /**
  * Public broadcast API for automation apps (Tasker, MacroDroid, Automate, NFC tag triggers…).
@@ -16,7 +17,8 @@ import com.uc.caffeine.util.buildPresetConsumptionEntry
  *  - [EXTRA_QUANTITY] — number of servings, default 1
  *  - [EXTRA_CAFFEINE_MG] — total caffeine; overrides the catalog amount, required for drinks not in the catalog
  *  - [EXTRA_TIMESTAMP] — start time as epoch millis (or seconds), default now; up to 7 days back
- *  - [EXTRA_DURATION_MINUTES] — time taken to finish the drink, default 10
+ *  - [EXTRA_DURATION_MINUTES] — time taken to finish the drink; defaults to the user's
+ *    "time to finish" setting for that drink (Settings → Time to finish)
  *
  * Extras may be sent as strings or numbers. Nothing is logged unless the user has enabled
  * automation in Settings → Automation.
@@ -46,7 +48,8 @@ data class LogDrinkRequest(
     val quantity: Double,
     val caffeineMg: Int?,
     val startedAtMillis: Long,
-    val durationMinutes: Int,
+    /** Null when the sender didn't specify one — the user's default applies. */
+    val durationMinutes: Int?,
 ) {
     sealed interface ParseResult {
         data class Valid(val request: LogDrinkRequest) : ParseResult
@@ -82,7 +85,7 @@ data class LogDrinkRequest(
                 }
 
                 val durationMinutes = when (val raw = extras[EXTRA_DURATION_MINUTES]) {
-                    null -> DEFAULT_CONSUMPTION_DURATION_MINUTES
+                    null -> null
                     else -> raw.asDouble()
                         ?.takeIf { it >= 1 && it <= MAX_DURATION_MINUTES }
                         ?.toInt()
@@ -140,7 +143,9 @@ fun resolveAutomationEntry(
     request: LogDrinkRequest,
     preset: DrinkPreset?,
     units: List<DrinkUnit>,
+    settings: UserSettings = UserSettings(),
 ): AutomationEntryResolution {
+    val durationMinutes = request.durationMinutes ?: settings.defaultDurationFor(preset)
     if (preset == null) {
         val name = request.drinkName
         val caffeineMg = request.caffeineMg
@@ -157,7 +162,7 @@ fun resolveAutomationEntry(
                 emoji = "☕",
                 unitCaffeineMg = caffeineMg.toDouble(),
                 startedAtMillis = request.startedAtMillis,
-                durationMinutes = request.durationMinutes,
+                durationMinutes = durationMinutes,
             ),
             volumeMl = null,
         )
@@ -186,7 +191,7 @@ fun resolveAutomationEntry(
         quantity = request.quantity,
         unit = unit,
         startedAtMillis = request.startedAtMillis,
-        durationMinutes = request.durationMinutes,
+        durationMinutes = durationMinutes,
     )
     val entry = request.caffeineMg?.let { total ->
         presetEntry.copy(caffeineMg = total, unitCaffeineMg = total / presetEntry.quantity)

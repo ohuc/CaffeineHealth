@@ -4,6 +4,7 @@ import com.uc.caffeine.data.dao.ConsumptionLogDao
 import com.uc.caffeine.data.dao.DrinkPresetDao
 import com.uc.caffeine.data.dao.DrinkUnitDao
 import com.uc.caffeine.data.model.ConsumptionEntry
+import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import org.json.JSONArray
@@ -75,6 +76,9 @@ class BackupManager(
             put("hcSleepMode", settings.hcSleepMode.name)
             put("caffeineCoachEnabled", settings.caffeineCoachEnabled)
             put("recentServingsCount", settings.recentServingsCount)
+            put("defaultDurationMinutes", settings.defaultDurationMinutes)
+            put("categoryDurationMinutes", JSONObject(settings.categoryDurationMinutes.toMap()))
+            put("drinkDurationMinutes", JSONObject(settings.drinkDurationMinutes.toMap()))
             put("weeklySleepRotaEnabled", settings.weeklySleepRotaEnabled)
             put("weeklySleepRota", JSONObject().apply {
                 settings.weeklySleepRota.forEach { (day, time) ->
@@ -189,6 +193,12 @@ class BackupManager(
                 profileFactors = pf,
                 caffeineCoachEnabled = settingsObj.optBoolean("caffeineCoachEnabled", true),
                 recentServingsCount = settingsObj.optInt("recentServingsCount", DEFAULT_RECENT_SERVINGS),
+                defaultDurationMinutes = settingsObj.optInt(
+                    "defaultDurationMinutes",
+                    DEFAULT_CONSUMPTION_DURATION_MINUTES,
+                ),
+                categoryDurationMinutes = settingsObj.optJSONObject("categoryDurationMinutes").toDurationMap(),
+                drinkDurationMinutes = settingsObj.optJSONObject("drinkDurationMinutes").toDurationMap(),
                 weeklySleepRotaEnabled = settingsObj.optBoolean("weeklySleepRotaEnabled", false),
                 weeklySleepRota = settingsObj.optJSONObject("weeklySleepRota")?.let { obj ->
                     buildMap {
@@ -243,6 +253,16 @@ class BackupManager(
                     )
                 )
             }
+        }
+    }
+}
+
+private fun JSONObject?.toDurationMap(): Map<String, Int> {
+    if (this == null) return emptyMap()
+    return buildMap {
+        keys().forEach { key ->
+            val minutes = optInt(key, -1).takeIf { it > 0 } ?: return@forEach
+            put(key, minutes)
         }
     }
 }

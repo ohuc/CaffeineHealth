@@ -1,5 +1,6 @@
 package com.uc.caffeine.ui.components
 
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.runtime.Composable
@@ -26,6 +27,21 @@ class AppHaptics(
 
     fun tick() {
         view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+    }
+
+    /** Fine-grained tick for each step of a slider drag — lighter than [tick] where supported. */
+    fun sliderTick() {
+        val constant = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            HapticFeedbackConstants.SEGMENT_FREQUENT_TICK
+        } else {
+            HapticFeedbackConstants.CLOCK_TICK
+        }
+        view.performHapticFeedback(constant)
+    }
+
+    /** Stronger bump when a slider hits either end of its range. */
+    fun sliderEdge() {
+        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE)
     }
 
     suspend fun celebration() {

@@ -27,7 +27,7 @@ import com.uc.caffeine.ui.onboarding.SmokingHabit
 import com.uc.caffeine.ui.onboarding.WeightUnit
 import com.uc.caffeine.R
 import com.uc.caffeine.data.model.ConsumptionEntry
-import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
+import com.uc.caffeine.util.defaultDurationFor
 import com.uc.caffeine.data.model.DismissedHealthConnectRecord
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
@@ -575,7 +575,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 quantity = 1.0,
                 unit = defaultUnit,
                 startedAtMillis = System.currentTimeMillis(),
-                durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
+                durationMinutes = userSettings.value.defaultDurationFor(preset),
             )
             val newId = logDao.logDrink(entry)
             triggerWidgetRefresh()
@@ -938,6 +938,24 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     fun updateAutomationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepo.updateAutomationEnabled(enabled)
+        }
+    }
+
+    fun updateDefaultDurationMinutes(minutes: Int) {
+        viewModelScope.launch {
+            settingsRepo.updateDefaultDurationMinutes(minutes)
+        }
+    }
+
+    fun setCategoryDurationMinutes(categoryKey: String, minutes: Int?) {
+        viewModelScope.launch {
+            settingsRepo.setCategoryDurationMinutes(categoryKey, minutes)
+        }
+    }
+
+    fun setDrinkDurationMinutes(itemId: String, minutes: Int?) {
+        viewModelScope.launch {
+            settingsRepo.setDrinkDurationMinutes(itemId, minutes)
         }
     }
 
