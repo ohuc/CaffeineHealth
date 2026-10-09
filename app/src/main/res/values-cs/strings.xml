@@ -453,7 +453,7 @@
     <string name="automation_extra_quantity">Počet porcí. Výchozí hodnota je 1.</string>
     <string name="automation_extra_caffeine_mg">Celkové množství kofeinu v mg. Nahrazuje množství z katalogu a umožňuje zaznamenávat nápoje, které v katalogu nejsou.</string>
     <string name="automation_extra_timestamp" formatted="false">Čas začátku pití v milisekundách nebo sekundách od epochy (Tasker: %TIMEMS). Výchozí hodnota je aktuální čas.</string>
-    <string name="automation_extra_duration_minutes">Doba potřebná k vypití nápoje v minutách. Výchozí hodnota je 10.</string>
+    <string name="automation_extra_duration_minutes">Doba potřebná k vypití nápoje v minutách. Výchozí hodnota se řídí vaším nastavením Doba konzumace.</string>
     <string name="automation_example_section">Příklad pro Tasker</string>
     <string name="automation_example_body">Task → Add action → System → Send Intent. Nastavte Action a Package podle údajů výše, Target na Broadcast Receiver a pole Extra vyplňte ve tvaru klíč:hodnota, např. drink_name:Espresso a quantity:2. Propojte úlohu s profilem pro NFC štítek a zaznamenávejte jedním přiložením.</string>
     <string name="automation_logged_toast">Zaznamenáno: %1$s (%2$d mg)</string>
@@ -479,4 +479,34 @@
     <string name="appearance_recent_servings_label">Nedávné porce</string>
     <string name="appearance_recent_servings_summary">Kolik naposledy zaznamenaných porcí nabízet na obrazovce Přidat jako zkratky pro záznam jedním klepnutím</string>
     <string name="appearance_recent_servings_off">Vypnuto</string>
+    <string name="whats_new_quick_start_title">Zaznamenáváte zpětně? Stačí klepnout</string>
+    <string name="whats_new_quick_start_body">Při přidávání nápoje vyberte Teď, před 10 min, před 30 min nebo před 1 h. Při změně času se nyní rovnou otevře výběr času a datum je dostupné jedním klepnutím.</string>
+    <string name="whats_new_duration_title">Vlastní doba konzumace</string>
+    <string name="whats_new_duration_body">Nastavte, jak dlouho vám obvykle trvá vypít nápoj: jednu výchozí dobu, dobu pro kategorii nebo pro jednotlivý nápoj. Výchozí doba pro tablety je 1 min. Najdete ji v Nastavení → Doba konzumace.</string>
+    <string name="whats_new_average_title">Výstižnější denní průměr</string>
+    <string name="whats_new_average_body">Průměr za den nyní zahrnuje pouze dny, kdy jste něco zaznamenali, takže dny bez kofeinu jej už nesnižují.</string>
+    <string name="whats_new_redesign_title">Nový vzhled panelu pro přidání nápoje</string>
+    <string name="whats_new_redesign_body">Nový vzhled s Material 3 Expressive: nový posuvník, který při tažení vibruje, skupiny tlačítek pro množství a čas začátku a přehlednější celková hodnota.</string>
+    <string name="timing_started_drinking">Začátek pití</string>
+    <string name="timing_time_to_finish">Doba konzumace</string>
+    <string name="timing_quick_now">Teď</string>
+    <string name="timing_quick_minutes_ago">Před %1$d min</string>
+    <string name="timing_quick_hours_ago">Před %1$d h</string>
+    <string name="timing_change_date">Datum: %1$s</string>
+    <string name="timing_start_time">Čas začátku</string>
+    <string name="timing_day_and_time">%1$s, %2$s</string>
+    <string name="timing_duration_decrease_cd">O minutu méně</string>
+    <string name="timing_duration_increase_cd">O minutu více</string>
+    <string name="timing_duration_hint">Nastavte delší dobu konzumace, aby se příjem kofeinu rozložil do delšího časového úseku.</string>
+    <string name="timing_always_use_for_drink">Vždy použít pro: %1$s</string>
+    <string name="settings_duration_title">Doba konzumace</string>
+    <string name="settings_duration_summary">Jak dlouho vám obvykle trvá vypít nápoj</string>
+    <string name="duration_settings_default_title">Výchozí</string>
+    <string name="duration_settings_default_description">Použije se pro každý nápoj bez vlastního nastavení</string>
+    <string name="duration_settings_categories_section">Podle kategorie</string>
+    <string name="duration_settings_categories_hint">Nahrazuje výchozí hodnotu pro každý nápoj v dané kategorii.</string>
+    <string name="duration_settings_drinks_section">Jednotlivé nápoje</string>
+    <string name="duration_settings_drinks_empty">Chcete-li nápoji nastavit vlastní dobu, při jeho přidávání zaškrtněte „Vždy použít pro: …“ ve výběru doby konzumace.</string>
+    <string name="duration_settings_reset_cd">Obnovit: %1$s</string>
+    <string name="duration_settings_remove_cd">Odebrat: %1$s</string>
 </resources>
