@@ -108,6 +108,12 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
         freeCompilerArgs.add("-Xskip-prerelease-check")
         allWarningsAsErrors.set(false)
     }
+    // Release Kotlin always compiles from scratch. An incremental release compile reused a stale
+    // Compose stability verdict for UserSettings in AutomationSettings.kt (`changed` instead of
+    // `changedInstance`), so the published v2.4.0 APK didn't match the stores' clean rebuild (#50).
+    if (name.contains("Release")) {
+        incremental = false
+    }
 }
 
 dependencies {
