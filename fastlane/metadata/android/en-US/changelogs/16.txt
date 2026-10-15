@@ -1,0 +1,7 @@
+- Scan drinks by barcode, live or from a photo. Unknown drinks can be looked up on Open Food Facts, only if you agree; this is the only time the app uses the internet
+- Redesigned Analytics: a dashboard coloured per range with rolling numbers, caffeine by source as one bar, and an hour-by-hour "When you drink" chart
+- Search that forgives typos
+- Log the 2nd or 3rd+ steep of a tea
+- Redesigned, resizable widgets
+- Frosted glass toolbar (Settings > Appearance)
+- Updated translations

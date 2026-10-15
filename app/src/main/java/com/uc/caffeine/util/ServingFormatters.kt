@@ -45,10 +45,11 @@ fun buildPresetConsumptionEntry(
     unit: DrinkUnit,
     startedAtMillis: Long,
     durationMinutes: Int,
+    drinkName: String = preset.name,
 ): ConsumptionEntry {
     val safeQuantity = quantity.coerceAtLeast(MIN_SERVING_QUANTITY)
     return ConsumptionEntry(
-        drinkName = preset.name,
+        drinkName = drinkName,
         caffeineMg = calculateServingTotalCaffeine(safeQuantity, unit.caffeineMg),
         emoji = preset.emoji,
         presetItemId = preset.itemId,

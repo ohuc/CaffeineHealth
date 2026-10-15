@@ -23,6 +23,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import com.uc.caffeine.ui.components.segmentedListItemShapes
+import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Switch
+import androidx.compose.material.icons.rounded.BlurOn
 import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DarkMode
@@ -78,6 +82,7 @@ internal fun AppearanceSettingsScreen(
     onHomeViewModeChange: (HomeViewMode) -> Unit,
     onColorPaletteChange: (AppColorPalette) -> Unit,
     onRecentServingsCountChange: (Int) -> Unit,
+    onExpressiveBlurChange: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
@@ -272,6 +277,37 @@ internal fun AppearanceSettingsScreen(
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
+                )
+            }
+
+            SegmentedListItem(
+                checked = userSettings.expressiveBlur,
+                onCheckedChange = { enabled ->
+                    haptics.toggle()
+                    onExpressiveBlurChange(enabled)
+                },
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Rounded.BlurOn,
+                        contentDescription = null,
+                    )
+                },
+                supportingContent = {
+                    Text(text = stringResource(R.string.appearance_expressive_blur_summary))
+                },
+                trailingContent = {
+                    // The whole row toggles; the switch only mirrors the state.
+                    Switch(checked = userSettings.expressiveBlur, onCheckedChange = null)
+                },
+                verticalAlignment = Alignment.CenterVertically,
+                shapes = segmentedListItemShapes(index = 0, count = 1),
+                colors = ListItemDefaults.colors(
+                    containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.appearance_expressive_blur_label),
+                    style = MaterialTheme.typography.titleMedium,
                 )
             }
 

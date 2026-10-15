@@ -115,6 +115,7 @@ internal fun WeeklySleepRotaSettingsScreen(
                         },
                     )
                 },
+                verticalAlignment = Alignment.CenterVertically,
                 shapes = segmentedListItemShapes(0, 1),
                 colors = ListItemDefaults.colors(
                     containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -191,6 +192,7 @@ internal fun WeeklySleepRotaSettingsScreen(
                                 }
                             }
                         },
+                        verticalAlignment = Alignment.CenterVertically,
                         shapes = segmentedListItemShapes(index, WeekOrder.size),
                         colors = ListItemDefaults.colors(
                             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,

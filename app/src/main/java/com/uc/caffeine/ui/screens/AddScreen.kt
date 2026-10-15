@@ -113,6 +113,22 @@ import com.uc.caffeine.util.CategoryIcons
 import com.uc.caffeine.util.CategoryUtils
 import com.uc.caffeine.util.formatServingSummary
 import com.uc.caffeine.util.formatUnitLabel
+import kotlinx.coroutines.Job
+import com.uc.caffeine.util.formatCaffeineAmount
+import com.uc.caffeine.data.toCustomDrinkDraft
+import com.uc.caffeine.data.ProductLookup
+import com.uc.caffeine.data.CustomDrinkDraft
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.filled.TravelExplore
+import androidx.compose.material.icons.filled.CloudOff
+import com.uc.caffeine.util.canBeResteeped
+import com.uc.caffeine.util.TeaSteep
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedContent
@@ -124,11 +140,29 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.IconButton
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.uc.caffeine.ui.components.rememberImagePickerRequest
+import com.uc.caffeine.ui.scanner.BarcodeScanner
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddScreen(
     onDrinkLogged: () -> Unit,
+    onFullScreenChange: (Boolean) -> Unit = {},
     viewModel: CaffeineViewModel = viewModel()
 ) {
     val snackbarHostState = LocalSnackbarHostState.current
@@ -143,18 +177,80 @@ fun AddScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val todayEntries by viewModel.todayEntries.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
     val categorizedDrinks = remember(groupedDrinks) {
+        // Results come back re-ranked as you type. Without this the list stays anchored to
+        // whichever drink led before and lands part-way down.
+        listState.requestScrollToItem(0)
         groupedDrinks.entries.toList()
     }
     val showRecentServings = selectedFilter == null && searchQuery.isBlank() && recentDrinks.isNotEmpty()
     val categories = viewModel.getAvailableCategories()
     val focusManager = LocalFocusManager.current
-    val listState = rememberLazyListState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedDrink by remember { mutableStateOf<DrinkPreset?>(null) }
     var showCustomDrinkSheet by remember { mutableStateOf(false) }
-    var customDrinkInitialName by remember { mutableStateOf("") }
+    var customDraft by remember { mutableStateOf(CustomDrinkDraft()) }
+    var customNotice by remember { mutableStateOf<CustomDrinkNotice?>(null) }
     val customSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var scannerOpen by rememberSaveable { mutableStateOf(false) }
+    var scannedBarcode by rememberSaveable { mutableStateOf<String?>(null) }
+    var onlineLookup by remember { mutableStateOf<OnlineLookup?>(null) }
+    var lookupJob by remember { mutableStateOf<Job?>(null) }
+    // A scanned barcode that turned out to be a drink already here, kept on it once it's logged.
+    var pendingBarcodeLink by remember { mutableStateOf<BarcodeLink?>(null) }
+    val scope = rememberCoroutineScope()
+
+    fun openCustomDrink(draft: CustomDrinkDraft, barcode: String? = null, notice: CustomDrinkNotice? = null) {
+        customDraft = draft
+        scannedBarcode = barcode
+        customNotice = notice
+        showCustomDrinkSheet = true
+    }
+
+    fun closeCustomDrink() {
+        showCustomDrinkSheet = false
+        customDraft = CustomDrinkDraft()
+        scannedBarcode = null
+        customNotice = null
+    }
+
+    // Only runs once the user has agreed to this lookup in the dialog.
+    fun lookUpOnline(barcode: String) {
+        onlineLookup = OnlineLookup(barcode, LookupPhase.Searching)
+        lookupJob = scope.launch {
+            when (val result = viewModel.lookUpProductOnline(barcode)) {
+                is ProductLookup.Found -> {
+                    val known = viewModel.findDrinkForProduct(result.product)
+                    onlineLookup = null
+                    if (known != null) {
+                        pendingBarcodeLink = BarcodeLink(known.id, barcode)
+                        selectedDrink = known
+                        return@launch
+                    }
+                    val draft = result.product.toCustomDrinkDraft()
+                    val notice = if (draft.caffeineMg != null) {
+                        CustomDrinkNotice.FromOpenFoodFacts
+                    } else {
+                        CustomDrinkNotice.FromOpenFoodFactsWithoutCaffeine
+                    }
+                    openCustomDrink(draft, barcode, notice)
+                }
+                ProductLookup.NotFound -> {
+                    onlineLookup = null
+                    openCustomDrink(CustomDrinkDraft(), barcode, CustomDrinkNotice.NotOnOpenFoodFacts)
+                }
+                ProductLookup.Unreachable -> onlineLookup = OnlineLookup(barcode, LookupPhase.Failed)
+            }
+        }
+    }
+
+    BackHandler(enabled = scannerOpen) { scannerOpen = false }
+    // The scanner covers the whole screen, floating toolbar included.
+    DisposableEffect(scannerOpen) {
+        onFullScreenChange(scannerOpen)
+        onDispose { onFullScreenChange(false) }
+    }
 
     LaunchedEffect(viewModel, snackbarHostState, sheetState) {
         viewModel.addScreenEvents.collectLatest { event ->
@@ -182,262 +278,309 @@ fun AddScreen(
         }
     }
 
-    CaffeineScreenScaffold(
-        title = stringResource(R.string.add_title),
-        headerBottomSpacing = 0.dp,
-        actions = {
-            FilledIconButton(onClick = { showCustomDrinkSheet = true }) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.add_create_custom_cd))
+    SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
+        CaffeineScreenScaffold(
+            title = stringResource(R.string.add_title),
+            headerBottomSpacing = 0.dp,
+            actions = {
+                FilledIconButton(onClick = { showCustomDrinkSheet = true }) {
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.add_create_custom_cd))
+                }
             }
-        }
-    ) { bottomPadding ->
-        SearchBar(
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = searchQuery,
-                    onQueryChange = { viewModel.updateSearchQuery(it) },
-                    onSearch = { focusManager.clearFocus() },
-                    expanded = false,
-                    onExpandedChange = { },
-                    placeholder = { Text(stringResource(R.string.add_search_placeholder)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = stringResource(R.string.add_search_cd)
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotBlank()) {
-                            IconButton(onClick = {
-                                listState.requestScrollToItem(0)
-                                viewModel.updateSearchQuery("")
-                                focusManager.clearFocus()
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Clear,
-                                    contentDescription = stringResource(R.string.add_clear_search_cd)
-                                )
+        ) { bottomPadding ->
+            SearchBar(
+                inputField = {
+                    SearchBarDefaults.InputField(
+                        query = searchQuery,
+                        onQueryChange = { viewModel.updateSearchQuery(it) },
+                        onSearch = { focusManager.clearFocus() },
+                        expanded = false,
+                        onExpandedChange = { },
+                        placeholder = { Text(stringResource(R.string.add_search_placeholder)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = stringResource(R.string.add_search_cd)
+                            )
+                        },
+                        trailingIcon = {
+                            Row(
+                                modifier = Modifier.padding(end = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (searchQuery.isNotBlank()) {
+                                    IconButton(onClick = {
+                                        listState.requestScrollToItem(0)
+                                        viewModel.updateSearchQuery("")
+                                        focusManager.clearFocus()
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Clear,
+                                            contentDescription = stringResource(R.string.add_clear_search_cd)
+                                        )
+                                    }
+                                }
+                                AnimatedVisibility(
+                                    visible = !scannerOpen,
+                                    enter = EnterTransition.None,
+                                    exit = ExitTransition.None,
+                                ) {
+                                    FilledTonalIconButton(
+                                        onClick = {
+                                            haptics.navigation()
+                                            focusManager.clearFocus()
+                                            scannerOpen = true
+                                        },
+                                        modifier = Modifier.scannerMorph(this@SharedTransitionLayout, this, isScanner = false),
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_barcode_scanner),
+                                            contentDescription = stringResource(R.string.scanner_open_cd),
+                                        )
+                                    }
+                                }
                             }
                         }
-                    }
-                )
-            },
-            expanded = false,
-            onExpandedChange = { },
-            modifier = Modifier.fillMaxWidth(),
-            windowInsets = WindowInsets(0.dp),
-            shape = RoundedCornerShape(16.dp),
-            content = { }
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        FlowRow(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-        ) {
-            val allLabel = stringResource(R.string.add_filter_all)
-            val allOptions = listOf(allLabel) + categories
-
-            allOptions.forEachIndexed { index, _ ->
-                val isAllButton = index == 0
-                val category = if (isAllButton) null else categories[index - 1]
-                val isChecked = if (isAllButton) {
-                    selectedFilter == null
-                } else {
-                    selectedFilter == category
-                }
-
-                ToggleButton(
-                    checked = isChecked,
-                    onCheckedChange = {
-                        if (it) {
-                            haptics.toggle()
-                            listState.requestScrollToItem(0)
-                            viewModel.selectCategoryFilter(category)
-                        }
-                    },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        allOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    }
-                ) {
-                    Icon(
-                        imageVector = if (isAllButton) {
-                            CategoryIcons.getAllIcon()
-                        } else {
-                            CategoryIcons.getIcon(category!!)
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                    Text(
-                        text = if (isAllButton) allLabel else CategoryUtils.getCategoryButtonLabel(category!!),
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (showRecentServings) {
-            Text(
-                text = stringResource(R.string.add_recent_servings),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
+                },
+                expanded = false,
+                onExpandedChange = { },
+                modifier = Modifier.fillMaxWidth(),
+                windowInsets = WindowInsets(0.dp),
+                shape = RoundedCornerShape(16.dp),
+                content = { }
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            SegmentedListGroup(
-                items = recentDrinks,
-                onItemClick = { recent ->
-                    haptics.confirm()
-                    viewModel.logRecentDrink(recent)
-                },
-                itemModifier = Modifier.heightIn(min = 65.dp),
-                leadingContent = { recent ->
-                    ExpressiveIconBadge(
-                        index = recent.quantity.toInt(),
-                        size = 44.dp,
+            FlowRow(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+            ) {
+                val allLabel = stringResource(R.string.add_filter_all)
+                val allOptions = listOf(allLabel) + categories
+
+                allOptions.forEachIndexed { index, _ ->
+                    val isAllButton = index == 0
+                    val category = if (isAllButton) null else categories[index - 1]
+                    val isChecked = if (isAllButton) {
+                        selectedFilter == null
+                    } else {
+                        selectedFilter == category
+                    }
+
+                    ToggleButton(
+                        checked = isChecked,
+                        onCheckedChange = {
+                            if (it) {
+                                haptics.toggle()
+                                listState.requestScrollToItem(0)
+                                viewModel.selectCategoryFilter(category)
+                            }
+                        },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            allOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        }
                     ) {
-                        DrinkIcon(
-                            imageName = recent.imageName,
-                            emoji = recent.emoji,
-                            contentDescription = recent.drinkName,
-                            modifier = Modifier.size(28.dp),
-                            emojiSize = MaterialTheme.typography.titleLarge.fontSize,
+                        Icon(
+                            imageVector = if (isAllButton) {
+                                CategoryIcons.getAllIcon()
+                            } else {
+                                CategoryIcons.getIcon(category!!)
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text(
+                            text = if (isAllButton) allLabel else CategoryUtils.getCategoryButtonLabel(category!!),
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                },
-                content = { recent ->
-                    Text(
-                        text = recent.drinkName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                supportingContent = { recent ->
-                    Text(
-                        text = formatServingSummary(recent.quantity, recent.unitKey),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                trailingContent = { recent ->
-                    Text(
-                        text = stringResource(R.string.caffeine_mg_compact, recent.caffeineMg),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                },
-            )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
-        }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f, fill = true)
-        ) {
-            if (isCatalogLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    ElevatedCard {
-                        Box(
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ContainedLoadingIndicator()
-                        }
-                    }
-                }
-            } else if (groupedDrinks.isEmpty()) {
-                EmptyDrinkResultsState(
-                    selectedFilter = selectedFilter,
-                    searchQuery = searchQuery,
-                    onClearFilters = {
-                        listState.requestScrollToItem(0)
-                        viewModel.selectCategoryFilter(null)
-                        viewModel.updateSearchQuery("")
-                        focusManager.clearFocus()
-                    },
-                    onCreateCustomDrink = { name ->
-                        customDrinkInitialName = name
-                        showCustomDrinkSheet = true
-                    }
+            if (showRecentServings) {
+                Text(
+                    text = stringResource(R.string.add_recent_servings),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
-                ) {
-                    categorizedDrinks.forEachIndexed { index, entry ->
-                        val (category, drinks) = entry
 
-                        if (index > 0) {
-                            item(
-                                key = "section-gap-$category",
-                                contentType = "section-gap",
-                            ) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
-                        }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                        stickyHeader(
-                            key = "header-$category",
-                            contentType = "header"
+                SegmentedListGroup(
+                    items = recentDrinks,
+                    onItemClick = { recent ->
+                        haptics.confirm()
+                        viewModel.logRecentDrink(recent)
+                    },
+                    itemModifier = Modifier.heightIn(min = 65.dp),
+                    leadingContent = { recent ->
+                        ExpressiveIconBadge(
+                            index = recent.quantity.toInt(),
+                            size = 44.dp,
                         ) {
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.surface
+                            DrinkIcon(
+                                imageName = recent.imageName,
+                                emoji = recent.emoji,
+                                contentDescription = recent.drinkName,
+                                modifier = Modifier.size(28.dp),
+                                emojiSize = MaterialTheme.typography.titleLarge.fontSize,
+                            )
+                        }
+                    },
+                    content = { recent ->
+                        Text(
+                            text = recent.drinkName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    supportingContent = { recent ->
+                        Text(
+                            text = formatServingSummary(recent.quantity, recent.unitKey),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    trailingContent = { recent ->
+                        Text(
+                            text = stringResource(R.string.caffeine_mg_compact, recent.caffeineMg),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = true)
+            ) {
+                if (isCatalogLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        ElevatedCard {
+                            Box(
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = category,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 12.dp),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                ContainedLoadingIndicator()
                             }
                         }
+                    }
+                } else if (groupedDrinks.isEmpty()) {
+                    EmptyDrinkResultsState(
+                        selectedFilter = selectedFilter,
+                        searchQuery = searchQuery,
+                        onClearFilters = {
+                            listState.requestScrollToItem(0)
+                            viewModel.selectCategoryFilter(null)
+                            viewModel.updateSearchQuery("")
+                            focusManager.clearFocus()
+                        },
+                        onCreateCustomDrink = { name ->
+                            openCustomDrink(CustomDrinkDraft(name = name))
+                        }
+                    )
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
+                    ) {
+                        categorizedDrinks.forEachIndexed { index, entry ->
+                            val (category, drinks) = entry
 
-                        itemsIndexed(
-                            items = drinks,
-                            key = { _, drink -> drink.id },
-                            contentType = { _, _ -> "drink" },
-                        ) { drinkIndex, drink ->
-                            SegmentedDrinkListItem(
-                                drink = drink,
-                                index = drinkIndex,
-                                count = drinks.size,
-                                onClick = {
-                                    haptics.navigation()
-                                    selectedDrink = drink
-                                },
-                                modifier = Modifier
-                                    .animateItem()
-                                    .heightIn(min = 65.dp),
-                            )
+                            if (index > 0) {
+                                item(
+                                    key = "section-gap-$category",
+                                    contentType = "section-gap",
+                                ) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+                            }
 
-                            if (drinkIndex < drinks.lastIndex) {
-                                Spacer(modifier = Modifier.height(6.dp))
+                            stickyHeader(
+                                key = "header-$category",
+                                contentType = "header"
+                            ) {
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colorScheme.surface
+                                ) {
+                                    Text(
+                                        text = category,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(bottom = 12.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            itemsIndexed(
+                                items = drinks,
+                                key = { _, drink -> drink.id },
+                                contentType = { _, _ -> "drink" },
+                            ) { drinkIndex, drink ->
+                                SegmentedDrinkListItem(
+                                    drink = drink,
+                                    index = drinkIndex,
+                                    count = drinks.size,
+                                    onClick = {
+                                        haptics.navigation()
+                                        selectedDrink = drink
+                                    },
+                                    modifier = Modifier
+                                        .animateItem()
+                                        .heightIn(min = 65.dp),
+                                )
+
+                                if (drinkIndex < drinks.lastIndex) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+
+        AnimatedVisibility(
+            visible = scannerOpen,
+            enter = EnterTransition.None,
+            exit = ExitTransition.None,
+        ) {
+            BarcodeScanner(
+                onBarcode = { code ->
+                    scannerOpen = false
+                    scope.launch {
+                        val match = viewModel.findDrinkByBarcode(code)
+                        if (match != null) {
+                            selectedDrink = match
+                        } else {
+                            onlineLookup = OnlineLookup(code, LookupPhase.Asking)
+                        }
+                    }
+                },
+                onClose = { scannerOpen = false },
+                modifier = Modifier.scannerMorph(this@SharedTransitionLayout, this, isScanner = true),
+            )
         }
     }
 
@@ -445,7 +588,10 @@ fun AddScreen(
         var isEditingCustomDrink by remember(drink.id) { mutableStateOf(false) }
 
         ModalBottomSheet(
-            onDismissRequest = { selectedDrink = null },
+            onDismissRequest = {
+                selectedDrink = null
+                pendingBarcodeLink = null
+            },
             sheetState = sheetState,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
@@ -475,14 +621,19 @@ fun AddScreen(
                         viewModel = viewModel,
                         userSettings = userSettings,
                         todayEntries = todayEntries,
-                        onAdd = { quantity, unit, startedAtMillis, durationMinutes ->
+                        onAdd = { quantity, unit, startedAtMillis, durationMinutes, drinkName ->
                             haptics.confirm()
+                            pendingBarcodeLink?.takeIf { it.presetId == drink.id }?.let {
+                                viewModel.linkBarcode(it.presetId, it.barcode)
+                            }
+                            pendingBarcodeLink = null
                             viewModel.logDrinkFromAddScreen(
                                 preset = drink,
                                 quantity = quantity,
                                 unit = unit,
                                 startedAtMillis = startedAtMillis,
                                 durationMinutes = durationMinutes,
+                                drinkName = drinkName,
                             )
                         },
                         onEditCustomDrink = if (drink.isCustom) {
@@ -494,26 +645,216 @@ fun AddScreen(
         }
     }
 
+    onlineLookup?.let { lookup ->
+        OnlineLookupDialog(
+            lookup = lookup,
+            onSearch = { lookUpOnline(lookup.barcode) },
+            onAddManually = {
+                onlineLookup = null
+                openCustomDrink(CustomDrinkDraft(), lookup.barcode, CustomDrinkNotice.NewBarcode)
+            },
+            onDismiss = {
+                lookupJob?.cancel()
+                onlineLookup = null
+            },
+        )
+    }
+
     if (showCustomDrinkSheet) {
         ModalBottomSheet(
-            onDismissRequest = {
-                showCustomDrinkSheet = false
-                customDrinkInitialName = ""
-            },
+            onDismissRequest = { closeCustomDrink() },
             sheetState = customSheetState,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             CreateCustomDrinkSheet(
                 viewModel = viewModel,
-                initialName = customDrinkInitialName,
-                onDismiss = {
-                    showCustomDrinkSheet = false
-                    customDrinkInitialName = ""
-                },
+                draft = customDraft,
+                barcode = scannedBarcode,
+                notice = customNotice,
+                onDismiss = { closeCustomDrink() },
             )
         }
     }
 }
+
+private enum class LookupPhase { Asking, Searching, Failed }
+
+private data class OnlineLookup(val barcode: String, val phase: LookupPhase)
+
+private data class BarcodeLink(val presetId: Int, val barcode: String)
+
+/** Why the custom drink sheet opened pre-filled (or not) after a scan. */
+private enum class CustomDrinkNotice {
+    NewBarcode,
+    FromOpenFoodFacts,
+    FromOpenFoodFactsWithoutCaffeine,
+    NotOnOpenFoodFacts,
+}
+
+/**
+ * Asks before anything leaves the device: a scanned barcode that isn't one of the user's drinks is
+ * only looked up on Open Food Facts once they agree, and the dialog carries the search through.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun OnlineLookupDialog(
+    lookup: OnlineLookup,
+    onSearch: () -> Unit,
+    onAddManually: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = AlertDialogDefaults.shape,
+            color = AlertDialogDefaults.containerColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .animateContentSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                AnimatedContent(
+                    targetState = lookup.phase,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "online-lookup-icon",
+                ) { phase ->
+                    when (phase) {
+                        LookupPhase.Searching -> ContainedLoadingIndicator(
+                            modifier = Modifier.size(LookupIconSize),
+                        )
+                        LookupPhase.Asking -> ExpressiveIconBadge(index = 0, size = LookupIconSize) {
+                            Icon(
+                                imageVector = Icons.Filled.TravelExplore,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                        LookupPhase.Failed -> ExpressiveIconBadge(
+                            index = 0,
+                            size = LookupIconSize,
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.CloudOff,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    text = stringResource(
+                        when (lookup.phase) {
+                            LookupPhase.Asking -> R.string.lookup_title
+                            LookupPhase.Searching -> R.string.lookup_searching_title
+                            LookupPhase.Failed -> R.string.lookup_failed_title
+                        }
+                    ),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+
+                BarcodeChip(
+                    barcode = lookup.barcode,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+
+                val body = when (lookup.phase) {
+                    LookupPhase.Asking -> R.string.lookup_body
+                    LookupPhase.Failed -> R.string.lookup_failed_body
+                    LookupPhase.Searching -> null
+                }
+                if (body != null) {
+                    Text(
+                        text = stringResource(body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                }
+
+                // Equal halves of one row, so the two choices never wrap onto separate lines.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (lookup.phase == LookupPhase.Searching) {
+                        FilledTonalButton(
+                            onClick = onDismiss,
+                            shapes = ButtonDefaults.shapes(),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.action_cancel))
+                        }
+                    } else {
+                        FilledTonalButton(
+                            onClick = onAddManually,
+                            shapes = ButtonDefaults.shapes(),
+                            contentPadding = LookupActionPadding,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(stringResource(R.string.lookup_add_manually), textAlign = TextAlign.Center)
+                        }
+                        Button(
+                            onClick = onSearch,
+                            shapes = ButtonDefaults.shapes(),
+                            contentPadding = LookupActionPadding,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    if (lookup.phase == LookupPhase.Failed) R.string.lookup_retry else R.string.lookup_search
+                                ),
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BarcodeChip(barcode: String, modifier: Modifier = Modifier) {
+    val description = stringResource(R.string.lookup_barcode_cd, barcode)
+    Surface(
+        shape = CircleShape,
+        color = CaffeineSurfaceDefaults.iconContainerColor,
+        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 12.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_barcode_scanner),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = barcode,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+private val LookupIconSize = 56.dp
+
+// Trimmed from the 24dp default so both labels fit side by side on narrow phones.
+private val LookupActionPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
 
 @Composable
 private fun AddDrinkServingSheet(
@@ -521,7 +862,7 @@ private fun AddDrinkServingSheet(
     viewModel: CaffeineViewModel,
     userSettings: com.uc.caffeine.data.UserSettings,
     todayEntries: List<ConsumptionEntry>,
-    onAdd: (Double, DrinkUnit, Long, Int) -> Unit,
+    onAdd: (quantity: Double, unit: DrinkUnit, startedAtMillis: Long, durationMinutes: Int, drinkName: String) -> Unit,
     onEditCustomDrink: (() -> Unit)? = null,
 ) {
     val units by produceState<List<DrinkUnit>?>(initialValue = null, key1 = preset.id) {
@@ -549,14 +890,28 @@ private fun AddDrinkServingSheet(
     val selectedUnit = remember(units, selectedUnitKey, defaultUnit) {
         units?.firstOrNull { it.unitKey == selectedUnitKey } ?: defaultUnit
     }
+    val canResteep = remember(preset.category, units, selectedUnit) {
+        canBeResteeped(preset.category, units.orEmpty().map { it.unitKey }, selectedUnit?.unitKey)
+    }
+    var steep by remember(preset.id) { mutableStateOf(TeaSteep.First) }
+    val effectiveSteep = if (canResteep) steep else TeaSteep.First
+    // What actually gets logged: the serving scaled down for a later steep.
+    val loggedUnit = remember(selectedUnit, effectiveSteep) {
+        selectedUnit?.let { it.copy(caffeineMg = it.caffeineMg * effectiveSteep.caffeineFactor) }
+    }
+    val steepEntryName = when (effectiveSteep) {
+        TeaSteep.First -> preset.name
+        TeaSteep.Second -> stringResource(R.string.add_tea_steep_entry_name, preset.name, stringResource(R.string.add_tea_steep_second))
+        TeaSteep.ThirdOrLater -> stringResource(R.string.add_tea_steep_entry_name, preset.name, stringResource(R.string.add_tea_steep_third))
+    }
     val servingSummary = remember(quantity, selectedUnit, preset.defaultUnit) {
         formatServingSummary(
             quantity = quantity,
             unitKey = selectedUnit?.unitKey ?: preset.defaultUnit,
         )
     }
-    val totalCaffeineMg = remember(quantity, selectedUnit) {
-        selectedUnit?.let { calculateServingTotalCaffeine(quantity, it.caffeineMg) } ?: 0
+    val totalCaffeineMg = remember(quantity, loggedUnit) {
+        loggedUnit?.let { calculateServingTotalCaffeine(quantity, it.caffeineMg) } ?: 0
     }
 
     Column(
@@ -631,6 +986,10 @@ private fun AddDrinkServingSheet(
                         onUnitSelected = { selectedUnitKey = it.unitKey },
                     )
                 }
+            }
+
+            AnimatedVisibility(visible = canResteep) {
+                TeaSteepSelector(steep = steep, onSteepChange = { steep = it })
             }
 
             Surface(
@@ -719,11 +1078,11 @@ private fun AddDrinkServingSheet(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
-                        selectedUnit?.let {
-                            onAdd(quantity, it, startedAtMillis, durationMinutes)
+                        loggedUnit?.let {
+                            onAdd(quantity, it, startedAtMillis, durationMinutes, steepEntryName)
                         }
                     },
-                    enabled = selectedUnit != null,
+                    enabled = loggedUnit != null,
                     shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
                     contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
                     modifier = Modifier
@@ -755,6 +1114,52 @@ private fun AddDrinkServingSheet(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun TeaSteepSelector(
+    steep: TeaSteep,
+    onSteepChange: (TeaSteep) -> Unit,
+) {
+    val haptics = rememberAppHaptics()
+    val steeps = listOf(
+        TeaSteep.First to stringResource(R.string.add_tea_steep_first),
+        TeaSteep.Second to stringResource(R.string.add_tea_steep_second),
+        TeaSteep.ThirdOrLater to stringResource(R.string.add_tea_steep_third),
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = stringResource(R.string.add_tea_steep_label),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+            steeps.forEachIndexed { index, (value, label) ->
+                ToggleButton(
+                    checked = steep == value,
+                    onCheckedChange = {
+                        if (it) {
+                            haptics.toggle()
+                            onSteepChange(value)
+                        }
+                    },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        steeps.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(text = label, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+        Text(
+            text = stringResource(R.string.add_tea_steep_summary),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -902,6 +1307,7 @@ private fun SegmentedDrinkListItem(
                 fontWeight = FontWeight.Bold,
             )
         },
+        verticalAlignment = Alignment.CenterVertically,
         shapes = segmentedListItemShapes(index, count),
         colors = ListItemDefaults.colors(
             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -912,20 +1318,23 @@ private fun SegmentedDrinkListItem(
 @Composable
 private fun CreateCustomDrinkSheet(
     viewModel: CaffeineViewModel,
-    initialName: String = "",
+    draft: CustomDrinkDraft,
+    barcode: String?,
+    notice: CustomDrinkNotice?,
     onDismiss: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val haptics = rememberAppHaptics()
 
-    var name by remember { mutableStateOf(initialName) }
+    var name by remember { mutableStateOf(draft.name) }
     var emoji by remember { mutableStateOf("☕") }
     var imageUri by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("coffee") }
-    var selectedUnitKey by remember { mutableStateOf("cup") }
-    var caffeineText by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf(draft.category) }
+    var selectedUnitKey by remember { mutableStateOf(draft.unitKey) }
+    var caffeineText by remember { mutableStateOf(draft.caffeineMg?.let(::formatCaffeineAmount).orEmpty()) }
 
-    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    val imageRequest = rememberImagePickerRequest()
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             scope.launch {
                 val path = viewModel.copyCustomDrinkImage(uri)
@@ -955,7 +1364,7 @@ private fun CreateCustomDrinkSheet(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(modifier = Modifier.clickable { pickImage.launch("image/*") }) {
+            Box(modifier = Modifier.clickable { pickImage.launch(imageRequest) }) {
                 ExpressiveIconBadge(index = 0, size = 76.dp) {
                     DrinkIcon(
                         imageName = imageUri,
@@ -982,6 +1391,20 @@ private fun CreateCustomDrinkSheet(
             }
         }
 
+        if (notice != null && barcode != null) {
+            Text(
+                text = when (notice) {
+                    CustomDrinkNotice.NewBarcode -> stringResource(R.string.custom_drink_new_barcode, barcode)
+                    CustomDrinkNotice.FromOpenFoodFacts -> stringResource(R.string.custom_drink_from_open_food_facts)
+                    CustomDrinkNotice.FromOpenFoodFactsWithoutCaffeine ->
+                        stringResource(R.string.custom_drink_from_open_food_facts_no_caffeine)
+                    CustomDrinkNotice.NotOnOpenFoodFacts -> stringResource(R.string.custom_drink_not_on_open_food_facts)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         HorizontalDivider()
 
         OutlinedTextField(
@@ -1004,7 +1427,7 @@ private fun CreateCustomDrinkSheet(
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = { pickImage.launch("image/*") }) {
+            TextButton(onClick = { pickImage.launch(imageRequest) }) {
                 Icon(
                     imageVector = Icons.Filled.Image,
                     contentDescription = null,
@@ -1102,6 +1525,7 @@ private fun CreateCustomDrinkSheet(
                     category = selectedCategory,
                     unitKey = selectedUnitKey,
                     caffeineMg = caffeine,
+                    barcode = barcode,
                 )
                 onDismiss()
             },
@@ -1147,7 +1571,8 @@ private fun EditCustomDrinkSheet(
         )
     }
 
-    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    val imageRequest = rememberImagePickerRequest()
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             scope.launch {
                 val path = viewModel.copyCustomDrinkImage(uri)
@@ -1215,7 +1640,7 @@ private fun EditCustomDrinkSheet(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(modifier = Modifier.clickable { pickImage.launch("image/*") }) {
+            Box(modifier = Modifier.clickable { pickImage.launch(imageRequest) }) {
                 ExpressiveIconBadge(index = preset.id, size = 76.dp) {
                     DrinkIcon(
                         imageName = imageUri,
@@ -1255,7 +1680,7 @@ private fun EditCustomDrinkSheet(
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = { pickImage.launch("image/*") }) {
+            TextButton(onClick = { pickImage.launch(imageRequest) }) {
                 Icon(
                     imageVector = Icons.Filled.Image,
                     contentDescription = null,
@@ -1344,6 +1769,40 @@ private fun EditCustomDrinkSheet(
 
         Spacer(Modifier.height(8.dp))
     }
+}
+
+private const val ScannerTransitionKey = "barcode-scanner"
+private val ScanButtonCorner = 20.dp
+
+/**
+ * The scan button and the scanner share bounds, so opening grows the scanner out of the button and
+ * closing shrinks it back in, rounding off as it goes. Whichever side is leaving fades out quickly
+ * and the arriving side fades in late, which keeps the morphing shape solid rather than letting the
+ * list show through a crossfade.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun Modifier.scannerMorph(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    isScanner: Boolean,
+): Modifier = with(sharedTransitionScope) {
+    val boundsSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Rect>()
+    val corner by animatedVisibilityScope.transition.animateDp(label = "scanner-corner") { state ->
+        val shown = state == EnterExitState.Visible
+        if (shown == isScanner) 0.dp else ScanButtonCorner
+    }
+    val quickly = tween<Float>(durationMillis = 90)
+    val late = tween<Float>(durationMillis = 150, delayMillis = 200)
+    this@scannerMorph.sharedBounds(
+        sharedContentState = rememberSharedContentState(ScannerTransitionKey),
+        animatedVisibilityScope = animatedVisibilityScope,
+        enter = fadeIn(if (isScanner) quickly else late),
+        exit = fadeOut(if (isScanner) late else quickly),
+        boundsTransform = { _, _ -> boundsSpec },
+        resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.Crop, Alignment.Center),
+        clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(corner)),
+    )
 }
 
 private tailrec fun Context.findComponentActivity(): ComponentActivity? {

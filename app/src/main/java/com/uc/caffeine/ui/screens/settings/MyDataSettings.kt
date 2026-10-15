@@ -210,6 +210,7 @@ private fun MyDataSettingsContent(
                     supportingContent = {
                         Text(stringResource(R.string.my_data_export_description))
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(0, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -230,6 +231,7 @@ private fun MyDataSettingsContent(
                     supportingContent = {
                         Text(stringResource(R.string.my_data_import_description))
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(1, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,

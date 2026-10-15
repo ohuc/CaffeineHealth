@@ -100,6 +100,7 @@ fun SettingsScreen(
                         onAutomationClick = {
                             nestedBackStack.add(SettingsDestination.Automation)
                         },
+                        onWhatsNewSeen = viewModel::markWhatsNewSeen,
                     )
 
                     SettingsDestination.CaffeineProfile -> CaffeineProfileSettingsScreen(
@@ -130,6 +131,7 @@ fun SettingsScreen(
                     SettingsDestination.Appearance -> AppearanceSettingsScreen(
                         userSettings = userSettings,
                         onThemeModeChange = viewModel::updateThemeMode,
+                        onExpressiveBlurChange = viewModel::updateExpressiveBlur,
                         onHomeViewModeChange = viewModel::updateHomeViewMode,
                         onColorPaletteChange = viewModel::updateColorPalette,
                         onRecentServingsCountChange = viewModel::updateRecentServingsCount,

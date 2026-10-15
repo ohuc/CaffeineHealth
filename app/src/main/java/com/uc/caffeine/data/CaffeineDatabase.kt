@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [DrinkPreset::class, DrinkUnit::class, ConsumptionEntry::class, DismissedHealthConnectRecord::class],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class CaffeineDatabase : RoomDatabase() {
@@ -86,6 +86,13 @@ abstract class CaffeineDatabase : RoomDatabase() {
             }
         }
 
+        // Barcodes on drinks, so a scanned product finds the drink saved for it.
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE drink_presets ADD COLUMN barcode TEXT")
+            }
+        }
+
         fun getDatabase(context: Context): CaffeineDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -93,7 +100,7 @@ abstract class CaffeineDatabase : RoomDatabase() {
                     CaffeineDatabase::class.java,
                     "caffeine_database"
                 )
-                    .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                    .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)

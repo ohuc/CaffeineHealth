@@ -23,7 +23,10 @@ data class DrinkPreset(
     // The full per-unit values live in drink_units table
     val defaultCaffeineMg: Int = 0,
 
-    val isCustom: Boolean = false
+    val isCustom: Boolean = false,
+
+    // EAN-13 form of the product barcode (see normalizeProductBarcode), so a scan finds the drink.
+    val barcode: String? = null,
 )
 
 val defaultDrinkPresets = listOf(

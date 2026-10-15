@@ -30,6 +30,7 @@ internal fun AnalyticsRoot(
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.analyticsUiState.collectAsStateWithLifecycle()
+    val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val nestedBackStack = rememberNavBackStack(AnalyticsDestination.Main)
 
     NavDisplay(
@@ -60,6 +61,7 @@ internal fun AnalyticsRoot(
                 when (destination) {
                     AnalyticsDestination.Main -> AnalyticsMainPage(
                         uiState = uiState,
+                        expressiveBlur = userSettings.expressiveBlur,
                         onRangeSelected = viewModel::setAnalyticsRange,
                         onSourcesClick = { nestedBackStack.add(AnalyticsDestination.Sources) },
                         onBedtimeClick = { nestedBackStack.add(AnalyticsDestination.Bedtime) },
@@ -71,7 +73,6 @@ internal fun AnalyticsRoot(
                         onRangeSelected = viewModel::setAnalyticsRange,
                         onCustomRange = viewModel::setCustomRange,
                         onBack = { nestedBackStack.removeLastOrNull() },
-                        modelProducer = viewModel.analyticsSourcePieChartModelProducer,
                     )
 
                     AnalyticsDestination.Bedtime -> AnalyticsBedtimePage(
@@ -81,6 +82,8 @@ internal fun AnalyticsRoot(
 
                     AnalyticsDestination.TimeOfDay -> AnalyticsTimeOfDayPage(
                         uiState = uiState,
+                        userSettings = userSettings,
+                        modelProducer = viewModel.analyticsTimeOfDayChartModelProducer,
                         onRangeSelected = viewModel::setAnalyticsRange,
                         onCustomRange = viewModel::setCustomRange,
                         onBack = { nestedBackStack.removeLastOrNull() },

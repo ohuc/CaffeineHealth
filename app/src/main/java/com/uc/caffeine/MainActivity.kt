@@ -20,6 +20,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.LinearEasing
@@ -74,6 +76,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.runtime.Composable
@@ -107,6 +110,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.uc.caffeine.data.ThemeMode
 import com.uc.caffeine.data.UserSettings
+import com.uc.caffeine.ui.components.frostedGlass
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.onboarding.OnboardingRoot
 import com.uc.caffeine.ui.onboarding.StartupDestination
@@ -119,6 +123,9 @@ import com.uc.caffeine.ui.theme.CaffeineTheme
 import com.uc.caffeine.ui.theme.MontserratFamily
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.widget.CaffeineWidgetUpdater
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
 class MainActivity : ComponentActivity() {
 
@@ -248,8 +255,15 @@ internal fun MainAppShell(
     val snackbarHostState = remember { SnackbarHostState() }
     var manualOnboardingVisible by rememberSaveable { mutableStateOf(false) }
     var manualOnboardingSession by rememberSaveable { mutableIntStateOf(0) }
+    // Set while a screen shows something full-screen over everything, like the barcode scanner.
+    var fullScreenContent by remember { mutableStateOf(false) }
     val selectedToolbarDestination = currentRoute.resolveToolbarDestination()
     val shouldShowHomeFab = !manualOnboardingVisible && currentRoute.shouldShowHomeFab()
+    // Screens scroll under the floating toolbar (they pad their lists by the bottom inset rather
+    // than the layout), so the toolbar samples them and draws a frosted backdrop.
+    val hazeState = rememberHazeState()
+    // Null while expressive blur is off: the toolbar and Add button fall back to solid surfaces.
+    val blurState = hazeState.takeIf { userSettings.expressiveBlur }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -258,144 +272,154 @@ internal fun MainAppShell(
         },
         bottomBar = {
             if (!manualOnboardingVisible) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-                        .padding(bottom = 16.dp),
-                    contentAlignment = Alignment.BottomCenter,
+                AnimatedVisibility(
+                    visible = !fullScreenContent,
+                    enter = slideInVertically { it } + fadeIn(),
+                    exit = slideOutVertically { it } + fadeOut(),
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                            .padding(bottom = 16.dp),
+                        contentAlignment = Alignment.BottomCenter,
                     ) {
-                        AnimatedVisibility(
-                            visible = shouldShowHomeFab,
-                            enter = fadeIn(tween(300)) + expandVertically(
-                                expandFrom = Alignment.Bottom,
-                                animationSpec = tween(300),
-                            ),
-                            exit = shrinkVertically(
-                                shrinkTowards = Alignment.Bottom,
-                                animationSpec = tween(250),
-                            ) + fadeOut(tween(250)),
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            AddConsumptionButton(
-                                modifier = Modifier.padding(bottom = 8.dp),
-                                onClick = {
-                                    haptics.confirm()
-                                    backStack.add(AddRoute)
-                                },
-                            )
-                        }
-                        val buttonBounds = remember { mutableStateMapOf<Int, androidx.compose.ui.geometry.Rect>() }
-                        val currentIndex = toolbarDestinations.indexOf(selectedToolbarDestination)
-                        val targetRect = buttonBounds[currentIndex]
-                        val button0Rect = buttonBounds[0]
-                        val pillRelativeX = (targetRect?.left ?: 0f) - (button0Rect?.left ?: 0f)
-
-                        val pillAnimatedX by animateFloatAsState(
-                            targetValue = pillRelativeX,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessLow,
-                            ),
-                            label = "pillX",
-                        )
-                        val pillAnimatedWidth by animateFloatAsState(
-                            targetValue = targetRect?.width ?: 0f,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessLow,
-                            ),
-                            label = "pillWidth",
-                        )
-                        val pillColor = MaterialTheme.colorScheme.primary
-
-                        HorizontalFloatingToolbar(
-                            expanded = true,
-                            colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(
-                                toolbarContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                toolbarContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            ),
-                        ) {
-                            CompositionLocalProvider(LocalRippleConfiguration provides null) {
-                                toolbarDestinations.forEachIndexed { index, destination ->
-                                val selected = selectedToolbarDestination == destination
-
-                                ToggleButton(
-                                    checked = selected,
-                                    onCheckedChange = {
-                                        if (!selected) {
-                                            haptics.navigation()
-                                            if (currentRoute != AppDestinations.HOME) {
-                                                backStack.removeLastOrNull()
-                                            }
-                                            if (destination != AppDestinations.HOME) {
-                                                backStack.add(destination)
-                                            }
-                                        }
+                            AnimatedVisibility(
+                                visible = shouldShowHomeFab,
+                                enter = fadeIn(tween(300)) + expandVertically(
+                                    expandFrom = Alignment.Bottom,
+                                    animationSpec = tween(300),
+                                ),
+                                exit = shrinkVertically(
+                                    shrinkTowards = Alignment.Bottom,
+                                    animationSpec = tween(250),
+                                ) + fadeOut(tween(250)),
+                            ) {
+                                AddConsumptionButton(
+                                    hazeState = blurState,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                    onClick = {
+                                        haptics.confirm()
+                                        backStack.add(AddRoute)
                                     },
-                                    modifier = Modifier
-                                        .height(56.dp)
-                                        .onGloballyPositioned { coords ->
-                                            buttonBounds[index] = coords.boundsInParent()
-                                        }
-                                        .then(
-                                            if (index == 0) {
-                                                Modifier.drawWithContent {
-                                                    if (pillAnimatedWidth > 0f) {
-                                                        drawRoundRect(
-                                                            color = pillColor,
-                                                            topLeft = Offset(pillAnimatedX, 0f),
-                                                            size = Size(pillAnimatedWidth, size.height),
-                                                            cornerRadius = CornerRadius(size.height / 2f),
-                                                        )
-                                                    }
-                                                    drawContent()
+                                )
+                            }
+                            val buttonBounds = remember { mutableStateMapOf<Int, androidx.compose.ui.geometry.Rect>() }
+                            val currentIndex = toolbarDestinations.indexOf(selectedToolbarDestination)
+                            val targetRect = buttonBounds[currentIndex]
+                            val button0Rect = buttonBounds[0]
+                            val pillRelativeX = (targetRect?.left ?: 0f) - (button0Rect?.left ?: 0f)
+
+                            val pillAnimatedX by animateFloatAsState(
+                                targetValue = pillRelativeX,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioLowBouncy,
+                                    stiffness = Spring.StiffnessLow,
+                                ),
+                                label = "pillX",
+                            )
+                            val pillAnimatedWidth by animateFloatAsState(
+                                targetValue = targetRect?.width ?: 0f,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioLowBouncy,
+                                    stiffness = Spring.StiffnessLow,
+                                ),
+                                label = "pillWidth",
+                            )
+                            val pillColor = MaterialTheme.colorScheme.primary
+
+                            HorizontalFloatingToolbar(
+                                expanded = true,
+                                // The container is drawn by the blur tint instead, so content behind
+                                // the toolbar shows through frosted rather than being hidden.
+                                modifier = Modifier.frostedContainer(blurState, CircleShape),
+                                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(
+                                    toolbarContainerColor = Color.Transparent,
+                                    toolbarContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                ),
+                            ) {
+                                CompositionLocalProvider(LocalRippleConfiguration provides null) {
+                                    toolbarDestinations.forEachIndexed { index, destination ->
+                                    val selected = selectedToolbarDestination == destination
+
+                                    ToggleButton(
+                                        checked = selected,
+                                        onCheckedChange = {
+                                            if (!selected) {
+                                                haptics.navigation()
+                                                if (currentRoute != AppDestinations.HOME) {
+                                                    backStack.removeLastOrNull()
                                                 }
-                                            } else {
-                                                Modifier
+                                                if (destination != AppDestinations.HOME) {
+                                                    backStack.add(destination)
+                                                }
                                             }
+                                        },
+                                        modifier = Modifier
+                                            .height(56.dp)
+                                            .onGloballyPositioned { coords ->
+                                                buttonBounds[index] = coords.boundsInParent()
+                                            }
+                                            .then(
+                                                if (index == 0) {
+                                                    Modifier.drawWithContent {
+                                                        if (pillAnimatedWidth > 0f) {
+                                                            drawRoundRect(
+                                                                color = pillColor,
+                                                                topLeft = Offset(pillAnimatedX, 0f),
+                                                                size = Size(pillAnimatedWidth, size.height),
+                                                                cornerRadius = CornerRadius(size.height / 2f),
+                                                            )
+                                                        }
+                                                        drawContent()
+                                                    }
+                                                } else {
+                                                    Modifier
+                                                }
+                                            ),
+                                        colors = ToggleButtonDefaults.toggleButtonColors(
+                                            checkedContainerColor = Color.Transparent,
+                                            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                                            containerColor = Color.Transparent,
+                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                         ),
-                                    colors = ToggleButtonDefaults.toggleButtonColors(
-                                        checkedContainerColor = Color.Transparent,
-                                        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                                        containerColor = Color.Transparent,
-                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    ),
-                                    shapes = ToggleButtonDefaults.shapes(
-                                        shape = CircleShape,
-                                        pressedShape = CircleShape,
-                                        checkedShape = CircleShape,
-                                    ),
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
+                                        shapes = ToggleButtonDefaults.shapes(
+                                            shape = CircleShape,
+                                            pressedShape = CircleShape,
+                                            checkedShape = CircleShape,
+                                        ),
                                     ) {
-                                        DestinationIcon(
-                                            destination = destination,
-                                            selected = selected,
-                                        )
-                                        AnimatedVisibility(
-                                            visible = selected,
-                                            enter = expandHorizontally(
-                                                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                                            ),
-                                            exit = shrinkHorizontally(
-                                                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                                            ),
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            Text(
-                                                text = stringResource(destination.labelRes),
-                                                modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
-                                                style = MaterialTheme.typography.titleSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                ),
+                                            DestinationIcon(
+                                                destination = destination,
+                                                selected = selected,
                                             )
+                                            AnimatedVisibility(
+                                                visible = selected,
+                                                enter = expandHorizontally(
+                                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                                                ),
+                                                exit = shrinkHorizontally(
+                                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                                                ),
+                                            ) {
+                                                Text(
+                                                    text = stringResource(destination.labelRes),
+                                                    modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
+                                                    style = MaterialTheme.typography.titleSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                    ),
+                                                )
+                                            }
                                         }
                                     }
                                 }
-                            }
+                                }
                             }
                         }
                     }
@@ -407,7 +431,7 @@ internal fun MainAppShell(
             LocalSnackbarHostState provides snackbarHostState,
             LocalAppScaffoldPadding provides innerPadding,
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().then(blurState?.let { Modifier.hazeSource(it) } ?: Modifier)) {
                 NavDisplay(
                     backStack = backStack,
                     onBack = { backStack.removeLastOrNull() },
@@ -443,6 +467,7 @@ internal fun MainAppShell(
                                 onDrinkLogged = {
                                     backStack.removeLastOrNull()
                                 },
+                                onFullScreenChange = { fullScreenContent = it },
                             )
                         }
                     },
@@ -496,9 +521,22 @@ private fun DestinationIcon(
     }
 }
 
+/**
+ * The container shared by the floating toolbar and the Add Consumption button. With a [hazeState]
+ * it is frosted glass: whatever scrolls behind (the [hazeSource] content) is blurred and tinted
+ * with primaryContainer. Without one (expressive blur turned off) it is plain primaryContainer.
+ */
+@Composable
+private fun Modifier.frostedContainer(hazeState: HazeState?, shape: Shape): Modifier {
+    val tint = MaterialTheme.colorScheme.primaryContainer
+    if (hazeState == null) return clip(shape).background(tint)
+    return clip(shape).frostedGlass(hazeState, tint)
+}
+
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 private fun AddConsumptionButton(
+    hazeState: HazeState?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -513,13 +551,17 @@ private fun AddConsumptionButton(
         label = "burst_rotation",
     )
 
+    val shape = RoundedCornerShape(50)
+    // Frosted like the toolbar below it. No shadow: the toolbar has none, and an elevation shadow
+    // would show through the translucent tint as a dark smudge.
     Surface(
         onClick = onClick,
-        modifier = modifier.height(72.dp),
-        shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = modifier
+            .frostedContainer(hazeState, shape)
+            .height(72.dp),
+        shape = shape,
+        color = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        shadowElevation = 6.dp,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 24.dp),

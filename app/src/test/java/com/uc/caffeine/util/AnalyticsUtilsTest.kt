@@ -64,6 +64,7 @@ class AnalyticsUtilsTest {
 
         assertEquals("Other", uiState.topSourceLabel)
         assertEquals(listOf("Other"), uiState.sourceAxisLabels)
+        assertEquals(listOf(OtherCategoryKey), uiState.sourceCategoryKeys)
     }
 
     @Test
@@ -86,6 +87,7 @@ class AnalyticsUtilsTest {
 
         assertTrue(uiState.hasData)
         assertEquals(listOf("Coffee"), uiState.sourceAxisLabels)
+        assertEquals(listOf("coffee"), uiState.sourceCategoryKeys)
         assertEquals(listOf(95.0), uiState.sourceValues)
     }
 
@@ -109,6 +111,31 @@ class AnalyticsUtilsTest {
         )
 
         assertEquals(listOf(25.0, 50.0, 75.0, 100.0), uiState.timeOfDayValues)
+    }
+
+    @Test
+    fun buildAnalyticsUiState_totalsConsumptionPerHourOfDay() {
+        val presets = listOf(testPreset(itemId = "coffee-1", category = "coffee"))
+        val entries = listOf(
+            testEntry(id = 1, startedAt = "2026-04-08T08:10:00Z", caffeineMg = 60, presetItemId = "coffee-1"),
+            testEntry(id = 2, startedAt = "2026-04-09T08:50:00Z", caffeineMg = 40, presetItemId = "coffee-1"),
+            testEntry(id = 3, startedAt = "2026-04-09T23:30:00Z", caffeineMg = 30, presetItemId = "coffee-1"),
+        )
+
+        val uiState = buildAnalyticsUiState(
+            entries = entries,
+            presets = presets,
+            settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false),
+            selectedRange = AnalyticsRange.LAST_30_DAYS,
+            nowMillis = Instant.parse("2026-04-09T23:45:00Z").toEpochMilli(),
+            locale = Locale.US,
+        )
+
+        assertEquals(24, uiState.timeOfDayHourlyValues.size)
+        assertEquals(100.0, uiState.timeOfDayHourlyValues[8], 0.0)
+        assertEquals(30.0, uiState.timeOfDayHourlyValues[23], 0.0)
+        assertEquals(130.0, uiState.timeOfDayHourlyValues.sum(), 0.0)
+        assertEquals(timeOfDayBucketIndexForHour(23), timeOfDayBucketIndexForHour(2))
     }
 
     @Test

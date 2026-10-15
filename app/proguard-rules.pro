@@ -44,6 +44,14 @@
    <fields>;
 }
 
+# Glance widgets: ActionCallbacks are instantiated reflectively from the class name carried in the
+# click intent (RunCallbackAction.run → getDeclaredConstructor().newInstance()). Glance's consumer
+# rule keeps the class but not its constructor, and R8 full mode strips a never-called <init>(),
+# so every widget button failed silently in release builds while debug builds worked (#54).
+-keep class * implements androidx.glance.appwidget.action.ActionCallback {
+    public <init>();
+}
+
 # Preserve source file names and line numbers for readable crash stack traces
 -keepattributes SourceFile, LineNumberTable
 -renamesourcefileattribute SourceFile

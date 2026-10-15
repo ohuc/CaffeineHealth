@@ -56,6 +56,7 @@ class BackupManager(
             put("sleepTimeMinute", settings.sleepTimeMinute)
             put("themeMode", settings.themeMode.name)
             put("useDynamicColor", settings.useDynamicColor)
+            put("expressiveBlur", settings.expressiveBlur)
             put("use24HourClock", settings.use24HourClock)
             put("dateFormat", settings.dateFormat.name)
             put("useSystemTimeZone", settings.useSystemTimeZone)
@@ -103,6 +104,7 @@ class BackupManager(
                 put("relevance", preset.relevance)
                 put("defaultUnit", preset.defaultUnit)
                 put("defaultCaffeineMg", preset.defaultCaffeineMg)
+                preset.barcode?.let { put("barcode", it) }
                 val unitsArray = JSONArray()
                 for (unit in units) {
                     unitsArray.put(JSONObject().apply {
@@ -182,6 +184,7 @@ class BackupManager(
                 sleepTimeMinute = settingsObj.optInt("sleepTimeMinute", 0),
                 themeMode = ThemeMode.fromStorage(settingsObj.optString("themeMode")),
                 useDynamicColor = settingsObj.optBoolean("useDynamicColor", true),
+                expressiveBlur = settingsObj.optBoolean("expressiveBlur", true),
                 use24HourClock = settingsObj.optBoolean("use24HourClock", false),
                 dateFormat = AppDateFormat.fromStorage(settingsObj.optString("dateFormat")),
                 useSystemTimeZone = settingsObj.optBoolean("useSystemTimeZone", true),
@@ -237,6 +240,7 @@ class BackupManager(
                 defaultUnit = obj.optString("defaultUnit", "cup"),
                 defaultCaffeineMg = obj.optInt("defaultCaffeineMg", 0),
                 isCustom = true,
+                barcode = obj.optString("barcode").ifBlank { null },
             )
             val drinkId = presetDao.insertAndGetId(preset).toInt()
             val unitsArray = obj.optJSONArray("units") ?: JSONArray()

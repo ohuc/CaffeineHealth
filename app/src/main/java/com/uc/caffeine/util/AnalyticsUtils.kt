@@ -38,6 +38,8 @@ data class AnalyticsUiState(
     val safeNights: Int = 0,
     val totalNights: Int = 0,
     val topSourceLabel: String = "No data yet",
+    /** Category keys behind [sourceAxisLabels], so each category keeps its own color and icon. */
+    val sourceCategoryKeys: List<String> = emptyList(),
     val sourceAxisLabels: List<String> = emptyList(),
     val sourceValues: List<Double> = emptyList(),
     val sourceItemEntries: List<SourceItemEntry> = emptyList(),
@@ -45,6 +47,8 @@ data class AnalyticsUiState(
     val bedtimeValues: List<Double> = emptyList(),
     val timeOfDayAxisLabels: List<String> = TimeOfDayBucket.axisLabels,
     val timeOfDayValues: List<Double> = List(TimeOfDayBucket.entries.size) { 0.0 },
+    /** Caffeine logged in each hour of the day, indexed 0..23 in the user's time zone. */
+    val timeOfDayHourlyValues: List<Double> = List(HOURS_PER_DAY) { 0.0 },
     val sleepThresholdMg: Double = 0.0,
     val currentSleepStreak: Int = 0,
     val bedtimeDailyStats: Map<LocalDate, DailyBedtimeStat> = emptyMap(),
@@ -52,7 +56,8 @@ data class AnalyticsUiState(
     val customEndDate: java.time.LocalDate? = null,
 )
 
-private const val OtherCategoryKey = "__other__"
+internal const val OtherCategoryKey = "__other__"
+private const val HOURS_PER_DAY = 24
 private const val OtherCategoryLabel = "Other"
 
 private data class AnalyticsWindow(
@@ -84,6 +89,9 @@ private enum class TimeOfDayBucket(val label: String) {
         }
     }
 }
+
+/** Index into [AnalyticsUiState.timeOfDayValues] of the part of the day that [hour] falls in. */
+fun timeOfDayBucketIndexForHour(hour: Int): Int = TimeOfDayBucket.fromHour(hour).ordinal
 
 fun buildAnalyticsUiState(
     entries: List<ConsumptionEntry>,
@@ -141,7 +149,7 @@ fun buildAnalyticsUiState(
     } else {
         0
     }
-    val timeOfDayValues = buildTimeOfDayValues(entriesInRange = entriesInRange, zoneId = zoneId)
+    val hourlyValues = buildHourlyValues(entriesInRange = entriesInRange, zoneId = zoneId)
     val hasData = entriesInRange.isNotEmpty()
 
     return AnalyticsUiState(
@@ -155,6 +163,7 @@ fun buildAnalyticsUiState(
             .maxByOrNull { it.value }
             ?.let { displayLabelForCategoryKey(it.key) }
             ?: "No data yet",
+        sourceCategoryKeys = if (hasData) sortedSourceTotals.map { it.key } else emptyList(),
         sourceAxisLabels = if (hasData) {
             sortedSourceTotals.map { entry ->
                 chartLabelForCategoryKey(entry.key)
@@ -171,7 +180,8 @@ fun buildAnalyticsUiState(
         bedtimeAxisLabels = if (hasData) bedtimeSeries.first else emptyList(),
         bedtimeValues = if (hasData) bedtimeSeries.second else emptyList(),
         timeOfDayAxisLabels = TimeOfDayBucket.axisLabels,
-        timeOfDayValues = timeOfDayValues,
+        timeOfDayValues = bucketHourlyValues(hourlyValues),
+        timeOfDayHourlyValues = hourlyValues,
         sleepThresholdMg = settings.sleepThresholdMg.toDouble(),
         currentSleepStreak = computeCurrentStreak(allBedtimeDailyStats, today),
         bedtimeDailyStats = allBedtimeDailyStats,
@@ -218,15 +228,22 @@ private fun buildSourceTotals(
         }
 }
 
-private fun buildTimeOfDayValues(
+private fun buildHourlyValues(
     entriesInRange: List<ConsumptionEntry>,
     zoneId: java.time.ZoneId,
 ): List<Double> {
-    val totals = DoubleArray(TimeOfDayBucket.entries.size)
+    val totals = DoubleArray(HOURS_PER_DAY)
     entriesInRange.forEach { entry ->
         val hour = Instant.ofEpochMilli(entry.startedAtMillis).atZone(zoneId).hour
-        val bucket = TimeOfDayBucket.fromHour(hour)
-        totals[bucket.ordinal] += entry.caffeineMg.toDouble()
+        totals[hour] += entry.caffeineMg.toDouble()
+    }
+    return totals.toList()
+}
+
+private fun bucketHourlyValues(hourlyValues: List<Double>): List<Double> {
+    val totals = DoubleArray(TimeOfDayBucket.entries.size)
+    hourlyValues.forEachIndexed { hour, value ->
+        totals[TimeOfDayBucket.fromHour(hour).ordinal] += value
     }
     return totals.toList()
 }

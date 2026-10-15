@@ -1,70 +1,147 @@
 package com.uc.caffeine.widget
 
-import android.content.Context
-import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
-import androidx.glance.Image
-import androidx.glance.ImageProvider
-import androidx.glance.LocalContext
 import androidx.glance.LocalSize
-import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
-import androidx.glance.appwidget.action.actionStartActivity
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.items
-import androidx.glance.appwidget.provideContent
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
-import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.size
 import androidx.glance.layout.width
-import androidx.glance.text.FontWeight
-import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
-import com.uc.caffeine.MainActivity
-import com.uc.caffeine.R
-import com.uc.caffeine.util.formatTimestampToTime
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
-class CombinedWidget : GlanceAppWidget() {
+/**
+ * "Caffeine Dashboard": the level panel and quick-log tiles together. One row high, the tiles sit
+ * beside the level; taller, they move into a strip under it so the curve gets the full width.
+ */
+class CombinedWidget : CaffeineGlanceWidget() {
 
-    override val sizeMode = SizeMode.Exact
+    // One side tile needs 222dp and two need 312dp, so the picker gets a layout for each count.
+    override val previewSizeMode = SizeMode.Responsive(
+        setOf(DpSize(180.dp, 80.dp), DpSize(222.dp, 80.dp), DpSize(312.dp, 80.dp), DpSize(360.dp, 80.dp))
+    )
 
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val data = withContext(Dispatchers.IO) { WidgetDataRepository(context).load() }
-        val bedtimeLabel = formatTimestampToTime(data.bedtimeMillis, data.settings)
-        provideContent {
-            WidgetTheme(useDynamicColor = data.settings.useDynamicColor) {
-                CombinedContent(data = data, bedtimeLabel = bedtimeLabel)
+    @Composable
+    override fun Content(data: WidgetData, confirmedDrinkKey: String?, isPreview: Boolean) {
+        val size = LocalSize.current
+        WidgetSurface {
+            if (size.height >= 150.dp) {
+                StackedDashboard(data, confirmedDrinkKey, isPreview)
+            } else {
+                SideBySideDashboard(data, confirmedDrinkKey, isPreview)
             }
         }
     }
+}
 
-    override suspend fun providePreview(context: Context, widgetCategory: Int) {
-        val data = WidgetDataRepository.mockData()
-        val bedtimeLabel = formatTimestampToTime(data.bedtimeMillis, data.settings)
-        provideContent {
-            WidgetTheme(useDynamicColor = data.settings.useDynamicColor) {
-                CombinedContent(data = data, bedtimeLabel = bedtimeLabel)
+private val MinLevelPanelWidth = 132.dp
+private val SideTileWidth = 84.dp
+
+@Composable
+private fun SideBySideDashboard(data: WidgetData, confirmedKey: String?, isPreview: Boolean) {
+    val size = LocalSize.current
+    val tileArea = size.width - MinLevelPanelWidth - TileGap
+    val count = tilesThatFit(tileArea, minTile = SideTileWidth, max = minOf(data.recentDrinks.size, 3))
+    // Each tile is followed by a gap, which leaves the trailing one against the widget edge.
+    val tilesWidth = (SideTileWidth + TileGap) * count
+    val panelWidth = size.width - tilesWidth
+
+    Row(modifier = GlanceModifier.fillMaxSize()) {
+        LevelPanel(
+            data = data,
+            width = panelWidth,
+            height = size.height,
+            showRefresh = !isPreview && panelWidth >= 160.dp,
+            modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+        )
+        if (count > 0) {
+            val style = tileStyleFor(SideTileWidth, size.height - TileGap * 2)
+            Row(modifier = GlanceModifier.fillMaxHeight().padding(vertical = TileGap)) {
+                data.recentDrinks.take(count).forEach { drink ->
+                    DrinkTile(
+                        drink = drink,
+                        style = style,
+                        confirmed = drink.key == confirmedKey,
+                        modifier = GlanceModifier.width(SideTileWidth).fillMaxHeight(),
+                    )
+                    Spacer(GlanceModifier.width(TileGap))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StackedDashboard(data: WidgetData, confirmedKey: String?, isPreview: Boolean) {
+    val size = LocalSize.current
+    val stripHeight = if (size.height >= 200.dp) 64.dp else 56.dp
+    val innerWidth = size.width - TileGap * 2
+    val count = tilesThatFit(innerWidth, minTile = 96.dp, max = minOf(data.recentDrinks.size, 3))
+    val tileWidth = if (count == 0) innerWidth else (innerWidth - TileGap * (count - 1)) / count
+    val panelHeight = if (count == 0) size.height else size.height - stripHeight - TileGap
+
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        LevelPanel(
+            data = data,
+            width = size.width,
+            height = panelHeight,
+            showRefresh = !isPreview,
+            modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+        )
+        if (count > 0) {
+            val style = tileStyleFor(tileWidth, stripHeight)
+            Row(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .height(stripHeight + TileGap)
+                    .padding(start = TileGap, end = TileGap, bottom = TileGap),
+            ) {
+                data.recentDrinks.take(count).forEachIndexed { index, drink ->
+                    if (index > 0) Spacer(GlanceModifier.width(TileGap))
+                    DrinkTile(
+                        drink = drink,
+                        style = style,
+                        confirmed = drink.key == confirmedKey,
+                        modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Header, readout and bedtime outlook over the decay curve. [width]/[height] size the chart. */
+@Composable
+private fun LevelPanel(
+    data: WidgetData,
+    width: Dp,
+    height: Dp,
+    showRefresh: Boolean,
+    modifier: GlanceModifier,
+) {
+    val compact = height < 116.dp
+    Box(modifier = modifier) {
+        Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+            ChartLayer(data = data, width = width, height = height * 0.58f)
+        }
+        Column(modifier = GlanceModifier.fillMaxSize().padding(if (compact) 12.dp else 14.dp)) {
+            LevelHeader(showRefresh = showRefresh)
+            LevelReadout(data = data, fontSize = if (compact) 24.sp else 32.sp)
+            if (!compact) {
+                Spacer(GlanceModifier.defaultWeight())
+                BedtimeLine(data = data)
             }
         }
     }
@@ -72,142 +149,4 @@ class CombinedWidget : GlanceAppWidget() {
 
 class CombinedWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = CombinedWidget()
-}
-
-@Composable
-private fun CombinedContent(data: WidgetData, bedtimeLabel: String) {
-    val ctx = LocalContext.current
-    val size = LocalSize.current
-    val density = ctx.resources.displayMetrics.density
-    val widthPx = (size.width.value * density).toInt().coerceIn(400, 3500)
-    val heightPx = (size.height.value * density).toInt().coerceIn(150, 1500)
-
-    val primaryArgb = GlanceTheme.colors.primary.getColor(ctx).toArgb()
-    val onSurfaceArgb = GlanceTheme.colors.onSurface.getColor(ctx).toArgb()
-    val scheme = remember(data.settings.useDynamicColor) {
-        resolveWidgetColorScheme(ctx, data.settings.useDynamicColor)
-    }
-    val markerArgb = scheme.surfaceContainerHighest.toArgb()
-    val markerOutlineArgb = scheme.outlineVariant.toArgb()
-    val primaryRgb = primaryArgb and 0x00FFFFFF
-    val onSurfaceRgb = onSurfaceArgb and 0x00FFFFFF
-
-    val chartBitmap = remember(data, widthPx, heightPx, primaryArgb, onSurfaceArgb, markerArgb) {
-        WidgetChartRenderer.render(
-            entries = data.allEntries,
-            settings = data.settings,
-            widthPx = widthPx,
-            heightPx = heightPx,
-            lineColor = primaryRgb or 0x90000000.toInt(),
-            fillTopColor = primaryRgb or 0x36000000,
-            bedtimeMillis = data.bedtimeMillis,
-            bedtimeLineColor = primaryRgb or 0xB0000000.toInt(),
-            currentTimeColor = onSurfaceRgb or 0x66000000,
-            markerColor = markerArgb,
-            markerOutlineColor = markerOutlineArgb,
-        )
-    }
-
-    Box(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(GlanceTheme.colors.surface)
-            .cornerRadius(20.dp)
-            .clickable(onClick = actionStartActivity(Intent(ctx, MainActivity::class.java))),
-        contentAlignment = Alignment.CenterEnd,
-    ) {
-        if (chartBitmap != null) {
-            Image(
-                provider = ImageProvider(chartBitmap),
-                contentDescription = null,
-                modifier = GlanceModifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds,
-            )
-        }
-
-        Box(
-            modifier = GlanceModifier.fillMaxSize().padding(end = 210.dp),
-            contentAlignment = Alignment.TopStart,
-        ) {
-            Column(
-                modifier = GlanceModifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.Vertical.Top,
-            ) {
-                Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                    Image(
-                        provider = ImageProvider(R.drawable.app_logo_glyph),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(28.dp),
-                    )
-                    Spacer(modifier = GlanceModifier.width(4.dp))
-                    Text(
-                        text = "Caffeine Now",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                    )
-                }
-                Row(verticalAlignment = Alignment.Vertical.Bottom) {
-                    Text(
-                        text = data.currentCaffeineMg.toWidgetNumberString(),
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
-                    )
-                    Spacer(modifier = GlanceModifier.width(3.dp))
-                    Text(
-                        text = "mg",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                    )
-                }
-                if (data.caffeineAtBedtimeMg >= 1.0) {
-                    Text(
-                        text = "${"%.0f".format(data.caffeineAtBedtimeMg)} mg at $bedtimeLabel",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 11.sp,
-                        ),
-                        maxLines = 1,
-                    )
-                }
-            }
-        }
-
-        if (data.recentDrinks.isEmpty()) {
-            Column(
-                modifier = GlanceModifier
-                    .fillMaxHeight()
-                    .width(210.dp)
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.Vertical.CenterVertically,
-            ) {
-                Text(
-                    text = "No recent drinks",
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 12.sp,
-                    ),
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = GlanceModifier
-                    .fillMaxHeight()
-                    .width(210.dp)
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
-            ) {
-                items(data.recentDrinks) { drink ->
-                    DrinkRow(drink = drink)
-                }
-            }
-        }
-    }
 }

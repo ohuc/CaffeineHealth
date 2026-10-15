@@ -31,4 +31,14 @@ class SettingsRepositoryMappingTest {
         assertEquals(30, mapped.sleepTimeMinute)
         assertTrue(mapped.isOnboardingComplete)
     }
+
+    @Test
+    fun whatsNewSeen_skipsNamesFromEarlierReleases() {
+        val preferences = mutablePreferencesOf()
+        preferences[SettingsKeys.WHATS_NEW_SEEN] = setOf(NewFeature.BarcodeScanner.name, "QuickStartTimes")
+
+        val mapped = preferences.toUserSettings(defaultSettings = UserSettings())
+
+        assertEquals(setOf(NewFeature.BarcodeScanner), mapped.whatsNewSeen)
+    }
 }

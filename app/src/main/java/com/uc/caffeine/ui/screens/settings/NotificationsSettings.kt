@@ -113,6 +113,7 @@ internal fun NotificationsSettingsScreen(
                             },
                         )
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(0, 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -147,6 +148,7 @@ internal fun NotificationsSettingsScreen(
                                 Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.notifications_remove_reminder_cd))
                             }
                         },
+                        verticalAlignment = Alignment.CenterVertically,
                         shapes = segmentedListItemShapes(index, totalItems),
                         colors = ListItemDefaults.colors(
                             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -165,6 +167,7 @@ internal fun NotificationsSettingsScreen(
                     content = {
                         Text(text = stringResource(R.string.notifications_add_reminder))
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(reminderCount, totalItems),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,

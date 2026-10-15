@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -89,6 +90,7 @@ internal fun DateTimeSettingsScreen(
                             },
                         )
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(0, 4),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -114,6 +116,7 @@ internal fun DateTimeSettingsScreen(
                             contentDescription = null,
                         )
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(1, 4),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -142,6 +145,7 @@ internal fun DateTimeSettingsScreen(
                             },
                         )
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(2, 4),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -180,6 +184,7 @@ internal fun DateTimeSettingsScreen(
                             )
                         }
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(3, 4),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -261,6 +266,7 @@ private fun AppDateFormatBottomSheet(
                             )
                         }
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(index, dateFormats.size),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -354,6 +360,7 @@ private fun TimeZoneBottomSheet(
                             )
                         }
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(index, filteredTimeZoneIds.size),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

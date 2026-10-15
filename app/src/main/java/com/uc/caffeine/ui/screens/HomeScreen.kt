@@ -95,6 +95,7 @@ import com.uc.caffeine.ui.components.RollingNumberText
 import com.uc.caffeine.ui.components.ServingQuantityStepper
 import com.uc.caffeine.ui.components.ServingUnitSelector
 import com.uc.caffeine.ui.components.rememberAppHaptics
+import com.uc.caffeine.ui.components.WhatsNewCard
 import com.uc.caffeine.ui.components.WhatsNewSheet
 import com.uc.caffeine.ui.components.shimmerEffect
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
@@ -125,6 +126,7 @@ import androidx.compose.material3.ToggleButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlin.math.abs
 import kotlinx.coroutines.withContext
 
 private const val DetailContentFadeInDurationMillis = 180
@@ -156,6 +158,7 @@ fun HomeScreen(
 
     var selectedEntry by remember { mutableStateOf<ConsumptionEntry?>(null) }
     var showCoachSheet by remember { mutableStateOf(false) }
+    var showWhatsNewSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val haptics = rememberAppHaptics()
 
@@ -290,6 +293,24 @@ fun HomeScreen(
                 }
             }
 
+            if (showWhatsNew) {
+                item(key = "home-whats-new", contentType = "home-whats-new") {
+                    Column(modifier = Modifier.animateItem()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        WhatsNewCard(
+                            onOpen = {
+                                haptics.navigation()
+                                showWhatsNewSheet = true
+                            },
+                            onDismiss = {
+                                haptics.toggle()
+                                viewModel.markWhatsNewSeen()
+                            },
+                        )
+                    }
+                }
+            }
+
             item(key = "home-history-title", contentType = "home-history-title") {
                 Column {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -374,7 +395,7 @@ fun HomeScreen(
                                     haptics.navigation()
                                     selectedEntry = entry
                                 },
-                                modifier = Modifier.heightIn(min = 72.dp),
+                                modifier = Modifier.heightIn(min = 56.dp),
                             )
                         }
 
@@ -487,8 +508,13 @@ fun HomeScreen(
         }
     }
 
-    if (showWhatsNew) {
-        WhatsNewSheet(onDismiss = { viewModel.markWhatsNewSeen() })
+    if (showWhatsNewSheet) {
+        WhatsNewSheet(
+            onDismiss = {
+                showWhatsNewSheet = false
+                viewModel.markWhatsNewSeen()
+            },
+        )
     }
 }
 
@@ -502,20 +528,22 @@ private fun ConsumptionHistoryListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Denser than the app's other segmented lists (#53): a day can hold many entries, and the
+    // floating Add Consumption button and toolbar already cover the bottom of the screen.
     SegmentedListItem(
         modifier = modifier,
         onClick = onClick,
         leadingContent = {
             ExpressiveIconBadge(
                 index = index,
-                size = 44.dp,
+                size = 36.dp,
             ) {
                 DrinkIcon(
                     imageName = entry.imageName,
                     emoji = entry.emoji,
                     contentDescription = entry.drinkName,
-                    modifier = Modifier.size(28.dp),
-                    emojiSize = MaterialTheme.typography.titleLarge.fontSize,
+                    modifier = Modifier.size(24.dp),
+                    emojiSize = MaterialTheme.typography.titleMedium.fontSize,
                 )
             }
         },
@@ -543,10 +571,12 @@ private fun ConsumptionHistoryListItem(
                 color = MaterialTheme.colorScheme.primary,
             )
         },
+        verticalAlignment = Alignment.CenterVertically,
         shapes = segmentedListItemShapes(index, count),
         colors = ListItemDefaults.colors(
             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
         ),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
     )
 }
 
@@ -1018,20 +1048,27 @@ private fun EditConsumptionEntrySheet(
             )
         }
     }
-    val initialUnit = remember(availableUnits, entry.unitKey, entry.unitCaffeineMg, fallbackUnit) {
-        val resolvedUnits = availableUnits.orEmpty()
-        if (resolvedUnits.isEmpty()) {
-            fallbackUnit
-        } else {
-            findMatchingUnit(resolvedUnits, entry.unitKey, entry.unitCaffeineMg)
-        }
-    }
-    val displayedUnits = remember(availableUnits, fallbackUnit) {
+    // An entry can be logged weaker than its catalog serving (a later tea steep). Scaling every unit
+    // by the strength it was logged at keeps an edit from quietly restoring full strength.
+    val displayedUnits = remember(availableUnits, fallbackUnit, entry.unitKey, entry.unitCaffeineMg) {
         val resolvedUnits = availableUnits.orEmpty()
         if (resolvedUnits.isEmpty()) {
             listOfNotNull(fallbackUnit)
         } else {
-            resolvedUnits
+            val catalogMg = resolvedUnits.firstOrNull { it.unitKey == entry.unitKey }?.caffeineMg
+            val strength = catalogMg?.takeIf { it > 0.0 }?.let { entry.unitCaffeineMg / it } ?: 1.0
+            if (abs(strength - 1.0) < 0.001) {
+                resolvedUnits
+            } else {
+                resolvedUnits.map { it.copy(caffeineMg = it.caffeineMg * strength) }
+            }
+        }
+    }
+    val initialUnit = remember(availableUnits, displayedUnits, entry.unitKey, entry.unitCaffeineMg, fallbackUnit) {
+        if (availableUnits.isNullOrEmpty()) {
+            fallbackUnit
+        } else {
+            findMatchingUnit(displayedUnits, entry.unitKey, entry.unitCaffeineMg)
         }
     }
     var selectedUnitKey by remember(entry.id, availableUnits) {

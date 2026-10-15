@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drink tile used by the static widget-picker previews. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_widget_preview_tile"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <TextView
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/bg_widget_preview_icon"
+        android:gravity="center"
+        android:text="🍵"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:text="@string/widget_preview_drink_name_2"
+            android:textColor="@color/widget_on_surface"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/widget_preview_drink_mg_2"
+            android:textColor="@color/widget_on_surface_variant"
+            android:textSize="11sp" />
+    </LinearLayout>
+</LinearLayout>

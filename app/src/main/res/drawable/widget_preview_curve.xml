@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Decay curve for the static widget-picker previews; stretched to the preview's width. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="60dp"
+    android:viewportWidth="240"
+    android:viewportHeight="60">
+    <path
+        android:fillColor="@color/widget_primary"
+        android:fillAlpha="0.16"
+        android:pathData="M0,52 C30,50 50,12 80,8 C110,4 130,26 160,38 C190,48 215,52 240,54 L240,60 L0,60 Z"/>
+    <path
+        android:strokeColor="@color/widget_primary"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M0,52 C30,50 50,12 80,8 C110,4 130,26 160,38 C190,48 215,52 240,54"/>
+</vector>

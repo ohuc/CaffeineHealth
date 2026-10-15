@@ -22,6 +22,7 @@ import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -96,6 +97,7 @@ internal fun AutomationSettingsScreen(
                         },
                     )
                 },
+                verticalAlignment = Alignment.CenterVertically,
                 shapes = segmentedListItemShapes(0, 1),
                 colors = listColors,
             )
@@ -137,6 +139,7 @@ internal fun AutomationSettingsScreen(
                         } else {
                             null
                         },
+                        verticalAlignment = Alignment.CenterVertically,
                         shapes = segmentedListItemShapes(index, setupRows.size),
                         colors = listColors,
                     )
@@ -149,6 +152,7 @@ internal fun AutomationSettingsScreen(
                         onClick = {},
                         content = { Text(text = extra.key, fontFamily = FontFamily.Monospace) },
                         supportingContent = { Text(text = stringResource(extra.descriptionRes)) },
+                        verticalAlignment = Alignment.CenterVertically,
                         shapes = segmentedListItemShapes(index, automationExtras.size),
                         colors = listColors,
                     )

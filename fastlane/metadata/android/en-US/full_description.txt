@@ -8,16 +8,21 @@ Log drinks from a curated catalog, watch your active caffeine level in real time
 • Personalized pharmacokinetic modeling based on age, weight, lifestyle
 • Sleep forecast — see if caffeine will affect your bedtime
 • Curated drink catalog: coffee, tea, energy drinks, soda
+• Barcode scanning, live or from a photo, with an optional Open Food Facts lookup
+• Typo-tolerant drink search and tea re-steep tracking
 • Drink detail sheets showing individual contribution curves
 • Quick actions — edit, duplicate, or delete entries
+• Analytics: caffeine by source, bedtime impact, and when you drink it, hour by hour
+• Home screen widgets, reminders, and automation via Tasker, MacroDroid or NFC tags
 • Material 3 Expressive design with dynamic color
 • Montserrat typography and haptic feedback throughout
 • Full dark mode support
 
 <b>Privacy:</b>
 
-• Fully offline — all data stays on your device
-• No ads, no tracking, no analytics, no accounts
+• Works fully offline — all your data stays on your device
+• The internet is only used if you choose to look up a scanned barcode on Open Food Facts, and only the barcode number is sent
+• No ads, no tracking, no telemetry, no accounts
 • Open source (GPL-3.0)
 
 <b>Science:</b>

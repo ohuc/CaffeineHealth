@@ -1,5 +1,15 @@
 package com.uc.caffeine.ui.screens.analytics
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +44,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
@@ -58,9 +69,13 @@ import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
 import com.uc.caffeine.R
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
+import com.uc.caffeine.ui.components.RollingNumberText
+import com.uc.caffeine.ui.components.frostedGlass
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.util.AnalyticsRange
 import com.uc.caffeine.util.AnalyticsUiState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlin.math.roundToInt
 
 private data class AnalyticsNavItem(
@@ -74,6 +89,7 @@ private data class AnalyticsNavItem(
 @Composable
 internal fun AnalyticsMainPage(
     uiState: AnalyticsUiState,
+    expressiveBlur: Boolean,
     onRangeSelected: (AnalyticsRange) -> Unit,
     onSourcesClick: () -> Unit,
     onBedtimeClick: () -> Unit,
@@ -89,7 +105,7 @@ internal fun AnalyticsMainPage(
             contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
+            item(key = "range") {
                 AnalyticsRangePicker(
                     selectedRange = uiState.selectedRange,
                     onRangeSelected = { range ->
@@ -100,10 +116,14 @@ internal fun AnalyticsMainPage(
             }
 
             if (uiState.hasData) {
-                item {
-                    AnalyticsSummaryCard(uiState = uiState)
+                item(key = "summary") {
+                    AnalyticsSummaryCard(
+                        uiState = uiState,
+                        expressiveBlur = expressiveBlur,
+                        modifier = Modifier.animateItem(),
+                    )
                 }
-                item {
+                item(key = "nav") {
                     AnalyticsNavCard(
                         onSourcesClick = {
                             haptics.navigation()
@@ -117,11 +137,15 @@ internal fun AnalyticsMainPage(
                             haptics.navigation()
                             onTimeOfDayClick()
                         },
+                        modifier = Modifier.animateItem(),
                     )
                 }
             } else {
-                item {
-                    AnalyticsEmptyState(selectedRange = uiState.selectedRange)
+                item(key = "empty") {
+                    AnalyticsEmptyState(
+                        selectedRange = uiState.selectedRange,
+                        modifier = Modifier.animateItem(),
+                    )
                 }
             }
         }
@@ -134,6 +158,7 @@ private fun AnalyticsNavCard(
     onSourcesClick: () -> Unit,
     onBedtimeClick: () -> Unit,
     onTimeOfDayClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val items = listOf(
         AnalyticsNavItem(
@@ -157,7 +182,7 @@ private fun AnalyticsNavCard(
     )
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         items.forEachIndexed { index, item ->
@@ -181,6 +206,7 @@ private fun AnalyticsNavCard(
                         contentDescription = null,
                     )
                 },
+                verticalAlignment = Alignment.CenterVertically,
                 shapes = segmentedListItemShapes(index, items.size),
                 colors = ListItemDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -190,24 +216,57 @@ private fun AnalyticsNavCard(
     }
 }
 
+/**
+ * The range dashboard. Switching ranges recolors it to that range's accent, rolls the figures
+ * digit by digit and slides the labels, rather than snapping to the new values. With expressive
+ * blur on, its morphing shapes glow through the same frosted glass as the floating toolbar.
+ */
 @Composable
-private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
-    val contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+private fun AnalyticsSummaryCard(
+    uiState: AnalyticsUiState,
+    expressiveBlur: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val rangeColors = uiState.selectedRange.colors()
+    val colorSpec = MaterialTheme.motionScheme.slowEffectsSpec<Color>()
+    val containerColor by animateColorAsState(rangeColors.container, colorSpec, label = "dashboardContainer")
+    val contentColor by animateColorAsState(rangeColors.onContainer, colorSpec, label = "dashboardContent")
+    val glowColor by animateColorAsState(rangeColors.glow, colorSpec, label = "dashboardGlow")
+    val glassState = rememberHazeState()
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = AnalyticsCardShape,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-        ),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            DecorativeShapesBackground(
-                color = contentColor,
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(AnalyticsCardShape),
-            )
+            if (expressiveBlur) {
+                // The shapes are drawn on an opaque copy of the container so the blurred layer
+                // fully covers them, leaving no sharp edges showing through.
+                DecorativeShapesBackground(
+                    color = glowColor,
+                    shapeAlpha = 0.9f,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(AnalyticsCardShape)
+                        .hazeSource(glassState)
+                        .background(containerColor),
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(AnalyticsCardShape)
+                        .frostedGlass(glassState, containerColor),
+                )
+            } else {
+                DecorativeShapesBackground(
+                    color = contentColor,
+                    shapeAlpha = 0.07f,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(AnalyticsCardShape),
+                )
+            }
 
             Column(
                 modifier = Modifier
@@ -216,15 +275,21 @@ private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = stringResource(headlineResForRange(uiState.selectedRange)),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = contentColor.copy(alpha = 0.8f),
-                    )
-                    Text(
+                    AnimatedContent(
+                        targetState = uiState.selectedRange,
+                        transitionSpec = { rangeSwapTransform() },
+                        label = "dashboardHeadline",
+                    ) { range ->
+                        Text(
+                            text = stringResource(headlineResForRange(range)),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = contentColor.copy(alpha = 0.8f),
+                        )
+                    }
+                    RollingNumberText(
                         text = stringResource(R.string.analytics_value_mg, uiState.totalCaffeineMg),
-                        style = MaterialTheme.typography.displaySmallEmphasized,
-                        color = contentColor,
+                        style = MaterialTheme.typography.displaySmallEmphasized.copy(color = contentColor),
+                        labelPrefix = "dashboard_total",
                     )
                     Text(
                         text = stringResource(R.string.analytics_total_caffeine_logged),
@@ -260,6 +325,7 @@ private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
                         value = uiState.topSourceLabel,
                         modifier = Modifier.weight(1f),
                         contentColor = contentColor,
+                        rollDigits = false,
                     )
                     SummaryMetric(
                         label = stringResource(R.string.analytics_sleep_threshold),
@@ -273,13 +339,28 @@ private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
     }
 }
 
+/** Later ranges slide in from below, earlier ones from above. */
+private fun AnimatedContentTransitionScope<AnalyticsRange>.rangeSwapTransform(): ContentTransform {
+    val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+    return (slideInVertically { height -> height * direction / 2 } + fadeIn()) togetherWith
+        (slideOutVertically { height -> -height * direction / 2 } + fadeOut()) using
+        SizeTransform(clip = false)
+}
+
+/**
+ * A labelled dashboard figure. Numbers roll digit by digit like everywhere else in the app; text
+ * values such as the top source slide and cross-fade instead.
+ */
 @Composable
 private fun SummaryMetric(
     label: String,
     value: String,
-    modifier: Modifier = Modifier,
     contentColor: Color,
+    modifier: Modifier = Modifier,
+    rollDigits: Boolean = true,
 ) {
+    val valueStyle = MaterialTheme.typography.titleMediumEmphasized.copy(color = contentColor)
+
     Column(
         modifier = modifier.padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -289,22 +370,39 @@ private fun SummaryMetric(
             style = MaterialTheme.typography.labelMedium,
             color = contentColor.copy(alpha = 0.72f),
         )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMediumEmphasized,
-            color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (rollDigits) {
+            RollingNumberText(
+                text = value,
+                style = valueStyle,
+                labelPrefix = "dashboard_metric",
+            )
+        } else {
+            AnimatedContent(
+                targetState = value,
+                transitionSpec = {
+                    (slideInVertically { height -> height / 2 } + fadeIn()) togetherWith
+                        (slideOutVertically { height -> -height / 2 } + fadeOut()) using
+                        SizeTransform(clip = false)
+                },
+                label = "dashboardTextMetric",
+            ) { text ->
+                Text(
+                    text = text,
+                    style = valueStyle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun DecorativeShapesBackground(
     color: Color,
+    shapeAlpha: Float,
     modifier: Modifier = Modifier,
 ) {
-    val shapeAlpha = 0.07f
     val transition = rememberInfiniteTransition(label = "morphShapes")
 
     // ─── Shape definitions ───────────────────────────────────────────────

@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
@@ -76,6 +77,7 @@ internal fun SettingsListScreen(
     onMyDataClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onAutomationClick: () -> Unit,
+    onWhatsNewSeen: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
     var showWhatsNewSheet by remember { mutableStateOf(false) }
@@ -178,6 +180,7 @@ internal fun SettingsListScreen(
                             contentDescription = null,
                         )
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(index, categories.size),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -225,6 +228,7 @@ internal fun SettingsListScreen(
                             )
                         }
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(0, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -256,6 +260,7 @@ internal fun SettingsListScreen(
                             contentDescription = null,
                         )
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(1, 2),
                     colors = ListItemDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -266,6 +271,11 @@ internal fun SettingsListScreen(
     }
 
     if (showWhatsNewSheet) {
-        WhatsNewSheet(onDismiss = { showWhatsNewSheet = false })
+        WhatsNewSheet(
+            onDismiss = {
+                showWhatsNewSheet = false
+                onWhatsNewSeen()
+            },
+        )
     }
 }

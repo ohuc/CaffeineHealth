@@ -32,6 +32,7 @@ object SettingsKeys {
     val SLEEP_TIME_MINUTE = intPreferencesKey("sleep_time_minute")
     val THEME_MODE = stringPreferencesKey("theme_mode")
     val USE_DYNAMIC_COLOR = booleanPreferencesKey("use_dynamic_color")
+    val EXPRESSIVE_BLUR = booleanPreferencesKey("expressive_blur")
     val USE_24_HOUR_CLOCK = booleanPreferencesKey("use_24_hour_clock")
     val DATE_FORMAT = stringPreferencesKey("date_format")
     val USE_SYSTEM_TIME_ZONE = booleanPreferencesKey("use_system_time_zone")
@@ -48,7 +49,7 @@ object SettingsKeys {
     val INACTIVITY_REMINDER_ENABLED = booleanPreferencesKey("inactivity_reminder_enabled")
     val DAILY_REMINDER_TIMES = stringSetPreferencesKey("daily_reminder_times")
     val LAST_APP_OPENED_AT = longPreferencesKey("last_app_opened_at")
-    val WHATS_NEW_LAST_SEEN_VERSION = intPreferencesKey("whats_new_last_seen_version")
+    val WHATS_NEW_SEEN = stringSetPreferencesKey("whats_new_seen")
     val HOME_VIEW_MODE = stringPreferencesKey("home_view_mode")
     val COLOR_PALETTE = stringPreferencesKey("color_palette")
     val WEEKLY_SLEEP_ROTA_ENABLED = booleanPreferencesKey("weekly_sleep_rota_enabled")
@@ -150,6 +151,12 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateExpressiveBlur(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.EXPRESSIVE_BLUR] = enabled
+        }
+    }
+
     suspend fun updateHomeViewMode(mode: HomeViewMode) {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.HOME_VIEW_MODE] = mode.name
@@ -219,6 +226,8 @@ class SettingsRepository(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs.writeOnboardingCompletion(profile)
             factors?.let { prefs.writeProfileFactors(it) }
+            // Everything is new to someone who just installed, so there's nothing to catch up on.
+            prefs[SettingsKeys.WHATS_NEW_SEEN] = allNewFeatureNames()
         }
     }
 
@@ -272,9 +281,9 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
-    suspend fun markWhatsNewSeen(versionCode: Int) {
+    suspend fun markWhatsNewSeen() {
         context.dataStore.edit { prefs ->
-            prefs[SettingsKeys.WHATS_NEW_LAST_SEEN_VERSION] = versionCode
+            prefs[SettingsKeys.WHATS_NEW_SEEN] = allNewFeatureNames()
         }
     }
 
@@ -371,6 +380,7 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.HOME_VIEW_MODE] = settings.homeViewMode.name
             prefs[SettingsKeys.COLOR_PALETTE] = settings.colorPalette.name
             prefs[SettingsKeys.USE_DYNAMIC_COLOR] = settings.useDynamicColor
+            prefs[SettingsKeys.EXPRESSIVE_BLUR] = settings.expressiveBlur
             prefs[SettingsKeys.USE_24_HOUR_CLOCK] = settings.use24HourClock
             prefs[SettingsKeys.DATE_FORMAT] = settings.dateFormat.name
             prefs[SettingsKeys.USE_SYSTEM_TIME_ZONE] = settings.useSystemTimeZone
@@ -418,6 +428,7 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         sleepTimeMinute = this[SettingsKeys.SLEEP_TIME_MINUTE] ?: defaultSettings.sleepTimeMinute,
         themeMode = ThemeMode.fromStorage(this[SettingsKeys.THEME_MODE]),
         useDynamicColor = this[SettingsKeys.USE_DYNAMIC_COLOR] ?: defaultSettings.useDynamicColor,
+        expressiveBlur = this[SettingsKeys.EXPRESSIVE_BLUR] ?: defaultSettings.expressiveBlur,
         use24HourClock = this[SettingsKeys.USE_24_HOUR_CLOCK] ?: defaultSettings.use24HourClock,
         dateFormat = AppDateFormat.fromStorage(this[SettingsKeys.DATE_FORMAT]),
         // Absent for users upgrading from before this option existed → default to matching
@@ -436,7 +447,7 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         hcSleepTimeMinute = this[SettingsKeys.HC_SLEEP_TIME_MINUTE],
         inactivityReminderEnabled = this[SettingsKeys.INACTIVITY_REMINDER_ENABLED] ?: true,
         dailyReminderTimes = this[SettingsKeys.DAILY_REMINDER_TIMES] ?: setOf("11:00", "14:00"),
-        whatsNewLastSeenVersion = this[SettingsKeys.WHATS_NEW_LAST_SEEN_VERSION] ?: 0,
+        whatsNewSeen = decodeNewFeatures(this[SettingsKeys.WHATS_NEW_SEEN]),
         homeViewMode = HomeViewMode.fromStorage(this[SettingsKeys.HOME_VIEW_MODE]),
         colorPalette = this[SettingsKeys.COLOR_PALETTE]?.let { AppColorPalette.fromStorage(it) }
             ?: if (this[SettingsKeys.USE_DYNAMIC_COLOR] != false) AppColorPalette.DYNAMIC
@@ -524,6 +535,12 @@ internal fun MutablePreferences.writeOnboardingCompletion(profile: DerivedOnboar
     this[SettingsKeys.SLEEP_TIME_MINUTE] = profile.sleepTimeMinute
     this[SettingsKeys.ONBOARDING_COMPLETE] = true
 }
+
+private fun allNewFeatureNames(): Set<String> = NewFeature.entries.mapTo(mutableSetOf()) { it.name }
+
+// Names from earlier releases no longer match an entry and are skipped.
+private fun decodeNewFeatures(names: Set<String>?): Set<NewFeature> =
+    names.orEmpty().mapNotNullTo(mutableSetOf()) { name -> NewFeature.entries.firstOrNull { it.name == name } }
 
 internal fun Preferences.hasLegacyProfilePrefs(): Boolean {
     return this[SettingsKeys.HALF_LIFE_MINUTES] != null ||

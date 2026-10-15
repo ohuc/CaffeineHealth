@@ -18,10 +18,11 @@
     <color name="splash_background">#FFF8F4</color>
     <color name="splash_icon_circle">#FFFFFF</color>
     <!-- Widget colors (light / default) -->
-    <color name="widget_surface">#F0E1D8</color>
+    <color name="widget_surface">#F6EAE2</color>
     <color name="widget_on_surface">#201A17</color>
     <color name="widget_on_surface_variant">#50453D</color>
     <color name="widget_icon_container">#E8D7CD</color>
+    <color name="widget_primary_container">#F7DFC3</color>
     <color name="widget_primary">#6B4B2B</color>
     <color name="widget_on_primary">#FFFFFF</color>
     <color name="widget_tertiary">#50653F</color>

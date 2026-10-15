@@ -29,10 +29,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonColors
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,74 +79,104 @@ internal val AnalyticsCardShape: Shape
     @Composable get() = MaterialTheme.shapes.extraLarge
 internal val AnalyticsColumnShape = RoundedCornerShape(14.dp)
 
+/**
+ * The color roles one analytics range is drawn in. Each range takes its own accent from the color
+ * scheme, so switching ranges recolors the picker and the dashboard and the change reads at a glance.
+ */
+@Immutable
+internal data class AnalyticsRangeColors(
+    val accent: Color,
+    val onAccent: Color,
+    val container: Color,
+    val onContainer: Color,
+    /** Drawn behind the dashboard's frosted glass; contrasts with [container]. */
+    val glow: Color,
+)
+
+@Composable
+@ReadOnlyComposable
+internal fun AnalyticsRange.colors(): AnalyticsRangeColors {
+    val scheme = MaterialTheme.colorScheme
+    return when (this) {
+        AnalyticsRange.TODAY -> AnalyticsRangeColors(
+            accent = scheme.primary,
+            onAccent = scheme.onPrimary,
+            container = scheme.primaryContainer,
+            onContainer = scheme.onPrimaryContainer,
+            glow = scheme.primary,
+        )
+        AnalyticsRange.YESTERDAY -> AnalyticsRangeColors(
+            accent = scheme.secondary,
+            onAccent = scheme.onSecondary,
+            container = scheme.secondaryContainer,
+            onContainer = scheme.onSecondaryContainer,
+            glow = scheme.secondary,
+        )
+        AnalyticsRange.LAST_30_DAYS, AnalyticsRange.CUSTOM -> AnalyticsRangeColors(
+            accent = scheme.tertiary,
+            onAccent = scheme.onTertiary,
+            container = scheme.tertiaryContainer,
+            onContainer = scheme.onTertiaryContainer,
+            glow = scheme.tertiary,
+        )
+        // The scheme has three accent hues; the inverse roles give the longest view a fourth look.
+        AnalyticsRange.LAST_90_DAYS -> AnalyticsRangeColors(
+            accent = scheme.inverseSurface,
+            onAccent = scheme.inverseOnSurface,
+            container = scheme.inverseSurface,
+            onContainer = scheme.inverseOnSurface,
+            glow = scheme.inversePrimary,
+        )
+    }
+}
+
+@Composable
+private fun rangeToggleColors(range: AnalyticsRange): ToggleButtonColors {
+    val colors = range.colors()
+    return ToggleButtonDefaults.toggleButtonColors(
+        checkedContainerColor = colors.accent,
+        checkedContentColor = colors.onAccent,
+    )
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun AnalyticsRangePicker(
     selectedRange: AnalyticsRange,
     onRangeSelected: (AnalyticsRange) -> Unit,
 ) {
-    val mainPageRanges = remember { AnalyticsRange.entries.filter { it != AnalyticsRange.CUSTOM } }
-    val row1 = mainPageRanges.subList(0, 2)  // Today, Yesterday
-    val row2 = mainPageRanges.subList(2, 4)  // 30 Days, 90 Days
+    // Today | Yesterday on top, 30 Days | 90 Days below.
+    val rows = remember {
+        AnalyticsRange.entries.filter { it != AnalyticsRange.CUSTOM }.chunked(2)
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
-        // Row 1: Today, Yesterday
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            row1.forEachIndexed { index, range ->
-                ToggleButton(
-                    checked = selectedRange == range,
-                    onCheckedChange = { checked ->
-                        if (checked && selectedRange != range) onRangeSelected(range)
-                    },
-                    modifier = Modifier.weight(1f),
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    },
-                    colors = ToggleButtonDefaults.toggleButtonColors(
-                        checkedContainerColor = MaterialTheme.colorScheme.primary,
-                        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Text(
-                        text = stringResource(range.labelRes),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
-            }
-        }
-
-        // Row 2: 30 Days, 90 Days
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            row2.forEachIndexed { index, range ->
-                ToggleButton(
-                    checked = selectedRange == range,
-                    onCheckedChange = { checked ->
-                        if (checked && selectedRange != range) onRangeSelected(range)
-                    },
-                    modifier = Modifier.weight(1f),
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    },
-                    colors = ToggleButtonDefaults.toggleButtonColors(
-                        checkedContainerColor = MaterialTheme.colorScheme.primary,
-                        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Text(
-                        text = stringResource(range.labelRes),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
+        rows.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            ) {
+                row.forEachIndexed { index, range ->
+                    ToggleButton(
+                        checked = selectedRange == range,
+                        onCheckedChange = { checked ->
+                            if (checked && selectedRange != range) onRangeSelected(range)
+                        },
+                        modifier = Modifier.weight(1f),
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        },
+                        colors = rangeToggleColors(range),
+                    ) {
+                        Text(
+                            text = stringResource(range.labelRes),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
                 }
             }
         }
@@ -216,11 +249,6 @@ internal fun AnalyticsRangeBottomSheet(
     )
     val dateFormatter = remember { java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy") }
 
-    val quickSelectColors = ToggleButtonDefaults.toggleButtonColors(
-        checkedContainerColor = MaterialTheme.colorScheme.primary,
-        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-    )
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -256,7 +284,7 @@ internal fun AnalyticsRangeBottomSheet(
                                 2 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                             },
-                            colors = quickSelectColors,
+                            colors = rangeToggleColors(range),
                         ) {
                             Text(text = stringResource(range.labelRes), style = MaterialTheme.typography.labelLarge)
                         }
@@ -287,7 +315,7 @@ internal fun AnalyticsRangeBottomSheet(
                                 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                                 else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                             },
-                            colors = quickSelectColors,
+                            colors = rangeToggleColors(range),
                         ) {
                             Text(text = stringResource(range.labelRes), style = MaterialTheme.typography.labelLarge)
                         }
@@ -417,9 +445,10 @@ private fun RangePickerDateField(
 @Composable
 internal fun AnalyticsEmptyState(
     selectedRange: AnalyticsRange,
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .testTag("analytics_empty_state"),
         shape = AnalyticsCardShape,

@@ -5,7 +5,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
 import com.uc.caffeine.ui.theme.CaffeineTheme
 import com.uc.caffeine.util.AnalyticsRange
 import com.uc.caffeine.util.AnalyticsUiState
@@ -18,7 +17,7 @@ class AnalyticsBySourcePageTest {
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun analyticsBySourcePage_showsSingleCategoryFallbackPie() {
+    fun analyticsBySourcePage_showsSingleCategoryBreakdown() {
         composeRule.setContent {
             CaffeineTheme(dynamicColor = false) {
                 AnalyticsBySourcePage(
@@ -27,18 +26,18 @@ class AnalyticsBySourcePageTest {
                         hasData = true,
                         totalCaffeineMg = 95,
                         topSourceLabel = "Coffee",
+                        sourceCategoryKeys = listOf("coffee"),
                         sourceAxisLabels = listOf("Coffee"),
                         sourceValues = listOf(95.0),
                     ),
                     onRangeSelected = {},
                     onCustomRange = { _, _ -> },
                     onBack = {},
-                    modelProducer = PieChartModelProducer(),
                 )
             }
         }
 
-        composeRule.onNodeWithTag(AnalyticsSingleSliceChartTag).assertIsDisplayed()
+        composeRule.onNodeWithTag(AnalyticsSourceBarTag).assertIsDisplayed()
         composeRule.onNodeWithText("100%").assertIsDisplayed()
         composeRule.onNodeWithText("Coffee").assertIsDisplayed()
         composeRule.onNodeWithText("95 mg").assertIsDisplayed()

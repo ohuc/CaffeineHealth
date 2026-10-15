@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The launcher icon as a round mask shows it, for widget headers: the white field cropped to a
+    circle on the adaptive icon's central 72dp keyline, with ic_launcher_foreground's paths shifted
+    into that crop. Keep the paths in sync with ic_launcher_foreground.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <path
+        android:fillColor="#FDFDFD"
+        android:pathData="M36,0a36,36 0,1 1,0 72a36,36 0,1 1,0 -72z" />
+    <group
+        android:translateX="-18"
+        android:translateY="-18">
+        <path
+            android:pathData="M36.5,41 L39.5,68.5 C40,72.5 42.5,74.5 46.5,74.5 L61.5,74.5 C65.5,74.5 68,72.5 68.5,68.5 L71.5,41 Z"
+            android:strokeColor="#A99C8C"
+            android:strokeWidth="6.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M70.7,47 L73.5,47 C79,47 81.5,50 81.5,54 C81.5,58 79,61 73.5,61 L69.2,61"
+            android:strokeColor="#A99C8C"
+            android:strokeWidth="6.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M42,57 L49.5,57 L52.5,49 L56,65.5 L59.5,57 L66,57"
+            android:strokeColor="#E6C8A3"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>

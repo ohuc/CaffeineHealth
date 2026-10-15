@@ -97,6 +97,7 @@ internal fun DurationSettingsScreen(
                         Text(formatDurationMinutes(userSettings.defaultDurationMinutes))
                     }
                 },
+                verticalAlignment = Alignment.CenterVertically,
                 shapes = segmentedListItemShapes(0, 1),
                 colors = ListItemDefaults.colors(
                     containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -135,6 +136,7 @@ internal fun DurationSettingsScreen(
                                 },
                             )
                         },
+                        verticalAlignment = Alignment.CenterVertically,
                         shapes = segmentedListItemShapes(index, categoryKeys.size),
                         colors = ListItemDefaults.colors(
                             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -174,6 +176,7 @@ internal fun DurationSettingsScreen(
                                 },
                             )
                         },
+                        verticalAlignment = Alignment.CenterVertically,
                         shapes = segmentedListItemShapes(index, drinkOverrides.size),
                         colors = ListItemDefaults.colors(
                             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,

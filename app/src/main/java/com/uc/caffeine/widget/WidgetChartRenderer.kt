@@ -8,39 +8,45 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.Shader
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.util.CaffeineCalculator
 
+/**
+ * Draws the widget's decay curve as a white alpha mask. The widget tints it with a day/night
+ * color, so the curve follows the system theme without a re-render (a baked-in color would stay
+ * light-on-dark until the next refresh after the theme flips).
+ */
 object WidgetChartRenderer {
     // 1-minute sampling. With ~720 points across a typical 600px-wide widget bitmap, each segment
     // is sub-pixel, so even simple linear/Bezier segments produce a perfectly smooth curve — the
     // staircasing on steep rises (visible at the original 5-minute sampling) collapses to noise
     // below the pixel grid.
     private const val INTERVAL_MS = 60 * 1000L
-    private const val BACK_MS = 6 * 60 * 60 * 1000L
-    private const val AHEAD_MS = 6 * 60 * 60 * 1000L
+
+    /** The chart spans this long either side of now, so "now" is always the horizontal centre. */
+    private const val HALF_WINDOW_MS = 6 * 60 * 60 * 1000L
+
+    private const val FILL_TOP_ALPHA = 0x3D
+    private const val LINE_ALPHA = 0xE0
+    private const val BEDTIME_ALPHA = 0xB0
 
     fun render(
         entries: List<ConsumptionEntry>,
         settings: UserSettings,
         widthPx: Int,
         heightPx: Int,
-        lineColor: Int,
-        fillTopColor: Int,
         bedtimeMillis: Long? = null,
-        bedtimeLineColor: Int = lineColor,
-        currentTimeColor: Int = Color.TRANSPARENT,
-        markerColor: Int = lineColor,
-        markerOutlineColor: Int = Color.TRANSPARENT,
     ): Bitmap? {
         if (widthPx <= 0 || heightPx <= 0) return null
 
         val now = System.currentTimeMillis()
-        val rangeStart = now - BACK_MS
-        val rangeEnd = now + AHEAD_MS
-        val totalMs = (BACK_MS + AHEAD_MS).toFloat()
+        val rangeStart = now - HALF_WINDOW_MS
+        val rangeEnd = now + HALF_WINDOW_MS
+        val totalMs = (HALF_WINDOW_MS * 2).toFloat()
 
         val timestamps = mutableListOf<Long>()
         val levels = mutableListOf<Double>()
@@ -56,10 +62,12 @@ object WidgetChartRenderer {
         val maxLevel = levels.maxOrNull() ?: 0.0
         if (maxLevel < 1.0) return null
 
-        val padV = heightPx * 0.08f
+        val strokeWidth = (heightPx / 40f).coerceIn(3f, 7f)
+        val padTop = strokeWidth * 2f
         fun timeToX(ts: Long): Float = ((ts - rangeStart).toFloat() / totalMs) * widthPx
+        // The curve runs down to the bottom edge so the fill reads as part of the card, not a box.
         fun levelToY(level: Double): Float =
-            heightPx - padV - (level.toFloat() / maxLevel.toFloat()) * (heightPx - 2 * padV)
+            heightPx - (level.toFloat() / maxLevel.toFloat()) * (heightPx - padTop)
 
         val points = timestamps.mapIndexed { i, ts -> PointF(timeToX(ts), levelToY(levels[i])) }
 
@@ -79,72 +87,45 @@ object WidgetChartRenderer {
             style = Paint.Style.FILL
             shader = LinearGradient(
                 0f, minY, 0f, heightPx.toFloat(),
-                intArrayOf(fillTopColor, Color.TRANSPARENT),
+                intArrayOf(white(FILL_TOP_ALPHA), Color.TRANSPARENT),
                 null,
                 Shader.TileMode.CLAMP,
             )
         })
 
-        val refStrokeWidth = (heightPx / 80f).coerceAtLeast(2f)
-        // Vertical guide lines look cleanest when snapped to the half-pixel grid
-        // with an integer stroke width — DashPathEffect on fractional dash lengths
-        // pixel-snaps unevenly, producing the jagged-segment artifact.
-        val verticalStroke = refStrokeWidth.toInt().coerceAtLeast(2).toFloat()
-
-        // Solid current-time line
-        if (currentTimeColor != Color.TRANSPARENT) {
-            val nowX = timeToX(now).toInt() + 0.5f
-            canvas.drawLine(
-                nowX, padV, nowX, heightPx - padV,
-                Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = currentTimeColor
-                    style = Paint.Style.STROKE
-                    strokeWidth = verticalStroke
-                },
-            )
-        }
-
-        // Dotted bedtime line
+        // Dotted bedtime line. Snapped to the half-pixel grid with an integer stroke width —
+        // DashPathEffect on fractional dash lengths pixel-snaps unevenly into jagged segments.
         if (bedtimeMillis != null && bedtimeMillis in rangeStart..rangeEnd) {
+            val dotStroke = (strokeWidth * 0.6f).toInt().coerceAtLeast(2).toFloat()
             val bedtimeX = timeToX(bedtimeMillis).toInt() + 0.5f
             canvas.drawLine(
-                bedtimeX, padV, bedtimeX, heightPx - padV,
+                bedtimeX, padTop, bedtimeX, heightPx.toFloat(),
                 Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = bedtimeLineColor
+                    color = white(BEDTIME_ALPHA)
                     style = Paint.Style.STROKE
-                    strokeWidth = verticalStroke
+                    this.strokeWidth = dotStroke
                     strokeCap = Paint.Cap.ROUND
-                    pathEffect = DashPathEffect(floatArrayOf(0f, verticalStroke * 2f), 0f)
+                    pathEffect = DashPathEffect(floatArrayOf(0f, dotStroke * 2.5f), 0f)
                 },
             )
         }
 
         // Curve line
-        val strokeWidth = (heightPx / 50f).coerceAtLeast(2f)
         canvas.drawPath(curvePath, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = lineColor
+            color = white(LINE_ALPHA)
             this.strokeWidth = strokeWidth
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
         })
 
-        // Consumption markers — small subtle circle on the curve at each consumption start,
-        // matching the in-app `rememberConsumptionMarker` (surfaceContainerHighest + outlineVariant).
-        // Y is clamped to the chart interior so a marker on a flat baseline still reads.
-        val markerRadius = (heightPx / 32f).coerceAtLeast(3f)
-        val outlineWidth = (heightPx / 240f).coerceAtLeast(1f)
-        val markerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = markerColor
-            style = Paint.Style.FILL
+        // Consumption markers: a solid dot with a knocked-out ring, so each drink reads as a bead
+        // on the curve in a single tint instead of needing a second outline color.
+        val markerRadius = strokeWidth * 1.15f
+        val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
         }
-        val markerOutlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = markerOutlineColor
-            style = Paint.Style.STROKE
-            this.strokeWidth = outlineWidth
-        }
-        val yMin = padV + markerRadius * 1.4f
-        val yMax = heightPx - padV - markerRadius * 1.4f
+        val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
         entries.forEach { entry ->
             val ts = entry.startedAtMillis
             if (ts in rangeStart..rangeEnd) {
@@ -152,16 +133,16 @@ object WidgetChartRenderer {
                 val level = CaffeineCalculator.calculateCurrentLevel(
                     entries, ts, settings.effectiveHalfLifeMinutes,
                 )
-                val y = levelToY(level).coerceIn(yMin, yMax)
-                if (markerOutlineColor != Color.TRANSPARENT) {
-                    canvas.drawCircle(x, y, markerRadius + outlineWidth / 2f, markerOutlinePaint)
-                }
-                canvas.drawCircle(x, y, markerRadius, markerPaint)
+                val y = levelToY(level).coerceIn(padTop, heightPx - markerRadius * 2f)
+                canvas.drawCircle(x, y, markerRadius + strokeWidth * 0.8f, ringPaint)
+                canvas.drawCircle(x, y, markerRadius, dotPaint)
             }
         }
 
         return bitmap
     }
+
+    private fun white(alpha: Int) = Color.argb(alpha, 255, 255, 255)
 
     private fun buildSmoothPath(points: List<PointF>): Path {
         val path = Path()

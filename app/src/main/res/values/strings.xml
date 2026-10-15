@@ -294,6 +294,46 @@
     <string name="custom_drink_amount_label">Amount</string>
     <string name="custom_drink_save">Save custom drink</string>
     <string name="custom_drink_edit_button">Edit custom drink</string>
+    <string name="add_tea_steep_label">Steep</string>
+    <string name="add_tea_steep_first">1st</string>
+    <string name="add_tea_steep_second">2nd</string>
+    <string name="add_tea_steep_third">3rd+</string>
+    <string name="add_tea_steep_summary">Re-steeping the same leaves releases less caffeine each time. Later steeps are estimates for 3–5 minute steeps.</string>
+    <!-- e.g. "Green Tea (2nd steep)"; %2$s is add_tea_steep_second or add_tea_steep_third -->
+    <string name="add_tea_steep_entry_name">%1$s (%2$s steep)</string>
+    <string name="custom_drink_new_barcode">New barcode %1$s. Add this drink once and scanning will find it next time.</string>
+
+    <string name="custom_drink_from_open_food_facts">Filled in from Open Food Facts. Check the caffeine against the label before saving.</string>
+    <string name="custom_drink_from_open_food_facts_no_caffeine">Filled in from Open Food Facts, which has no caffeine figure for this product. Check the label.</string>
+    <string name="custom_drink_not_on_open_food_facts">Open Food Facts doesn\'t have this product yet. Add it from the label and scanning will find it next time.</string>
+
+    <!-- Online barcode lookup -->
+    <string name="lookup_title">Not in your drinks yet</string>
+    <string name="lookup_body">Look it up on Open Food Facts? Only the barcode number is sent online, to this free, open product database.</string>
+    <string name="lookup_barcode_cd">Barcode %1$s</string>
+    <string name="lookup_search">Search online</string>
+    <string name="lookup_add_manually">Add it myself</string>
+    <string name="lookup_searching_title">Searching Open Food Facts…</string>
+    <string name="lookup_failed_title">Couldn\'t search</string>
+    <string name="lookup_failed_body">Open Food Facts couldn\'t be reached. Check your connection and try again, or add the drink yourself.</string>
+    <string name="lookup_retry">Try again</string>
+
+    <!-- Barcode scanner -->
+    <string name="scanner_open_cd">Scan a barcode</string>
+    <string name="scanner_close_cd">Close scanner</string>
+    <string name="scanner_torch_on_cd">Turn on flashlight</string>
+    <string name="scanner_torch_off_cd">Turn off flashlight</string>
+    <string name="scanner_hint">Point at the barcode on the can, bottle or pack</string>
+    <string name="scanner_from_photo">Scan from a photo</string>
+    <string name="scanner_no_barcode_in_photo">Couldn\'t find a barcode in that photo. Try one where the barcode is sharp and fills more of the picture.</string>
+    <string name="scanner_permission_title">Scan drinks with your camera</string>
+    <string name="scanner_permission_body">Caffeine Health only uses the camera to read the barcode on a drink while this screen is open. Nothing is recorded, saved or sent anywhere.</string>
+    <string name="scanner_permission_allow">Allow camera</string>
+    <string name="scanner_permission_denied_title">Camera access is off</string>
+    <string name="scanner_permission_denied_body">Allow camera access in Settings to scan barcodes, or scan from a photo instead.</string>
+    <string name="scanner_open_settings">Open settings</string>
+    <string name="scanner_no_camera_title">No camera available</string>
+    <string name="scanner_no_camera_body">You can still scan a barcode from a photo.</string>
 
     <!-- Common reused -->
     <string name="action_ok">OK</string>
@@ -322,6 +362,13 @@
     <string name="widget_caffeine_now_inline_label">Caffeine Now</string>
     <string name="widget_refresh_cd">Refresh</string>
     <string name="widget_quick_log_toast">Consumption has been added!</string>
+    <string name="widget_quick_log_title">Quick log</string>
+    <string name="widget_no_recent_drinks">No recent drinks</string>
+    <string name="widget_no_recent_drinks_hint">Drinks you log in the app show up here</string>
+    <string name="widget_logged">Logged</string>
+    <string name="widget_log_drink_cd">Log %1$s, %2$d mg</string>
+    <string name="widget_level_cd">%1$s mg of caffeine active</string>
+    <string name="widget_bedtime_projection">%1$d mg at %2$s</string>
 
     <!-- Analytics screen -->
     <string name="analytics_title">Analytics</string>
@@ -395,6 +442,15 @@
     <string name="analytics_bucket_afternoon_range">12pm – 3pm</string>
     <string name="analytics_bucket_evening">Evening</string>
     <string name="analytics_bucket_evening_range">3pm – 7pm</string>
+    <string name="analytics_peak_hour">Peak hour</string>
+    <string name="analytics_mostly_morning">Most of your caffeine comes in the morning</string>
+    <string name="analytics_mostly_afternoon">Most of your caffeine comes in the afternoon</string>
+    <string name="analytics_mostly_evening">Most of your caffeine comes in the evening</string>
+    <string name="analytics_mostly_night">Most of your caffeine comes at night</string>
+    <string name="analytics_hour_by_hour">Hour by hour</string>
+    <string name="analytics_hour_by_hour_summary">Tap a bar to see how much you logged in that hour.</string>
+    <string name="analytics_hour_marker">%1$s · %2$d mg</string>
+    <string name="analytics_share_percent">%1$d%%</string>
 
     <!-- Common reused -->
     <string name="action_close">Close</string>
@@ -536,6 +592,23 @@
     <string name="whats_new_title">What\'s New</string>
     <string name="whats_new_version_label">v%1$s</string>
     <string name="whats_new_got_it">Got it</string>
+    <string name="whats_new_subtitle">Here\'s what this update brings</string>
+    <!-- Home card that opens What's New after an update -->
+    <string name="whats_new_card_cta">See what\'s new</string>
+    <string name="whats_new_card_dismiss_cd">Dismiss What\'s New</string>
+    <string name="whats_new_scanner_title">Scan Drinks by Barcode</string>
+    <string name="whats_new_scanner_body">Tap the scan button next to search on the Add screen, or scan a barcode from a photo. Drinks you haven\'t added yet can be looked up on Open Food Facts.</string>
+    <string name="whats_new_analytics_title">Analytics, Redesigned</string>
+    <string name="whats_new_analytics_body">The dashboard takes a colour for each range and rolls to the new numbers. Caffeine by source is one bar split by category, and When you drink caffeine shows your peak hour on an hour-by-hour chart.</string>
+    <string name="whats_new_search_title">Search That Forgives Typos</string>
+    <string name="whats_new_search_body">“expresso”, “redbull” and “nescafe” now find what you meant, with the closest matches first.</string>
+    <string name="whats_new_steeps_title">Count Every Steep</string>
+    <string name="whats_new_steeps_body">Re-steeping tea? Pick the 2nd or 3rd+ steep when adding a brewed tea and less caffeine is logged, since leaves give up most of it the first time.</string>
+    <string name="whats_new_widgets_title">Redesigned Widgets</string>
+    <string name="whats_new_widgets_body">Make them taller to fit more of your drinks, get a check mark when a drink is logged, and see how much caffeine you\'ll have left at bedtime.</string>
+    <string name="whats_new_blur_title">Frosted Glass</string>
+    <string name="whats_new_blur_body">The toolbar and Add Consumption button now blur what scrolls behind them, the Analytics dashboard glows through the same glass, and your log fits more drinks on screen. Prefer solid colours? Settings → Appearance → Expressive blur.</string>
+    <!-- Previous releases' items: unused, kept because translations (e.g. Czech) still contain them -->
     <string name="whats_new_quick_start_title">Logged It Late? One Tap</string>
     <string name="whats_new_quick_start_body">Pick Now, 10 min, 30 min or 1 h ago when adding a drink. Changing the time now opens straight on the clock, with the date one tap away.</string>
     <string name="whats_new_duration_title">Your Own Time to Finish</string>
@@ -544,7 +617,6 @@
     <string name="whats_new_average_body">Your average per day now only counts days you logged something, so days off caffeine no longer drag it down.</string>
     <string name="whats_new_redesign_title">A Fresh Add Drink Sheet</string>
     <string name="whats_new_redesign_body">Redesigned with Material 3 Expressive: a new slider that ticks as you drag, button groups for amounts and start times, and a clearer total.</string>
-    <!-- Previous release's items: unused, kept because translations (e.g. Czech) still contain them -->
     <string name="whats_new_automation_title">Log Drinks Automatically</string>
     <string name="whats_new_automation_body">Tasker, MacroDroid or an NFC tag can now log drinks for you. Turn it on in Settings → Automation, where you\'ll find everything needed to set it up.</string>
     <string name="whats_new_recents_title">Your Recent Servings</string>
@@ -576,6 +648,8 @@
 
     <!-- Home view mode (Appearance settings) -->
     <string name="appearance_home_view_label">Home view style</string>
+    <string name="appearance_expressive_blur_label">Expressive blur</string>
+    <string name="appearance_expressive_blur_summary">Frosted glass behind the floating toolbar and Add Consumption button. Turn off for solid colours.</string>
     <string name="appearance_home_view_summary">Choose how caffeine is shown on the home screen</string>
     <string name="appearance_home_view_graph">Graph</string>
     <string name="appearance_home_view_circular">Circular</string>

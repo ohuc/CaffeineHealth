@@ -37,6 +37,13 @@ interface DrinkPresetDao {
     @Query("SELECT * FROM drink_presets WHERE name = :name COLLATE NOCASE ORDER BY isCustom DESC, relevance DESC LIMIT 1")
     suspend fun getPresetByName(name: String): DrinkPreset?
 
+    // A user's own drink wins over a catalog drink carrying the same barcode.
+    @Query("SELECT * FROM drink_presets WHERE barcode = :barcode ORDER BY isCustom DESC, relevance DESC LIMIT 1")
+    suspend fun getPresetByBarcode(barcode: String): DrinkPreset?
+
+    @Query("UPDATE drink_presets SET barcode = :barcode WHERE id = :id")
+    suspend fun setBarcode(id: Int, barcode: String)
+
     @Query("SELECT COUNT(*) FROM drink_presets")
     suspend fun getCount(): Int
 

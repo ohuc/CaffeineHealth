@@ -23,6 +23,11 @@ healthConnect = "1.1.0"
 graphicsShapes = "1.0.1"
 glance = "1.2.0-rc01"
 workManager = "2.10.0"
+# 1.7.2 is the newest Haze built against Compose 1.10 / Kotlin 2.2; 1.7.3+ and 2.x pull Compose 1.12.
+haze = "1.7.2"
+camerax = "1.6.2"
+# Pure-Java barcode decoding; ML Kit is proprietary and would keep the app off F-Droid.
+zxing = "3.5.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -62,6 +67,11 @@ androidx-graphics-shapes = { group = "androidx.graphics", name = "graphics-shape
 glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
+haze = { group = "dev.chrisbanes.haze", name = "haze", version.ref = "haze" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+androidx-camera-compose = { group = "androidx.camera", name = "camera-compose", version.ref = "camerax" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

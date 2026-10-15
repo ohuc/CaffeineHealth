@@ -8,10 +8,11 @@
     <color name="splash_background">#17120F</color>
     <color name="splash_icon_circle">#FFFFFF</color>
     <!-- Widget colors (dark / night) -->
-    <color name="widget_surface">#2F2824</color>
+    <color name="widget_surface">#241E1A</color>
     <color name="widget_on_surface">#EDE0D8</color>
     <color name="widget_on_surface_variant">#D1C5BB</color>
     <color name="widget_icon_container">#3A322E</color>
+    <color name="widget_primary_container">#56391E</color>
     <color name="widget_primary">#DDB892</color>
     <color name="widget_on_primary">#3B2611</color>
     <color name="widget_tertiary">#B8D09E</color>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Compact drink tile used by the static Dashboard picker preview. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_widget_preview_tile"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <TextView
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/bg_widget_preview_icon"
+        android:gravity="center"
+        android:text="☕"
+        android:textSize="14sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="1"
+        android:text="@string/widget_preview_drink_mg_1"
+        android:textColor="@color/widget_on_surface"
+        android:textSize="11sp" />
+</LinearLayout>

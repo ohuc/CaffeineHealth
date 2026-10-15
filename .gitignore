@@ -9,7 +9,8 @@ local.properties
 .claude/
 
 CLAUDE.md
-
+.claude/
+CLAUDE.md
 # Kotlin compiler errors
 .kotlin/
 

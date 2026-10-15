@@ -2,9 +2,13 @@ package com.uc.caffeine.widget
 
 import android.content.Context
 import android.widget.Toast
+import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.state.getAppWidgetState
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.uc.caffeine.R
 import com.uc.caffeine.data.CaffeineDatabase
 import com.uc.caffeine.data.HealthConnectManager
@@ -13,9 +17,14 @@ import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.util.resolvedZoneId
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
+/**
+ * Glance instantiates this reflectively by class name, so it needs the ProGuard keep rule in
+ * proguard-rules.pro — without it R8 strips the constructor and taps fail silently (#54).
+ */
 class QuickLogAction : ActionCallback {
     companion object {
         val KEY_PRESET_ID = ActionParameters.Key<String>("preset_id")
@@ -28,6 +37,7 @@ class QuickLogAction : ActionCallback {
         val KEY_IMAGE_NAME = ActionParameters.Key<String>("image_name")
         val KEY_ABSORPTION_RATE = ActionParameters.Key<Int>("absorption_rate")
         val KEY_DURATION_MINUTES = ActionParameters.Key<Int>("duration_minutes")
+        val KEY_DRINK_KEY = ActionParameters.Key<String>("drink_key")
     }
 
     override suspend fun onAction(
@@ -35,6 +45,10 @@ class QuickLogAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters,
     ) {
+        val drinkKey = parameters[KEY_DRINK_KEY]
+        // A second tap while the tile still shows "Logged" is almost always a double tap.
+        if (drinkKey != null && isConfirming(context, glanceId, drinkKey)) return
+
         val entry = ConsumptionEntry(
             drinkName = parameters[KEY_DRINK_NAME] ?: return,
             caffeineMg = parameters[KEY_CAFFEINE_MG] ?: return,
@@ -65,7 +79,30 @@ class QuickLogAction : ActionCallback {
             Toast.makeText(context, context.getString(R.string.widget_quick_log_toast), Toast.LENGTH_SHORT).show()
         }
 
+        if (drinkKey != null) {
+            updateAppWidgetState(context, glanceId) { prefs ->
+                prefs[WidgetStateKeys.LoggedDrinkKey] = drinkKey
+                prefs[WidgetStateKeys.LoggedAtMillis] = System.currentTimeMillis()
+            }
+        }
+
         // Refresh all widget instances so the new drink is reflected immediately
         CaffeineWidgetUpdater.update(context)
+
+        if (drinkKey != null) {
+            delay(WidgetStateKeys.CONFIRMATION_MS)
+            updateAppWidgetState(context, glanceId) { prefs ->
+                prefs.remove(WidgetStateKeys.LoggedDrinkKey)
+                prefs.remove(WidgetStateKeys.LoggedAtMillis)
+            }
+            CaffeineWidgetUpdater.update(context)
+        }
+    }
+
+    private suspend fun isConfirming(context: Context, glanceId: GlanceId, drinkKey: String): Boolean {
+        val state: Preferences = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
+        val loggedAt = state[WidgetStateKeys.LoggedAtMillis] ?: return false
+        return state[WidgetStateKeys.LoggedDrinkKey] == drinkKey &&
+            System.currentTimeMillis() - loggedAt < WidgetStateKeys.CONFIRMATION_MS
     }
 }

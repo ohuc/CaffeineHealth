@@ -5,10 +5,11 @@ import android.os.Build
 import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.setWidgetPreviews
-import androidx.glance.appwidget.updateAll
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import kotlinx.coroutines.CancellationException
 import java.util.concurrent.TimeUnit
 
 object CaffeineWidgetUpdater {
@@ -16,10 +17,28 @@ object CaffeineWidgetUpdater {
     private const val WORK_NAME = "caffeine_widget_refresh"
     private const val TAG = "CaffeineWidgetUpdater"
 
+    /**
+     * Re-renders every placed widget with fresh data. `updateAll()` alone isn't enough: for an
+     * instance whose Glance session is still alive it only recomposes against the stored state,
+     * so data loaded in `provideGlance` would stay stale. Bumping the refresh token in that state
+     * is what makes a live session reload (see [CaffeineGlanceWidget]).
+     */
     suspend fun update(context: Context) {
-        CaffeineNowWidget().updateAll(context)
-        QuickAddWidget().updateAll(context)
-        CombinedWidget().updateAll(context)
+        val manager = GlanceAppWidgetManager(context)
+        val token = System.currentTimeMillis()
+        for (widget in listOf(CaffeineNowWidget(), QuickAddWidget(), CombinedWidget())) {
+            for (id in manager.getGlanceIds(widget.javaClass)) {
+                // One broken instance must not keep the others from refreshing.
+                try {
+                    updateAppWidgetState(context, id) { it[WidgetStateKeys.RefreshToken] = token }
+                    widget.update(context, id)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "Widget update failed for $id", e)
+                }
+            }
+        }
     }
 
     fun schedulePeriodicRefresh(context: Context) {

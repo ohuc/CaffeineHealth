@@ -1,56 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Static picker preview for Android 12–14; Android 15+ uses the generated Glance preview. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_widget_preview"
-    android:orientation="vertical"
-    android:padding="12dp">
+    android:background="@drawable/bg_widget_preview">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/widget_caffeine_now_inline_label"
-        android:textColor="@color/widget_on_surface_variant"
-        android:textSize="11sp" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview_curve" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="bottom"
-        android:layout_marginTop="4dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="247"
-            android:textColor="@color/widget_on_surface"
-            android:textSize="36sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" mg"
-            android:textColor="@color/widget_on_surface_variant"
-            android:textSize="16sp"
-            android:layout_marginBottom="6dp" />
-
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/widget_preview_safe_before_bed"
-        android:textColor="@color/widget_tertiary"
-        android:textSize="11sp"
-        android:layout_marginTop="2dp" />
-
-    <View
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@color/widget_icon_container"
-        android:layout_marginTop="8dp" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
 
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_widget_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/widget_caffeine_now_inline_label"
+                android:textColor="@color/widget_on_surface_variant"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:baselineAligned="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="142.6"
+                android:textColor="@color/widget_primary"
+                android:textSize="26sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/unit_mg"
+                android:textColor="@color/widget_primary"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

@@ -12,6 +12,7 @@ import com.uc.caffeine.data.LastNightSleep
 import com.uc.caffeine.data.CaffeineDatabase
 import com.uc.caffeine.data.Cyp1a2Genotype
 import com.uc.caffeine.data.HormonalStatus
+import com.uc.caffeine.data.NewFeature
 import com.uc.caffeine.data.ProfileFactors
 import com.uc.caffeine.data.SettingsKeys
 import com.uc.caffeine.data.SettingsRepository
@@ -51,12 +52,15 @@ import com.uc.caffeine.util.ConsumptionContributionDetail
 import com.uc.caffeine.util.groupConsumptionEntriesByLocalDate
 import com.uc.caffeine.util.nextStartOfDayMillis
 import com.uc.caffeine.util.resolvedZoneId
+import com.uc.caffeine.util.searchDrinks
+import com.uc.caffeine.data.ProductLookup
+import com.uc.caffeine.data.OpenFoodFacts
+import com.uc.caffeine.data.ScannedProduct
+import com.uc.caffeine.data.drinkMatchKey
 import com.uc.caffeine.util.startOfDayMillis
 import com.uc.caffeine.widget.CaffeineWidgetUpdater
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
-import com.patrykandpatrick.vico.compose.pie.data.pieSeries
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -123,7 +127,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         )
 
     val showWhatsNew: StateFlow<Boolean> = settingsRepo.settingsFlow
-        .map { it.isOnboardingComplete && it.whatsNewLastSeenVersion < com.uc.caffeine.BuildConfig.VERSION_CODE }
+        .map { it.isOnboardingComplete && !it.whatsNewSeen.containsAll(NewFeature.entries) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -131,7 +135,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         )
 
     fun markWhatsNewSeen() {
-        viewModelScope.launch { settingsRepo.markWhatsNewSeen(com.uc.caffeine.BuildConfig.VERSION_CODE) }
+        viewModelScope.launch { settingsRepo.markWhatsNewSeen() }
     }
 
     // Fast ticker — 1-second interval for the live caffeine counter.
@@ -279,17 +283,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 drinks
             }
 
-            val searchFiltered = if (query.isNotBlank()) {
-                categoryFiltered.filter { drink ->
-                    drink.name.contains(query, ignoreCase = true) ||
-                    drink.brand.contains(query, ignoreCase = true) ||
-                    drink.description?.contains(query, ignoreCase = true) == true
-                }
-            } else {
-                categoryFiltered
-            }
-
-            searchFiltered
+            searchDrinks(categoryFiltered, query)
                 .groupBy { it.category.lowercase() }
                 .mapKeys { (category, _) -> CategoryUtils.getCategoryDisplayName(category) }
                 .toSortedMap(compareBy { displayName ->
@@ -297,11 +291,13 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                         .entries.find { it.value == displayName }?.key ?: ""
                     CategoryUtils.getCategoryOrder().indexOf(lowercaseKey)
                 })
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyMap()
-        )
+        }
+            .flowOn(Dispatchers.Default)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyMap()
+            )
 
     // Full historical consumption timeline for the Home screen.
     val groupedConsumptionEntries: StateFlow<Map<LocalDate, List<ConsumptionEntry>>> = combine(
@@ -528,7 +524,6 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     // as a view model." The producer shouldn't be replaced — updates happen
     // via runTransaction which already runs off the main thread.
     val chartModelProducer = CartesianChartModelProducer()
-    val analyticsSourcePieChartModelProducer = PieChartModelProducer()
     val analyticsBedtimeChartModelProducer = CartesianChartModelProducer()
     val analyticsTimeOfDayChartModelProducer = CartesianChartModelProducer()
 
@@ -543,15 +538,23 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             DrinkCatalogSync.syncIfNeeded(getApplication(), presetDao, unitDao)
         }
 
+        // Widgets draw the palette, bedtime and sleep threshold from settings, so redraw them when
+        // those change rather than at the next periodic refresh. drop(1) skips the initial load;
+        // collectLatest + delay coalesces bursts like onboarding writing many keys at once.
+        viewModelScope.launch {
+            settingsRepo.settingsFlow
+                .distinctUntilChanged()
+                .drop(1)
+                .collectLatest {
+                    delay(500)
+                    CaffeineWidgetUpdater.update(getApplication())
+                }
+        }
+
         viewModelScope.launch {
             analyticsUiState.collect { state ->
                 if (!state.hasData) return@collect
 
-                analyticsSourcePieChartModelProducer.runTransaction {
-                    pieSeries {
-                        series(state.sourceValues)
-                    }
-                }
                 analyticsBedtimeChartModelProducer.runTransaction {
                     columnSeries {
                         series(state.bedtimeValues)
@@ -559,7 +562,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 }
                 analyticsTimeOfDayChartModelProducer.runTransaction {
                     columnSeries {
-                        series(state.timeOfDayValues)
+                        series(state.timeOfDayHourlyValues)
                     }
                 }
             }
@@ -594,6 +597,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         unit: DrinkUnit,
         startedAtMillis: Long,
         durationMinutes: Int,
+        drinkName: String = preset.name,
     ) {
         viewModelScope.launch {
             val entry = buildPresetConsumptionEntry(
@@ -602,10 +606,11 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 unit = unit,
                 startedAtMillis = startedAtMillis,
                 durationMinutes = durationMinutes,
+                drinkName = drinkName,
             )
             val newId = logDao.logDrink(entry)
             triggerWidgetRefresh()
-            addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(preset.name))
+            addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(drinkName))
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = settings.resolvedZoneId()
@@ -839,6 +844,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     fun updateDynamicColor(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepo.updateDynamicColor(enabled)
+        }
+    }
+
+    fun updateExpressiveBlur(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateExpressiveBlur(enabled)
         }
     }
 
@@ -1222,6 +1233,26 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    suspend fun findDrinkByBarcode(barcode: String): DrinkPreset? = presetDao.getPresetByBarcode(barcode)
+
+    suspend fun lookUpProductOnline(barcode: String): ProductLookup = OpenFoodFacts.lookUp(barcode)
+
+    /**
+     * The drink already in the app that a looked-up product is, going by name, so scanning a
+     * catalog drink opens it rather than a new custom drink. A user's own drink wins.
+     */
+    suspend fun findDrinkForProduct(product: ScannedProduct): DrinkPreset? {
+        val key = drinkMatchKey(product.name).ifEmpty { return null }
+        return allDrinkPresets.first()
+            .filter { drinkMatchKey(it.name) == key }
+            .maxWithOrNull(compareBy<DrinkPreset>({ it.isCustom }, { it.relevance }))
+    }
+
+    /** Remembers a scanned barcode on the drink it was logged as, so the next scan stays offline. */
+    fun linkBarcode(presetId: Int, barcode: String) {
+        viewModelScope.launch { presetDao.setBarcode(presetId, barcode) }
+    }
+
     fun saveCustomDrink(
         name: String,
         emoji: String,
@@ -1229,6 +1260,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         category: String,
         unitKey: String,
         caffeineMg: Double,
+        barcode: String? = null,
     ) {
         viewModelScope.launch {
             val preset = DrinkPreset(
@@ -1241,6 +1273,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 defaultCaffeineMg = caffeineMg.toInt(),
                 isCustom = true,
                 relevance = 10000,
+                barcode = barcode,
             )
             val presetId = presetDao.insertAndGetId(preset).toInt()
             unitDao.insert(

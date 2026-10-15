@@ -123,6 +123,12 @@ data class UserSettings(
     val useDynamicColor: Boolean = true,
 
     /**
+     * Frosted-glass blur behind the floating toolbar and the Add Consumption button. Off draws them
+     * as solid tonal surfaces, which also spares slower devices the blur.
+     */
+    val expressiveBlur: Boolean = true,
+
+    /**
      * Whether times should be shown in 24-hour format.
      */
     val use24HourClock: Boolean = false,
@@ -176,7 +182,8 @@ data class UserSettings(
     val hcSleepTimeMinute: Int? = null,
     val inactivityReminderEnabled: Boolean = true,
     val dailyReminderTimes: Set<String> = setOf("11:00", "14:00"),
-    val whatsNewLastSeenVersion: Int = 0,
+    /** Highlights already shown on the Home "What's New" card or sheet. */
+    val whatsNewSeen: Set<NewFeature> = emptySet(),
     val homeViewMode: HomeViewMode = HomeViewMode.GRAPH,
     val colorPalette: AppColorPalette = AppColorPalette.DYNAMIC,
     val weeklySleepRotaEnabled: Boolean = false,

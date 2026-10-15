@@ -218,6 +218,7 @@ private fun TimingRow(
                 maxLines = 1,
             )
         },
+        verticalAlignment = Alignment.CenterVertically,
         shapes = segmentedListItemShapes(index, 2),
         colors = ListItemDefaults.colors(
             containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -521,6 +522,7 @@ fun DurationPickerDialog(
                             haptics.toggle()
                             saveForDrink = it
                         },
+                        verticalAlignment = Alignment.CenterVertically,
                         shapes = segmentedListItemShapes(0, 1),
                         content = {
                             Text(

@@ -34,8 +34,8 @@ android {
         applicationId = "com.uc.caffeine"
         minSdk = 31
         targetSdk = 36
-        versionCode = 15
-        versionName = "2.4.1"
+        versionCode = 16
+        versionName = "2.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -166,6 +166,15 @@ dependencies {
 
     // WorkManager — reliable periodic widget refresh
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Haze — backdrop blur behind the floating toolbar
+    implementation(libs.haze)
+
+    // Barcode scanning — CameraX viewfinder + ZXing decoding
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.compose)
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

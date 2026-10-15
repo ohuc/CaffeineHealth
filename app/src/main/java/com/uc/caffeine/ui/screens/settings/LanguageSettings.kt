@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -186,6 +187,7 @@ internal fun LanguageSettingsScreen(
                             )
                         }
                     } else null,
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = ListItemDefaults.segmentedShapes(
                         index = index,
                         count = supportedLanguages.size,

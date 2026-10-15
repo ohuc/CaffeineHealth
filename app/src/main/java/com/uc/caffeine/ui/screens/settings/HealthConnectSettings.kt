@@ -153,6 +153,7 @@ internal fun HealthConnectSettingsScreen(
                             enabled = healthConnectManager.isAvailable(),
                         )
                     },
+                    verticalAlignment = Alignment.CenterVertically,
                     shapes = segmentedListItemShapes(0, 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -232,6 +233,7 @@ internal fun HealthConnectSettingsScreen(
                                         onClick = { onHcSleepModeChange(HcSleepMode.PREVIOUS_DAY) },
                                     )
                                 },
+                                verticalAlignment = Alignment.CenterVertically,
                                 shapes = segmentedListItemShapes(0, 2),
                                 colors = ListItemDefaults.colors(
                                     containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
@@ -264,6 +266,7 @@ internal fun HealthConnectSettingsScreen(
                                         onClick = { onHcSleepModeChange(HcSleepMode.SEVEN_DAY_AVERAGE) },
                                     )
                                 },
+                                verticalAlignment = Alignment.CenterVertically,
                                 shapes = segmentedListItemShapes(1, 2),
                                 colors = ListItemDefaults.colors(
                                     containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
