@@ -452,4 +452,11 @@
     <string name="home_circular_threshold_format">von %1$d mg</string>
     <string name="home_view_toggle_to_circular_cd">Wechsle zur Kreisansicht</string>
     <string name="home_view_toggle_to_graph_cd">Wechsle zur Graphansicht</string>
+    <string name="settings_automation_title">Automatisierung</string>
+    <string name="automation_enable_title">Anderen Apps erlauben, Getränke zu protokollieren</string>
+    <string name="duration_settings_remove_cd">%1$s entfernen</string>
+    <string name="automation_action_label">Aktion</string>
+    <string name="settings_automation_summary">Log Getränke von Tasker, NFC Anhängsel und anderen Apps</string>
+    <string name="automation_enable_description">Apps wie Tasker oder MacroDroid können Einträge hinzufügen, indem Sie eine Broadcast-Intent senden. Schalten Sie das nur an, wenn Sie sie benutzen.</string>
+    <string name="automation_package_label">Paket</string>
 </resources>
