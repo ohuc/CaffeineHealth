@@ -576,4 +576,10 @@
     <string name="whats_new_blur_body">Panel nástrojů a tlačítko Přidat záznam nyní rozostřují obsah, který se za nimi posouvá, přehled v Analýzách prosvítá přes stejné sklo a na obrazovku se vejde více vašich záznamů nápojů. Dáváte přednost plným barvám? Nastavení → Vzhled → Expresivní rozostření.</string>
     <string name="appearance_expressive_blur_label">Expresivní rozostření</string>
     <string name="appearance_expressive_blur_summary">Matné sklo za plovoucím panelem nástrojů a tlačítkem Přidat záznam. Pro plné barvy tuto možnost vypněte.</string>
+    <string name="action_undo">Vrátit zpět</string>
+    <string name="custom_drink_delete_button">Odstranit nápoj</string>
+    <string name="custom_drink_delete_title">Odstranit „%1$s“?</string>
+    <string name="custom_drink_delete_body">Bude odstraněn ze seznamu vašich nápojů. Vše, co jste již zaznamenali, zůstane v historii.</string>
+    <string name="custom_drink_delete_confirm">Odstranit</string>
+    <string name="custom_drink_deleted_toast">Odstraněno: %1$s</string>
 </resources>
