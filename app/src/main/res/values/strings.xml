@@ -88,6 +88,7 @@
     <string name="action_yes">Yes</string>
     <string name="action_no">No</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_undo">Undo</string>
     <string name="action_add">Add</string>
     <string name="action_expand">Expand</string>
     <string name="action_collapse">Collapse</string>
@@ -294,6 +295,11 @@
     <string name="custom_drink_amount_label">Amount</string>
     <string name="custom_drink_save">Save custom drink</string>
     <string name="custom_drink_edit_button">Edit custom drink</string>
+    <string name="custom_drink_delete_button">Delete drink</string>
+    <string name="custom_drink_delete_title">Delete “%1$s”?</string>
+    <string name="custom_drink_delete_body">It will be removed from your drinks list. Anything you\'ve already logged stays in your history.</string>
+    <string name="custom_drink_delete_confirm">Delete</string>
+    <string name="custom_drink_deleted_toast">Deleted %1$s</string>
     <string name="add_tea_steep_label">Steep</string>
     <string name="add_tea_steep_first">1st</string>
     <string name="add_tea_steep_second">2nd</string>

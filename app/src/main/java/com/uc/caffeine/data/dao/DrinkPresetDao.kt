@@ -55,4 +55,9 @@ interface DrinkPresetDao {
 
     @Query("DELETE FROM drink_presets WHERE isCustom = 1")
     suspend fun deleteCustomPresets()
+
+    // Only ever removes a user's own drink; catalog drinks are re-synced, so deleting one would
+    // just bring it back.
+    @Query("DELETE FROM drink_presets WHERE id = :id AND isCustom = 1")
+    suspend fun deleteCustomPreset(id: Int)
 }

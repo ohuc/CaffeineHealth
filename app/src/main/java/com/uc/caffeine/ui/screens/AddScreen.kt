@@ -57,6 +57,9 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -260,6 +263,25 @@ fun AddScreen(
             selectedDrink = null
 
             when (event) {
+                is AddScreenUiEvent.CustomDrinkDeleted -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    val message = context.getString(R.string.custom_drink_deleted_toast, event.drinkName)
+                    val undoLabel = context.getString(R.string.action_undo)
+                    val showUndo: suspend () -> Unit = {
+                        val result = snackbarHostState.showSnackbar(
+                            message = message,
+                            actionLabel = undoLabel,
+                            withDismissAction = true,
+                            duration = SnackbarDuration.Long,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            haptics.confirm()
+                            viewModel.undoDeleteCustomDrink()
+                        }
+                    }
+                    // Outlives this screen, so Undo still works if the user navigates away.
+                    activity?.lifecycleScope?.launch { showUndo() } ?: showUndo()
+                }
                 is AddScreenUiEvent.DrinkLogged -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     val message = context.getString(R.string.add_logged_toast, event.drinkName)
@@ -1550,6 +1572,7 @@ private fun EditCustomDrinkSheet(
 ) {
     val scope = rememberCoroutineScope()
     val haptics = rememberAppHaptics()
+    var showDeleteDialog by remember(preset.id) { mutableStateOf(false) }
 
     val existingUnit by produceState<DrinkUnit?>(initialValue = null, key1 = preset.id) {
         value = viewModel.getUnitsForDrink(preset.id).firstOrNull()
@@ -1767,7 +1790,130 @@ private fun EditCustomDrinkSheet(
             )
         }
 
+        HorizontalDivider()
+
+        // Kept apart at the very bottom, in the error colour, so it is never hit on the way to Save.
+        FilledTonalButton(
+            onClick = {
+                haptics.navigation()
+                showDeleteDialog = true
+            },
+            shapes = ButtonDefaults.shapes(),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            ),
+            contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = ButtonDefaults.MediumContainerHeight),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Delete,
+                contentDescription = null,
+                modifier = Modifier.size(ButtonDefaults.IconSize),
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(
+                text = stringResource(R.string.custom_drink_delete_button),
+                style = ButtonDefaults.textStyleFor(ButtonDefaults.MediumContainerHeight),
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
+    }
+
+    if (showDeleteDialog) {
+        DeleteCustomDrinkDialog(
+            drinkName = preset.name,
+            onConfirm = {
+                haptics.confirm()
+                showDeleteDialog = false
+                viewModel.deleteCustomDrink(preset)
+            },
+            onDismiss = { showDeleteDialog = false },
+        )
+    }
+}
+
+/**
+ * Confirms removing a custom drink. Only the drink list changes: entries already logged keep their
+ * own copy of the drink, so history and charts stay exactly as they were.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun DeleteCustomDrinkDialog(
+    drinkName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = AlertDialogDefaults.shape,
+            color = AlertDialogDefaults.containerColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                ExpressiveIconBadge(
+                    index = 0,
+                    size = LookupIconSize,
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.DeleteForever,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.custom_drink_delete_title, drinkName),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+
+                Text(
+                    text = stringResource(R.string.custom_drink_delete_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilledTonalButton(
+                        onClick = onDismiss,
+                        shapes = ButtonDefaults.shapes(),
+                        contentPadding = LookupActionPadding,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.action_cancel), textAlign = TextAlign.Center)
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        shapes = ButtonDefaults.shapes(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
+                        contentPadding = LookupActionPadding,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.custom_drink_delete_confirm), textAlign = TextAlign.Center)
+                    }
+                }
+            }
+        }
     }
 }
 

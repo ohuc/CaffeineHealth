@@ -81,6 +81,7 @@ private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
 sealed interface AddScreenUiEvent {
     data class DrinkLogged(val drinkName: String) : AddScreenUiEvent
+    data class CustomDrinkDeleted(val drinkName: String) : AddScreenUiEvent
 }
 
 sealed interface HomeScreenUiEvent {
@@ -1319,6 +1320,35 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     isDefault = true,
                 )
             )
+        }
+    }
+
+    // The last custom drink deleted, kept so the snackbar's Undo can put it back exactly as it was.
+    private var recentlyDeletedCustomDrink: Pair<DrinkPreset, List<DrinkUnit>>? = null
+
+    /**
+     * Removes a user's own drink from the list. Logged entries keep their own copy of the name,
+     * caffeine and image, so history is untouched.
+     */
+    fun deleteCustomDrink(preset: DrinkPreset) {
+        if (!preset.isCustom) return
+        viewModelScope.launch {
+            val units = unitDao.getUnitsForDrink(preset.id)
+            recentlyDeletedCustomDrink = preset to units
+            unitDao.deleteUnitsForDrink(preset.id)
+            presetDao.deleteCustomPreset(preset.id)
+            addScreenEventsChannel.send(AddScreenUiEvent.CustomDrinkDeleted(preset.name))
+        }
+    }
+
+    fun undoDeleteCustomDrink() {
+        val (preset, units) = recentlyDeletedCustomDrink ?: return
+        recentlyDeletedCustomDrink = null
+        viewModelScope.launch {
+            val presetId = presetDao.insertAndGetId(preset).toInt()
+            val restoredUnits = units.map { it.copy(id = 0, drinkId = presetId) }
+                .ifEmpty { listOf(fallbackUnitForPreset(preset.copy(id = presetId))) }
+            unitDao.insertAll(restoredUnits)
         }
     }
 
