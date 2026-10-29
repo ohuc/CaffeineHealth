@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.R
 import com.uc.caffeine.data.UserSettings
+import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.ui.components.DurationPickerDialog
 import com.uc.caffeine.ui.components.SettingsPageScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
@@ -39,6 +40,7 @@ import com.uc.caffeine.util.CategoryIcons
 import com.uc.caffeine.util.CategoryUtils
 import com.uc.caffeine.util.defaultDurationForCategory
 import com.uc.caffeine.util.formatDurationMinutes
+import com.uc.caffeine.util.resolveVisibleDrinkDurationOverrides
 
 /** What the duration picker is currently editing. */
 private sealed interface DurationTarget {
@@ -51,7 +53,7 @@ private sealed interface DurationTarget {
 @Composable
 internal fun DurationSettingsScreen(
     userSettings: UserSettings,
-    drinkNamesByItemId: Map<String, String>,
+    drinkPresets: List<DrinkPreset>,
     onDefaultDurationChange: (Int) -> Unit,
     onCategoryDurationChange: (String, Int?) -> Unit,
     onDrinkDurationChange: (String, Int?) -> Unit,
@@ -60,9 +62,12 @@ internal fun DurationSettingsScreen(
     val haptics = rememberAppHaptics()
     var pickerTarget by remember { mutableStateOf<DurationTarget?>(null) }
     val categoryKeys = CategoryUtils.getCategoryOrder()
-    val drinkOverrides = userSettings.drinkDurationMinutes.entries
-        .map { (itemId, minutes) -> Triple(itemId, drinkNamesByItemId[itemId] ?: itemId, minutes) }
-        .sortedBy { it.second.lowercase() }
+    val drinkOverrides = remember(userSettings.drinkDurationMinutes, drinkPresets) {
+        resolveVisibleDrinkDurationOverrides(
+            drinkDurationMinutes = userSettings.drinkDurationMinutes,
+            presets = drinkPresets,
+        )
+    }
 
     SettingsPageScaffold(
         title = stringResource(R.string.settings_duration_title),
@@ -193,8 +198,9 @@ internal fun DurationSettingsScreen(
                 userSettings.defaultDurationMinutes
             is DurationTarget.Category -> CategoryUtils.getCategoryDisplayName(target.key) to
                 userSettings.defaultDurationForCategory(target.key)
-            is DurationTarget.Drink -> (drinkNamesByItemId[target.itemId] ?: target.itemId) to
-                (userSettings.drinkDurationMinutes[target.itemId] ?: userSettings.defaultDurationMinutes)
+            is DurationTarget.Drink -> (
+                drinkOverrides.firstOrNull { it.first == target.itemId }?.second ?: target.itemId
+                ) to (userSettings.drinkDurationMinutes[target.itemId] ?: userSettings.defaultDurationMinutes)
         }
         DurationPickerDialog(
             currentDurationMinutes = current,

@@ -8,10 +8,8 @@ package com.uc.caffeine.data
  * already dismissed the previous ones without depending on a version bump.
  */
 enum class NewFeature {
-    BarcodeScanner,
-    Analytics,
-    DrinkSearch,
-    TeaSteeps,
-    Widgets,
-    ExpressiveBlur,
+    RingWidget,
+    ExtendedRelease,
+    CoachTolerance,
+    WaveDirection,
 }

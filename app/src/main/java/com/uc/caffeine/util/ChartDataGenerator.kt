@@ -132,6 +132,7 @@ object ChartDataGenerator {
 
         val latestFuturePeakTime = entries
             .asSequence()
+            .filter { entry -> CaffeineCalculator.peakSearchEndMillis(entry) > currentTimeMillis }
             .map { entry ->
                 CaffeineCalculator.calculatePeakTime(
                     entry = entry,
@@ -392,26 +393,25 @@ object ChartDataGenerator {
         endTime: Long,
         halfLifeMinutes: Int,
     ) {
-        // Find entries within our time range
-        val relevantEntries = entries.filter { entry ->
-            val peakTime = CaffeineCalculator.calculatePeakTime(
-                entry = entry,
-                halfLifeMinutes = halfLifeMinutes,
-            )
-            peakTime in startTime..endTime
-        }
-
-        // Mark the nearest data point to each peak
-        relevantEntries.forEach { entry ->
-            val peakTime = CaffeineCalculator.calculatePeakTime(
-                entry = entry,
-                halfLifeMinutes = halfLifeMinutes,
-            )
-            val nearestIndex = dataPoints.indexOfFirst {
-                it.timestampMillis >= peakTime
+        // Compute each overlapping entry's peak once and mark the nearest data point.
+        entries.forEach { entry ->
+            if (
+                entry.startedAtMillis > endTime ||
+                CaffeineCalculator.peakSearchEndMillis(entry) < startTime
+            ) {
+                return@forEach
             }
-            if (nearestIndex >= 0) {
-                dataPoints[nearestIndex] = dataPoints[nearestIndex].copy(isPeak = true)
+            val peakTime = CaffeineCalculator.calculatePeakTime(
+                entry = entry,
+                halfLifeMinutes = halfLifeMinutes,
+            )
+            if (peakTime in startTime..endTime) {
+                val nearestIndex = dataPoints.indexOfFirst {
+                    it.timestampMillis >= peakTime
+                }
+                if (nearestIndex >= 0) {
+                    dataPoints[nearestIndex] = dataPoints[nearestIndex].copy(isPeak = true)
+                }
             }
         }
     }

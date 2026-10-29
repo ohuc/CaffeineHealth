@@ -1,8 +1,93 @@
+import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
+import org.w3c.dom.Node
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+}
+
+// Weblate commits an empty values-<locale>/strings.xml stub as soon as someone clicks
+// "Start new translation". Require at least one translated resource before packaging a locale.
+val minTranslatedStrings = 1
+val bcp47QualifierRegex = Regex("^b\\+([A-Za-z]{2,3}(?:\\+[A-Za-z0-9]+)*)$")
+val legacyLocaleQualifierRegex = Regex("^([a-z]{2,3})(?:-r([A-Z]{2}|[0-9]{3}))?$")
+
+fun localeResourceQualifier(dirName: String): String? {
+    if (!dirName.startsWith("values-")) return null
+    val qualifier = dirName.removePrefix("values-")
+    // "values-car" is Android Auto's UI mode qualifier in AAPT2, not a locale directory.
+    if (qualifier == "car") return null
+
+    if (bcp47QualifierRegex.matches(qualifier) || legacyLocaleQualifierRegex.matches(qualifier)) {
+        // localeFilters passes qualifiers directly to AAPT2's -c flag, which expects Android
+        // resource qualifier syntax (e.g. "zh-rCN" or "b+sr+Latn") rather than BCP-47 "zh-CN".
+        return qualifier
+    }
+    return null
+}
+
+fun translatedResourceNames(localeResDir: java.io.File): Set<String> {
+    val xmlFiles = localeResDir
+        .listFiles { file -> file.isFile && file.extension.equals("xml", ignoreCase = true) }
+        .orEmpty()
+    if (xmlFiles.isEmpty()) return emptySet()
+
+    val factory = DocumentBuilderFactory.newInstance()
+    val names = sortedSetOf<String>()
+    for (xmlFile in xmlFiles) {
+        val doc = factory.newDocumentBuilder().parse(xmlFile)
+        val root = doc.documentElement ?: continue
+        val children = root.childNodes
+        for (i in 0 until children.length) {
+            val node = children.item(i)
+            if (node.nodeType != Node.ELEMENT_NODE) continue
+            val element = node as Element
+            if (element.getAttribute("translatable") == "false") continue
+            val translated = when (element.tagName) {
+                "string" -> element.textContent.trim().isNotEmpty()
+                "plurals", "string-array" -> {
+                    val items = element.getElementsByTagName("item")
+                    (0 until items.length).any { idx -> items.item(idx).textContent.trim().isNotEmpty() }
+                }
+                else -> false
+            }
+            if (translated) names += "${element.tagName}/${element.getAttribute("name")}"
+        }
+    }
+    return names
+}
+
+fun countTranslatedResourceEntries(localeResDir: java.io.File): Int =
+    translatedResourceNames(localeResDir).size
+
+val mainResDir = layout.projectDirectory.dir("src/main/res").asFile
+val nonBlankTranslatedLocales: List<String> = mainResDir
+    .listFiles { dir -> dir.isDirectory && dir.name.startsWith("values-") }
+    .orEmpty()
+    .mapNotNull { dir ->
+        val qualifier = localeResourceQualifier(dir.name) ?: return@mapNotNull null
+        qualifier.takeIf { countTranslatedResourceEntries(dir) >= minTranslatedStrings }
+    }
+    .distinct()
+    .sorted()
+
+// Per-locale completion (% of the English strings that have a translation), shown on the
+// Language screen like Weblate's progress. Computed from the checked-in resources, so the
+// build stays reproducible. Format: "de=93;zh-CN=80".
+val baseResourceNames = translatedResourceNames(mainResDir.resolve("values"))
+val translationCompletion: String = nonBlankTranslatedLocales.joinToString(";") { qualifier ->
+    val tag = if (qualifier.startsWith("b+")) {
+        qualifier.removePrefix("b+").replace('+', '-')
+    } else {
+        qualifier.replace("-r", "-")
+    }
+    val translated = translatedResourceNames(mainResDir.resolve("values-$qualifier"))
+        .count { it in baseResourceNames }
+    val percent = if (baseResourceNames.isEmpty()) 100 else translated * 100 / baseResourceNames.size
+    "$tag=$percent"
 }
 
 // Keep release credentials out of source control. An unsigned release is
@@ -34,8 +119,10 @@ android {
         applicationId = "com.uc.caffeine"
         minSdk = 31
         targetSdk = 36
-        versionCode = 16
-        versionName = "2.5.0"
+        versionCode = 17
+        versionName = "2.5.1"
+
+        buildConfigField("String", "TRANSLATION_COMPLETION", "\"$translationCompletion\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -74,13 +161,32 @@ android {
     androidResources {
         // Derives res/xml/_generated_res_locale_config.xml (wired into the manifest's
         // android:localeConfig automatically) from the values-<locale> dirs that exist
-        // at build time, so a new Weblate translation lands in the supported-locale list
-        // without a manual edit here.
+        // at build time, while localeFilters blocks blank Weblate stubs (0 translated
+        // strings) from leaking into the supported-locale list or packaged APK.
         generateLocaleConfig = true
+        localeFilters += listOf("en") + nonBlankTranslatedLocales
     }
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
+    }
+}
+
+tasks.register("verifyTranslations") {
+    group = "verification"
+    description = "Fails if any values-<locale> resource directory contains zero translated strings."
+    doLast {
+        val blankLocaleDirs = mainResDir
+            .listFiles { dir -> dir.isDirectory && dir.name.startsWith("values-") }
+            .orEmpty()
+            .filter { dir -> localeResourceQualifier(dir.name) != null }
+            .filter { dir -> countTranslatedResourceEntries(dir) < minTranslatedStrings }
+            .map { it.name }
+            .sorted()
+        check(blankLocaleDirs.isEmpty()) {
+            "Blank translation directories are not allowed (need >= $minTranslatedStrings translated string): " +
+                blankLocaleDirs.joinToString()
+        }
     }
 }
 

@@ -30,6 +30,7 @@ import com.uc.caffeine.R
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.util.defaultDurationFor
 import com.uc.caffeine.util.coerceReleaseMinutes
+import com.uc.caffeine.util.resolveRecentConsumptionDuration
 import com.uc.caffeine.data.model.DismissedHealthConnectRecord
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
@@ -685,6 +686,13 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     // Log from a RecentDrink (tapped from AddScreen quick add)
     fun logRecentDrink(recent: RecentDrink) {
         viewModelScope.launch {
+            val settings = userSettings.value
+            val preset = getPresetForItemId(recent.presetItemId)
+            val resolvedDurationMinutes = resolveRecentConsumptionDuration(
+                loggedDurationMinutes = recent.durationMinutes,
+                preset = preset,
+                settings = settings,
+            )
             val entry = ConsumptionEntry(
                 drinkName  = recent.drinkName,
                 caffeineMg = recent.caffeineMg,
@@ -696,12 +704,11 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 imageName  = recent.imageName,
                 absorptionRate = recent.absorptionRate,
                 startedAtMillis = System.currentTimeMillis(),
-                durationMinutes = recent.durationMinutes,
+                durationMinutes = resolvedDurationMinutes,
             )
             val newId = logDao.logDrink(entry)
             triggerWidgetRefresh()
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(recent.drinkName))
-            val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = settings.resolvedZoneId()
                 runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
@@ -1402,11 +1409,25 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     isDefault = true,
                 )
             )
+            if (
+                updated.releaseMinutes != null &&
+                preset.itemId.isNotBlank() &&
+                preset.itemId in userSettings.value.drinkDurationMinutes
+            ) {
+                settingsRepo.setDrinkDurationMinutes(preset.itemId, null)
+            }
+            triggerWidgetRefresh()
         }
     }
 
+    private data class DeletedCustomDrink(
+        val preset: DrinkPreset,
+        val units: List<DrinkUnit>,
+        val savedDurationMinutes: Int?,
+    )
+
     // The last custom drink deleted, kept so the snackbar's Undo can put it back exactly as it was.
-    private var recentlyDeletedCustomDrink: Pair<DrinkPreset, List<DrinkUnit>>? = null
+    private var recentlyDeletedCustomDrink: DeletedCustomDrink? = null
 
     /**
      * Removes a user's own drink from the list. Logged entries keep their own copy of the name,
@@ -1416,21 +1437,34 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         if (!preset.isCustom) return
         viewModelScope.launch {
             val units = unitDao.getUnitsForDrink(preset.id)
-            recentlyDeletedCustomDrink = preset to units
+            val savedDurationMinutes = preset.itemId
+                .takeIf { it.isNotBlank() }
+                ?.let { userSettings.value.drinkDurationMinutes[it] }
+            recentlyDeletedCustomDrink = DeletedCustomDrink(
+                preset = preset,
+                units = units,
+                savedDurationMinutes = savedDurationMinutes,
+            )
             unitDao.deleteUnitsForDrink(preset.id)
             presetDao.deleteCustomPreset(preset.id)
+            if (savedDurationMinutes != null) {
+                settingsRepo.setDrinkDurationMinutes(preset.itemId, null)
+            }
             addScreenEventsChannel.send(AddScreenUiEvent.CustomDrinkDeleted(preset.name))
         }
     }
 
     fun undoDeleteCustomDrink() {
-        val (preset, units) = recentlyDeletedCustomDrink ?: return
+        val deleted = recentlyDeletedCustomDrink ?: return
         recentlyDeletedCustomDrink = null
         viewModelScope.launch {
-            val presetId = presetDao.insertAndGetId(preset).toInt()
-            val restoredUnits = units.map { it.copy(id = 0, drinkId = presetId) }
-                .ifEmpty { listOf(fallbackUnitForPreset(preset.copy(id = presetId))) }
+            val presetId = presetDao.insertAndGetId(deleted.preset).toInt()
+            val restoredUnits = deleted.units.map { it.copy(id = 0, drinkId = presetId) }
+                .ifEmpty { listOf(fallbackUnitForPreset(deleted.preset.copy(id = presetId))) }
             unitDao.insertAll(restoredUnits)
+            if (deleted.savedDurationMinutes != null && deleted.preset.itemId.isNotBlank()) {
+                settingsRepo.setDrinkDurationMinutes(deleted.preset.itemId, deleted.savedDurationMinutes)
+            }
         }
     }
 

@@ -15,6 +15,7 @@ import com.uc.caffeine.data.HealthConnectManager
 import com.uc.caffeine.data.SettingsRepository
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
+import com.uc.caffeine.util.resolveRecentConsumptionDuration
 import com.uc.caffeine.util.resolvedZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -65,12 +66,22 @@ class QuickLogAction : ActionCallback {
 
         withContext(Dispatchers.IO) {
             val db = CaffeineDatabase.getDatabase(context)
-            val newId = db.consumptionLogDao().logDrink(entry)
             val settings = SettingsRepository(context).settingsFlow.first()
+            val preset = entry.presetItemId
+                .takeIf { it.isNotBlank() }
+                ?.let { db.drinkPresetDao().getPresetByItemId(it) }
+            val resolvedEntry = entry.copy(
+                durationMinutes = resolveRecentConsumptionDuration(
+                    loggedDurationMinutes = entry.durationMinutes,
+                    preset = preset,
+                    settings = settings,
+                ),
+            )
+            val newId = db.consumptionLogDao().logDrink(resolvedEntry)
             if (settings.healthConnectEnabled) {
                 // An HC failure must not crash the Glance action callback
                 runCatching {
-                    HealthConnectManager(context).writeEntry(entry.copy(id = newId.toInt()), settings.resolvedZoneId())
+                    HealthConnectManager(context).writeEntry(resolvedEntry.copy(id = newId.toInt()), settings.resolvedZoneId())
                 }
             }
         }

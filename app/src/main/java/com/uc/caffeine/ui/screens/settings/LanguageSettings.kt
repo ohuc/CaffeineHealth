@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.uc.caffeine.BuildConfig
 import com.uc.caffeine.R
 import com.uc.caffeine.ui.components.SettingsPageScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
@@ -38,6 +39,8 @@ private data class AppLanguage(
     val tag: String,
     val flag: String,
     val nativeName: String,
+    // Share of English strings translated (0-100); null for English itself.
+    val completionPercent: Int?,
 )
 
 private data class LanguageDisplay(val flag: String, val nativeName: String)
@@ -76,6 +79,15 @@ private val languageDisplayOverrides = mapOf(
     "zh-CN" to LanguageDisplay("🇨🇳", "简体中文"),
 )
 
+// Generated at build time from the checked-in values-<locale> resources (app/build.gradle.kts).
+private val translationCompletion: Map<String, Int> = BuildConfig.TRANSLATION_COMPLETION
+    .split(';')
+    .mapNotNull { entry ->
+        val tag = entry.substringBefore('=', "")
+        entry.substringAfter('=', "").toIntOrNull()?.let { tag to it }
+    }
+    .toMap()
+
 private const val FALLBACK_FLAG = "🌐"
 
 /**
@@ -111,6 +123,7 @@ private fun buildSupportedLanguages(context: Context): List<AppLanguage> {
                 val locale = Locale.forLanguageTag(tag)
                 locale.getDisplayName(locale).replaceFirstChar { it.titlecase(locale) }
             },
+            completionPercent = if (tag == "en") null else translationCompletion[tag],
         )
     }
     val pinned = listOf("en", "hi")
@@ -177,6 +190,11 @@ internal fun LanguageSettingsScreen(
                     },
                     content = {
                         Text(text = language.nativeName)
+                    },
+                    supportingContent = language.completionPercent?.let { percent ->
+                        {
+                            Text(text = stringResource(R.string.language_translated_percent, percent))
+                        }
                     },
                     trailingContent = if (isSelected) {
                         {

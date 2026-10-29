@@ -7,9 +7,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
@@ -41,9 +39,6 @@ fun SettingsScreen(
 ) {
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val drinkPresets by viewModel.drinkPresets.collectAsStateWithLifecycle()
-    val drinkNamesByItemId = remember(drinkPresets) {
-        drinkPresets.filter { it.itemId.isNotBlank() }.associate { it.itemId to it.name }
-    }
     val nestedBackStack = rememberNavBackStack(SettingsDestination.Main)
 
     NavDisplay(
@@ -121,7 +116,7 @@ fun SettingsScreen(
 
                     SettingsDestination.Duration -> DurationSettingsScreen(
                         userSettings = userSettings,
-                        drinkNamesByItemId = drinkNamesByItemId,
+                        drinkPresets = drinkPresets,
                         onDefaultDurationChange = viewModel::updateDefaultDurationMinutes,
                         onCategoryDurationChange = viewModel::setCategoryDurationMinutes,
                         onDrinkDurationChange = viewModel::setDrinkDurationMinutes,

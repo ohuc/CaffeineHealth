@@ -30,10 +30,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -207,9 +209,16 @@ private fun DirectionalCircularWavyProgressIndicator(
     val progressDrawingCache = remember { CircularProgressDrawingCache() }
     val waveOffsetState = remember { mutableFloatStateOf(0f) }
 
-    val currentProgress = progress().fastCoerceIn(0f, 1f)
-    val targetAmplitude = amplitude(currentProgress).fastCoerceIn(0f, 1f)
-    val animatedAmplitude by animateFloatAsState(
+    val latestProgress by rememberUpdatedState(progress)
+    val latestAmplitude by rememberUpdatedState(amplitude)
+    // CaffeineWaveAmplitude is a step function (0f below 1%, 1f above), so derivedStateOf keeps
+    // per-frame progress animations and 1s ticks from recomposing this indicator once > 1%.
+    val targetAmplitude by remember {
+        derivedStateOf {
+            latestAmplitude(latestProgress().fastCoerceIn(0f, 1f)).fastCoerceIn(0f, 1f)
+        }
+    }
+    val animatedAmplitudeState = animateFloatAsState(
         targetValue = targetAmplitude,
         animationSpec = if (targetAmplitude > 0f) {
             IncreasingAmplitudeAnimationSpec
@@ -219,7 +228,9 @@ private fun DirectionalCircularWavyProgressIndicator(
         label = "circular_wave_amplitude",
     )
 
-    val isWaveActive = targetAmplitude > 0f || animatedAmplitude > 0f
+    val isWaveActive by remember {
+        derivedStateOf { targetAmplitude > 0f || animatedAmplitudeState.value > 0f }
+    }
 
     LaunchedEffect(waveSpeed, wavelength, isWaveActive) {
         val speedMagnitudeDp = abs(waveSpeed.value).dp
@@ -248,18 +259,19 @@ private fun DirectionalCircularWavyProgressIndicator(
             .drawWithCache {
                 val currentGapPx = gapSize.toPx()
                 val currentWavelengthPx = wavelength.toPx()
-                val requiresMorph = animatedAmplitude > 0f && animatedAmplitude < 1f
-
-                circularShapes.update(
-                    size = size,
-                    wavelength = currentWavelengthPx,
-                    strokeWidth = stroke.width,
-                    requiresMorph = requiresMorph,
-                )
 
                 onDrawWithContent {
                     val drawProgress = progress().fastCoerceIn(0f, 1f)
-                    val drawAmplitude = animatedAmplitude.fastCoerceIn(0f, 1f)
+                    val drawAmplitude = animatedAmplitudeState.value.fastCoerceIn(0f, 1f)
+                    val requiresMorph = drawAmplitude > 0f && drawAmplitude < 1f
+
+                    circularShapes.update(
+                        size = size,
+                        wavelength = currentWavelengthPx,
+                        strokeWidth = stroke.width,
+                        requiresMorph = requiresMorph,
+                    )
+
                     progressDrawingCache.updatePaths(
                         size = size,
                         progressPathProvider = { amp, _, _, _, supportMotion, path ->
@@ -560,12 +572,13 @@ private class CircularProgressDrawingCache {
     }
 }
 
-private class CircularShapes {
+internal class CircularShapes {
     private var currentSize: Size? = null
     private var currentWavelength: Float = -1f
     private var trackPolygon: RoundedPolygon? = null
     private var activeIndicatorPolygon: RoundedPolygon? = null
-    private var activeIndicatorMorph: Morph? = null
+    internal var activeIndicatorMorph: Morph? = null
+        private set
     val currentVertexCount = mutableIntStateOf(-1)
 
     fun update(
@@ -594,9 +607,13 @@ private class CircularShapes {
                         innerRounding = CornerRounding(radius = 0.5f),
                     )
                     .normalized()
-            if (requiresMorph) {
-                activeIndicatorMorph = Morph(start = trackPolygon!!, end = activeIndicatorPolygon!!)
+            activeIndicatorMorph = if (requiresMorph) {
+                Morph(start = trackPolygon!!, end = activeIndicatorPolygon!!)
+            } else {
+                null
             }
+        } else if (requiresMorph && activeIndicatorMorph == null) {
+            activeIndicatorMorph = Morph(start = trackPolygon!!, end = activeIndicatorPolygon!!)
         }
 
         currentSize = size

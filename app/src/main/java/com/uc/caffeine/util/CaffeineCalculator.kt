@@ -19,6 +19,9 @@ object CaffeineCalculator {
     private const val PEAK_SEARCH_PADDING_MULTIPLIER = 4L
     private const val MAX_PREDICTION_WINDOW_HOURS = 168L
     private const val BINARY_SEARCH_PRECISION_MILLIS = 60_000L
+    // Once min(ka, ke) * elapsedMinutes >= 40 (~58 half-lives; exp(-40) ≈ 4.2e-18), even a multi-gram
+    // entry contributes < 1e-11 mg, allowing long historical logs to short-circuit in O(1).
+    private const val NEGLIGIBLE_DECAY_EXPONENT = 40.0
 
     /**
      * Calculate current active caffeine level from all logged drinks.
@@ -47,20 +50,36 @@ object CaffeineCalculator {
         currentTimeMillis: Long = System.currentTimeMillis(),
         halfLifeMinutes: Int = 300,
     ): Double {
-        if (currentTimeMillis < entry.startedAtMillis) return 0.0
+        if (entry.caffeineMg <= 0 || currentTimeMillis < entry.startedAtMillis) return 0.0
 
         val doseCount = entry.normalizedDurationMinutes
+        val ke = LN2 / halfLifeMinutes
+        val ka = LN10 / entry.absorptionRate
+
+        val lastSubDoseMillis = entry.startedAtMillis + ((doseCount - 1L) * MINUTE_MILLIS)
+        if (currentTimeMillis > lastSubDoseMillis) {
+            val minElapsedMinutes = (currentTimeMillis - lastSubDoseMillis) / (1000.0 * 60.0)
+            if (minOf(ke, ka) * minElapsedMinutes >= NEGLIGIBLE_DECAY_EXPONENT) {
+                return 0.0
+            }
+        }
+
+        val elapsedMinutes = (currentTimeMillis - entry.startedAtMillis) / MINUTE_MILLIS
+        val activeDoseCount = minOf(doseCount.toLong(), elapsedMinutes + 1L).toInt()
         val doseMg = entry.caffeineMg.toDouble() / doseCount.toDouble()
 
-        return (0 until doseCount).sumOf { minuteIndex ->
-            calculateDecayedAmount(
+        var sum = 0.0
+        for (minuteIndex in 0 until activeDoseCount) {
+            val consumedAtMillis = entry.startedAtMillis + (minuteIndex * MINUTE_MILLIS)
+            val t = (currentTimeMillis - consumedAtMillis) / (1000.0 * 60.0)
+            sum += decayedAmountForElapsedMinutes(
                 caffeineMg = doseMg,
-                consumedAtMillis = entry.startedAtMillis + (minuteIndex * MINUTE_MILLIS),
-                currentTimeMillis = currentTimeMillis,
-                absorptionMinutes = entry.absorptionRate,
-                halfLifeMinutes = halfLifeMinutes,
+                t = t,
+                ka = ka,
+                ke = ke,
             )
         }
+        return sum
     }
 
     /**
@@ -90,20 +109,38 @@ object CaffeineCalculator {
         val t = (currentTimeMillis - consumedAtMillis) / (1000.0 * 60.0)
         if (t < 0) return 0.0
 
-        val ke = LN2  / halfLifeMinutes
+        val ke = LN2 / halfLifeMinutes
         val ka = LN10 / absorptionMinutes
+        return decayedAmountForElapsedMinutes(
+            caffeineMg = caffeineMg,
+            t = t,
+            ka = ka,
+            ke = ke,
+        )
+    }
+
+    private fun decayedAmountForElapsedMinutes(
+        caffeineMg: Double,
+        t: Double,
+        ka: Double,
+        ke: Double,
+    ): Double {
+        if (t < 0.0) return 0.0
+
+        val expKe = exp(-ke * t)
+        val expKa = exp(-ka * t)
 
         // 1. Calculate the standard Bateman equation
         val standardBateman = if (abs(ka - ke) < 1e-9) {
-            caffeineMg * ka * t * exp(-ke * t)
+            caffeineMg * ka * t * expKe
         } else {
-            caffeineMg * (ka / (ka - ke)) * (exp(-ke * t) - exp(-ka * t))
+            caffeineMg * (ka / (ka - ke)) * (expKe - expKa)
         }
 
         // 2. THE FIX: Apply a "Gastric Emptying" smoothing factor.
         // This forces the equation to start at a slope of 0 and gently curve upwards,
         // simulating the delay before the liquid reaches the intestines.
-        val gastricSmoothing = 1.0 - exp(-ka * t)
+        val gastricSmoothing = 1.0 - expKa
 
         return standardBateman * gastricSmoothing
     }
@@ -152,21 +189,53 @@ object CaffeineCalculator {
         halfLifeMinutes: Int = 300,
     ): Long {
         val searchEndTime = peakSearchEndMillis(entry)
+        val totalSearchMinutes = ((searchEndTime - entry.startedAtMillis) / MINUTE_MILLIS).toInt()
+        if (totalSearchMinutes <= 0) return entry.startedAtMillis
+        if (entry.caffeineMg <= 0) return searchEndTime
+
+        val doseCount = entry.normalizedDurationMinutes
+        val doseMg = entry.caffeineMg.toDouble() / doseCount.toDouble()
+        val ke = LN2 / halfLifeMinutes
+        val ka = LN10 / entry.absorptionRate
 
         var bestTime = entry.startedAtMillis
         var bestLevel = Double.NEGATIVE_INFINITY
-        var probeTime = entry.startedAtMillis
-        while (probeTime <= searchEndTime) {
-            val level = calculateEntryContribution(
-                entry = entry,
-                currentTimeMillis = probeTime,
-                halfLifeMinutes = halfLifeMinutes,
+
+        if (doseCount == 1) {
+            for (minute in 0..totalSearchMinutes) {
+                val level = decayedAmountForElapsedMinutes(
+                    caffeineMg = doseMg,
+                    t = minute.toDouble(),
+                    ka = ka,
+                    ke = ke,
+                )
+                if (level >= bestLevel) {
+                    bestLevel = level
+                    bestTime = entry.startedAtMillis + (minute.toLong() * MINUTE_MILLIS)
+                }
+            }
+            return bestTime
+        }
+
+        // At integer minute m from startedAtMillis, active sub-doses i in 0..min(m, doseCount - 1)
+        // have elapsed minutes k = m - i in max(0, m - doseCount + 1)..m. Prefix-summing the
+        // single-sub-dose response evaluates the PK equation once per minute (O(M)) instead of
+        // re-summing all sub-doses at every probe step (O(M * D)).
+        val prefix = DoubleArray(totalSearchMinutes + 2)
+        for (minute in 0..totalSearchMinutes) {
+            val unitResponse = decayedAmountForElapsedMinutes(
+                caffeineMg = doseMg,
+                t = minute.toDouble(),
+                ka = ka,
+                ke = ke,
             )
+            prefix[minute + 1] = prefix[minute] + unitResponse
+            val windowStart = maxOf(0, minute - doseCount + 1)
+            val level = prefix[minute + 1] - prefix[windowStart]
             if (level >= bestLevel) {
                 bestLevel = level
-                bestTime = probeTime
+                bestTime = entry.startedAtMillis + (minute.toLong() * MINUTE_MILLIS)
             }
-            probeTime += MINUTE_MILLIS
         }
 
         return bestTime

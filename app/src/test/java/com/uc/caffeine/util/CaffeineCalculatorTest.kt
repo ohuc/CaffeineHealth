@@ -2,6 +2,7 @@ package com.uc.caffeine.util
 
 import com.uc.caffeine.data.model.ConsumptionEntry
 import java.time.Instant
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -94,6 +95,83 @@ class CaffeineCalculatorTest {
         assertTrue(
             CaffeineCalculator.calculateEntryContribution(released, releasedPeak, 300) <
                 CaffeineCalculator.calculateEntryContribution(atOnce, atOncePeak, 300),
+        )
+    }
+
+    @Test
+    fun calculatePeakTime_matchesDirectMinuteByMinuteContributionScan() {
+        val cases = listOf(
+            Triple(1, 45, 300),
+            Triple(10, 45, 300),
+            Triple(180, 20, 240),
+            Triple(480, 60, 420),
+            Triple(1440, 45, 300),
+            // Exercises ka ≈ ke (LN10 / 332 ≈ LN2 / 100).
+            Triple(120, 332, 100),
+        )
+        for ((duration, absorption, halfLife) in cases) {
+            val entry = testEntry(
+                id = duration,
+                startedAt = "2026-04-05T08:00:00Z",
+                caffeineMg = 200,
+                durationMinutes = duration,
+                absorptionRate = absorption,
+            )
+            val searchEnd = CaffeineCalculator.peakSearchEndMillis(entry)
+            var bruteForceBestTime = entry.startedAtMillis
+            var bruteForceBestLevel = Double.NEGATIVE_INFINITY
+            var probe = entry.startedAtMillis
+            while (probe <= searchEnd) {
+                val level = CaffeineCalculator.calculateEntryContribution(entry, probe, halfLife)
+                if (level >= bruteForceBestLevel) {
+                    bruteForceBestLevel = level
+                    bruteForceBestTime = probe
+                }
+                probe += 60_000L
+            }
+
+            val fastPeakTime = CaffeineCalculator.calculatePeakTime(entry, halfLife)
+            assertEquals(
+                "Mismatch for duration=$duration absorption=$absorption halfLife=$halfLife",
+                bruteForceBestTime,
+                fastPeakTime,
+            )
+        }
+    }
+
+    @Test
+    fun calculateEntryContribution_capsFutureSubDosesAndZerosAncientEntries() {
+        val xrEntry = testEntry(
+            id = 1,
+            startedAt = "2026-04-05T08:00:00Z",
+            caffeineMg = 288,
+            durationMinutes = 1440,
+            absorptionRate = 45,
+        )
+        // 30.5 minutes into a 24h extended-release window: only sub-doses 0..30 have begun.
+        val midReleaseMillis = xrEntry.startedAtMillis + (30 * 60_000L) + 30_000L
+        val doseMg = xrEntry.caffeineMg.toDouble() / 1440.0
+        val expectedMidRelease = (0 until 1440).sumOf { minuteIndex ->
+            CaffeineCalculator.calculateDecayedAmount(
+                caffeineMg = doseMg,
+                consumedAtMillis = xrEntry.startedAtMillis + (minuteIndex * 60_000L),
+                currentTimeMillis = midReleaseMillis,
+                absorptionMinutes = xrEntry.absorptionRate,
+                halfLifeMinutes = 300,
+            )
+        }
+        assertEquals(
+            expectedMidRelease,
+            CaffeineCalculator.calculateEntryContribution(xrEntry, midReleaseMillis, 300),
+            1e-12,
+        )
+
+        // 30 days later (> 58 half-lives after the last sub-dose): short-circuits to 0.0.
+        val thirtyDaysLater = xrEntry.finishedAtMillis + (30L * 24 * 60 * 60_000L)
+        assertEquals(
+            0.0,
+            CaffeineCalculator.calculateEntryContribution(xrEntry, thirtyDaysLater, 300),
+            0.0,
         )
     }
 

@@ -35,10 +35,10 @@ class SettingsRepositoryMappingTest {
     @Test
     fun whatsNewSeen_skipsNamesFromEarlierReleases() {
         val preferences = mutablePreferencesOf()
-        preferences[SettingsKeys.WHATS_NEW_SEEN] = setOf(NewFeature.BarcodeScanner.name, "QuickStartTimes")
+        preferences[SettingsKeys.WHATS_NEW_SEEN] = setOf(NewFeature.RingWidget.name, "BarcodeScanner")
 
         val mapped = preferences.toUserSettings(defaultSettings = UserSettings())
 
-        assertEquals(setOf(NewFeature.BarcodeScanner), mapped.whatsNewSeen)
+        assertEquals(setOf(NewFeature.RingWidget), mapped.whatsNewSeen)
     }
 }

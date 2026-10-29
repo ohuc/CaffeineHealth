@@ -1,0 +1,78 @@
+# Rejects blank translation stubs (e.g. an empty values-<locale>/strings.xml pushed when someone
+# initializes a new language in Weblate without translating any strings).
+name: Verify translations
+
+on:
+  pull_request:
+    paths:
+      - 'app/src/main/res/values-*/**'
+      - '.github/workflows/verify-translations.yml'
+  push:
+    branches:
+      - master
+    paths:
+      - 'app/src/main/res/values-*/**'
+      - '.github/workflows/verify-translations.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-non-blank-locales:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject blank locale resource directories
+        run: |
+          python3 - <<'EOF'
+          import pathlib
+          import re
+          import sys
+          import xml.etree.ElementTree as ET
+
+          MIN_TRANSLATED_STRINGS = 1
+          BCP47_RE = re.compile(r"^b\+[A-Za-z]{2,3}(?:\+[A-Za-z0-9]+)*$")
+          LEGACY_LOCALE_RE = re.compile(r"^[a-z]{2,3}(?:-r(?:[A-Z]{2}|[0-9]{3}))?$")
+
+          def is_locale_dir(name: str) -> bool:
+              if not name.startswith("values-"):
+                  return False
+              qualifier = name[len("values-"):]
+              if qualifier == "car":
+                  return False
+              return bool(BCP47_RE.match(qualifier) or LEGACY_LOCALE_RE.match(qualifier))
+
+          def count_translated_entries(locale_dir: pathlib.Path) -> int:
+              count = 0
+              for xml_file in sorted(locale_dir.glob("*.xml")):
+                  root = ET.parse(xml_file).getroot()
+                  for elem in root:
+                      if elem.attrib.get("translatable") == "false":
+                          continue
+                      if elem.tag == "string":
+                          if "".join(elem.itertext()).strip():
+                              count += 1
+                      elif elem.tag in ("plurals", "string-array"):
+                          if any("".join(item.itertext()).strip() for item in elem.findall("item")):
+                              count += 1
+              return count
+
+          res_root = pathlib.Path("app/src/main/res")
+          failed = False
+          checked = 0
+          for d in sorted(res_root.iterdir()):
+              if not d.is_dir() or not is_locale_dir(d.name):
+                  continue
+              checked += 1
+              entries = count_translated_entries(d)
+              if entries < MIN_TRANSLATED_STRINGS:
+                  target = next(d.glob("*.xml"), d)
+                  print(
+                      f"::error file={target}::Blank translation in {d.name} "
+                      f"({entries} translated strings; minimum is {MIN_TRANSLATED_STRINGS})."
+                  )
+                  failed = True
+
+          if failed:
+              sys.exit(1)
+          print(f"OK: verified {checked} locale directories; none are blank.")
+          EOF

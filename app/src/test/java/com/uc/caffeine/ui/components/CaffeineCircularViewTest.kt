@@ -1,11 +1,15 @@
 package com.uc.caffeine.ui.components
 
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.ui.viewmodel.CaffeineTrend
 import com.uc.caffeine.ui.viewmodel.determineCaffeineTrend
 import com.uc.caffeine.util.CaffeineCalculator
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -30,6 +34,42 @@ class CaffeineCircularViewTest {
         assertEquals(0.25f, wrapWaveOffset(1.25f), 0.0001f)
         assertEquals(0.90f, wrapWaveOffset(-0.10f), 0.0001f)
         assertEquals(0.35f, wrapWaveOffset(0.35f - 1.0f), 0.0001f)
+    }
+
+    @Test
+    fun circularShapes_clearsStaleMorphWhenResizedAtSteadyAmplitude() {
+        val shapes = CircularShapes()
+        shapes.update(
+            size = Size(200f, 200f),
+            wavelength = 60f,
+            strokeWidth = 16f,
+            requiresMorph = true,
+        )
+        val smallVertices = shapes.currentVertexCount.intValue
+        val smallMorph = shapes.activeIndicatorMorph
+        assertNotNull(smallMorph)
+
+        // Resize while settled at amplitude 0f or 1f (!requiresMorph): vertex count changes, so the
+        // old Morph must be cleared instead of lingering with outdated polygon geometry.
+        shapes.update(
+            size = Size(420f, 420f),
+            wavelength = 60f,
+            strokeWidth = 16f,
+            requiresMorph = false,
+        )
+        val largeVertices = shapes.currentVertexCount.intValue
+        assertTrue(largeVertices > smallVertices)
+        assertNull(shapes.activeIndicatorMorph)
+
+        // Next amplitude transition at the new size lazily creates a fresh Morph for largeVertices.
+        shapes.update(
+            size = Size(420f, 420f),
+            wavelength = 60f,
+            strokeWidth = 16f,
+            requiresMorph = true,
+        )
+        assertNotNull(shapes.activeIndicatorMorph)
+        assertNotSame(smallMorph, shapes.activeIndicatorMorph)
     }
 
     @Test

@@ -253,14 +253,15 @@ private fun CoachToleranceCard(
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+        Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
                         haptics.toggle()
                         onToggle(!enabled)
-                    },
+                    }
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -296,7 +297,7 @@ private fun CoachToleranceCard(
                 exit = fadeOut() + shrinkVertically(),
             ) {
                 Column(
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

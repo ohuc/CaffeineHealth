@@ -46,6 +46,51 @@ fun UserSettings.defaultDurationFor(preset: DrinkPreset?): Int {
     return defaultDurationForCategory(CategoryUtils.normalizeCategoryKey(preset.category))
 }
 
+/**
+ * Resolves the consumption/release window when re-logging a recent serving combo (from the
+ * Add screen's Recent servings list or the Quick Log widget).
+ *
+ * - If [preset] currently has an extended-release window ([DrinkPreset.releaseMinutes]), that
+ *   window always wins so enabling or editing extended release takes effect immediately.
+ * - If [preset] is a regular drink ([DrinkPreset.releaseMinutes] == null) and the previously
+ *   logged duration exceeded [MAX_CONSUMPTION_DURATION_MINUTES] (because extended release was
+ *   later turned off), fall back to [defaultDurationFor].
+ * - Otherwise preserve the exact finish duration the user logged for that serving.
+ */
+fun resolveRecentConsumptionDuration(
+    loggedDurationMinutes: Int,
+    preset: DrinkPreset?,
+    settings: UserSettings,
+): Int {
+    if (preset == null) return loggedDurationMinutes
+    preset.releaseMinutes?.let { return it }
+    if (loggedDurationMinutes > MAX_CONSUMPTION_DURATION_MINUTES) {
+        return settings.defaultDurationFor(preset)
+    }
+    return loggedDurationMinutes
+}
+
+/**
+ * Filters saved per-drink "Time to finish" overrides to presets that currently exist in the
+ * catalog and do not use an extended-release window (where finish-time overrides are a no-op).
+ * Returns an empty list while [presets] has not loaded yet so raw itemIds never flash on screen.
+ */
+fun resolveVisibleDrinkDurationOverrides(
+    drinkDurationMinutes: Map<String, Int>,
+    presets: List<DrinkPreset>,
+): List<Triple<String, String, Int>> {
+    if (presets.isEmpty() || drinkDurationMinutes.isEmpty()) return emptyList()
+    val adjustableNamesByItemId = presets
+        .asSequence()
+        .filter { it.itemId.isNotBlank() && it.releaseMinutes == null }
+        .associate { it.itemId to it.name }
+    return drinkDurationMinutes.entries
+        .mapNotNull { (itemId, minutes) ->
+            adjustableNamesByItemId[itemId]?.let { name -> Triple(itemId, name, minutes) }
+        }
+        .sortedBy { it.second.lowercase() }
+}
+
 fun coerceConsumptionDuration(minutes: Int): Int =
     minutes.coerceIn(MIN_CONSUMPTION_DURATION_MINUTES, MAX_CONSUMPTION_DURATION_MINUTES)
 

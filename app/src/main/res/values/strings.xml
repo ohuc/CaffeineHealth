@@ -82,6 +82,7 @@
 
     <!-- Language settings -->
     <string name="language_section_title">Language</string>
+    <string name="language_translated_percent">%1$d%% translated</string>
     <string name="language_selected_cd">Selected</string>
     <string name="language_deferred_title">Localization deferred</string>
     <string name="language_deferred_description">English will remain the active language in this build.</string>
@@ -616,6 +617,14 @@
     <!-- Home card that opens What's New after an update -->
     <string name="whats_new_card_cta">See what\'s new</string>
     <string name="whats_new_card_dismiss_cd">Dismiss What\'s New</string>
+    <string name="whats_new_ring_widget_title">Caffeine Ring Widget</string>
+    <string name="whats_new_ring_widget_body">A new home screen widget shows your active caffeine as a ring that fills toward your sleep threshold.</string>
+    <string name="whats_new_extended_release_title">Extended-Release Drinks</string>
+    <string name="whats_new_extended_release_body">Give a custom drink or pill a release window and its caffeine is spread over that time, just like the real thing.</string>
+    <string name="whats_new_tolerance_title">Coach Knows Your Tolerance</string>
+    <string name="whats_new_tolerance_body">Turn on tolerance tracking in your Caffeine profile and Caffeine Coach adjusts its suggestions to your recent intake.</string>
+    <string name="whats_new_wave_title">Rising or Falling?</string>
+    <string name="whats_new_wave_body">The wave on the home ring now flows forward while caffeine is rising and backward as it wears off.</string>
     <string name="whats_new_scanner_title">Scan Drinks by Barcode</string>
     <string name="whats_new_scanner_body">Tap the scan button next to search on the Add screen, or scan a barcode from a photo. Drinks you haven\'t added yet can be looked up on Open Food Facts.</string>
     <string name="whats_new_analytics_title">Analytics, Redesigned</string>

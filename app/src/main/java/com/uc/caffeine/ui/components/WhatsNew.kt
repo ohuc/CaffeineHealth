@@ -29,11 +29,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.filled.BlurOn
-import androidx.compose.material.icons.filled.EmojiFoodBeverage
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.HourglassBottom
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.BottomSheetDefaults
@@ -81,16 +80,10 @@ private class Highlight(
 
 @Composable
 private fun NewFeature.highlight(): Highlight = when (this) {
-    NewFeature.BarcodeScanner -> Highlight(
-        ImageVector.vectorResource(R.drawable.ic_barcode_scanner),
-        R.string.whats_new_scanner_title,
-        R.string.whats_new_scanner_body,
-    )
-    NewFeature.Analytics -> Highlight(Icons.Filled.Insights, R.string.whats_new_analytics_title, R.string.whats_new_analytics_body)
-    NewFeature.DrinkSearch -> Highlight(Icons.Filled.Search, R.string.whats_new_search_title, R.string.whats_new_search_body)
-    NewFeature.TeaSteeps -> Highlight(Icons.Filled.EmojiFoodBeverage, R.string.whats_new_steeps_title, R.string.whats_new_steeps_body)
-    NewFeature.Widgets -> Highlight(Icons.Filled.Widgets, R.string.whats_new_widgets_title, R.string.whats_new_widgets_body)
-    NewFeature.ExpressiveBlur -> Highlight(Icons.Filled.BlurOn, R.string.whats_new_blur_title, R.string.whats_new_blur_body)
+    NewFeature.RingWidget -> Highlight(Icons.Filled.DataUsage, R.string.whats_new_ring_widget_title, R.string.whats_new_ring_widget_body)
+    NewFeature.ExtendedRelease -> Highlight(Icons.Filled.HourglassBottom, R.string.whats_new_extended_release_title, R.string.whats_new_extended_release_body)
+    NewFeature.CoachTolerance -> Highlight(Icons.Filled.Psychology, R.string.whats_new_tolerance_title, R.string.whats_new_tolerance_body)
+    NewFeature.WaveDirection -> Highlight(Icons.Filled.Waves, R.string.whats_new_wave_title, R.string.whats_new_wave_body)
 }
 
 /**

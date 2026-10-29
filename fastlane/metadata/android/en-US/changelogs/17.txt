@@ -1,0 +1,6 @@
+- Caffeine Ring widget: your active caffeine against your sleep threshold, at a glance
+- Extended-release drinks: give a custom drink a release window and it's logged over that time
+- Caffeine Coach can now account for your tolerance (opt-in, in your Caffeine profile)
+- The caffeine ring's wave now shows whether your level is rising or falling
+- Faster charts and peak-time calculations
+- Updated translations
