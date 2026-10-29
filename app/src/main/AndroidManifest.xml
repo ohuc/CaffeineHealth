@@ -109,6 +109,18 @@
                 android:resource="@xml/widget_combined_info" />
         </receiver>
 
+        <receiver
+            android:name=".widget.CaffeineRingWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_caffeine_ring_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_caffeine_ring_info" />
+        </receiver>
+
         <!-- Health Connect permissions rationale on Android 13 and below (standalone HC APK) -->
         <activity-alias
             android:name="PermissionsRationaleActivity"

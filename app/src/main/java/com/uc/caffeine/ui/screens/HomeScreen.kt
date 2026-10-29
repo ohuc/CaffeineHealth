@@ -103,6 +103,7 @@ import com.uc.caffeine.ui.viewmodel.CaffeineTrend
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.ui.viewmodel.HomeScreenUiEvent
 import com.uc.caffeine.util.ConsumptionContributionDetail
+import com.uc.caffeine.util.MAX_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.util.calculateNextBedtimeMillis
 import com.uc.caffeine.util.calculateServingTotalCaffeine
 import com.uc.caffeine.util.findMatchingUnit
@@ -1034,6 +1035,13 @@ private fun EditConsumptionEntrySheet(
     var durationMinutes by remember(entry.id) {
         mutableIntStateOf(entry.normalizedDurationMinutes)
     }
+    val presetIsExtendedRelease by produceState(initialValue = false, key1 = entry.presetItemId) {
+        value = viewModel.getPresetForItemId(entry.presetItemId)?.releaseMinutes != null
+    }
+    // A window longer than any time to finish can only be a release time (or an import); the
+    // finish-time picker would silently clamp it to 3 hours, so it stays read-only.
+    val isExtendedRelease = presetIsExtendedRelease ||
+        entry.normalizedDurationMinutes > MAX_CONSUMPTION_DURATION_MINUTES
     val fallbackUnit = remember(entry) {
         if (entry.unitKey.isBlank()) {
             null
@@ -1173,6 +1181,7 @@ private fun EditConsumptionEntrySheet(
             settings = userSettings,
             onStartedAtChange = { startedAtMillis = it },
             onDurationChange = { durationMinutes = it },
+            isExtendedRelease = isExtendedRelease,
         )
 
         Spacer(modifier = Modifier.height(12.dp))

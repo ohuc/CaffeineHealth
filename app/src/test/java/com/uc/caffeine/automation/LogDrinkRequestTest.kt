@@ -182,4 +182,26 @@ class LogDrinkRequestTest {
 
         assertTrue(resolveAutomationEntry(request, preset = null, units = emptyList()) is AutomationEntryResolution.Failed)
     }
+
+    @Test
+    fun resolve_releaseTimeOverridesRequestedDuration() {
+        val slowRelease = DrinkPreset(
+            id = 9,
+            itemId = "custom-xr",
+            name = "XR pill",
+            category = "Pill",
+            defaultUnit = "pill",
+            defaultCaffeineMg = 200,
+            isCustom = true,
+            releaseMinutes = 600,
+        )
+        val units = listOf(
+            DrinkUnit(drinkId = 9, unitKey = "pill", caffeineMg = 200.0, milliliters = null, grams = null, isDefault = true),
+        )
+        val request = parseValid(mapOf("drink_id" to "custom-xr", "duration_minutes" to 25))
+
+        val result = resolveAutomationEntry(request, slowRelease, units) as AutomationEntryResolution.Resolved
+
+        assertEquals(600, result.entry.durationMinutes)
+    }
 }

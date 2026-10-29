@@ -70,6 +70,33 @@ class CaffeineCalculatorTest {
         assertTrue(predicted!! > now)
     }
 
+    @Test
+    fun calculatePeakTime_neverLiesPastItsSearchWindow() {
+        // timeUntilPeak skips entries whose search window has closed, which is only sound if the
+        // peak is always inside that window — including for a long extended release (#58).
+        listOf(1, 10, 180, 480, 1440).forEach { minutes ->
+            val entry = testEntry(id = minutes, startedAt = "2026-04-05T08:00:00Z", durationMinutes = minutes)
+            val peak = CaffeineCalculator.calculatePeakTime(entry, halfLifeMinutes = 300)
+            assertTrue(peak <= CaffeineCalculator.peakSearchEndMillis(entry))
+            assertTrue(peak >= entry.startedAtMillis)
+        }
+    }
+
+    @Test
+    fun extendedRelease_peaksLowerAndLaterThanTheSameDoseAtOnce() {
+        val atOnce = testEntry(id = 1, startedAt = "2026-04-05T08:00:00Z", caffeineMg = 200, durationMinutes = 1)
+        val released = testEntry(id = 2, startedAt = "2026-04-05T08:00:00Z", caffeineMg = 200, durationMinutes = 480)
+
+        val atOncePeak = CaffeineCalculator.calculatePeakTime(atOnce, halfLifeMinutes = 300)
+        val releasedPeak = CaffeineCalculator.calculatePeakTime(released, halfLifeMinutes = 300)
+
+        assertTrue(releasedPeak > atOncePeak)
+        assertTrue(
+            CaffeineCalculator.calculateEntryContribution(released, releasedPeak, 300) <
+                CaffeineCalculator.calculateEntryContribution(atOnce, atOncePeak, 300),
+        )
+    }
+
     private fun testEntry(
         id: Int,
         startedAt: String,

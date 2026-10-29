@@ -65,4 +65,27 @@ class DurationDefaultsTest {
             decodeDurationMap(setOf("tea=5", "=4", "coffee=abc", "noequals")),
         )
     }
+
+    @Test
+    fun releaseTimeBeatsEveryFinishTimeDefault() {
+        val slowRelease = DrinkPreset(
+            itemId = "custom-xr",
+            name = "XR pill",
+            category = "Pill",
+            releaseMinutes = 480,
+        )
+        val settings = UserSettings(
+            defaultDurationMinutes = 5,
+            categoryDurationMinutes = mapOf("pill" to 2),
+            drinkDurationMinutes = mapOf("custom-xr" to 1),
+        )
+        assertEquals(480, settings.defaultDurationFor(slowRelease))
+    }
+
+    @Test
+    fun releaseTimeIsClampedToItsOwnRangeNotTheFinishTimeCap() {
+        assertEquals(MAX_RELEASE_MINUTES, coerceReleaseMinutes(10_000))
+        assertEquals(MIN_RELEASE_MINUTES, coerceReleaseMinutes(0))
+        assertEquals(600, coerceReleaseMinutes(600))
+    }
 }

@@ -58,6 +58,10 @@ import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 import com.uc.caffeine.util.MAX_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.util.MIN_CONSUMPTION_DURATION_MINUTES
+import com.uc.caffeine.util.DEFAULT_RELEASE_MINUTES
+import com.uc.caffeine.util.MAX_RELEASE_MINUTES
+import com.uc.caffeine.util.MIN_RELEASE_MINUTES
+import com.uc.caffeine.util.RELEASE_STEP_MINUTES
 import com.uc.caffeine.util.combineDatePickerSelectionWithTime
 import com.uc.caffeine.util.dateFormatter
 import com.uc.caffeine.util.formatDurationMinutes
@@ -95,6 +99,8 @@ fun ConsumptionTimingSection(
     onDurationChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
     drinkDurationDefault: DrinkDurationDefault? = null,
+    // Extended-release drink (#58): [durationMinutes] is its release time, fixed by the drink.
+    isExtendedRelease: Boolean = false,
 ) {
     val haptics = rememberAppHaptics()
     var showDateTimePicker by remember { mutableStateOf(false) }
@@ -159,16 +165,27 @@ fun ConsumptionTimingSection(
                     showDateTimePicker = true
                 },
             )
-            TimingRow(
-                index = 1,
-                icon = { Icon(Icons.Rounded.Timer, contentDescription = null) },
-                label = stringResource(R.string.timing_time_to_finish),
-                value = formatDurationMinutes(durationMinutes),
-                onClick = {
-                    haptics.toggle()
-                    showDurationPicker = true
-                },
-            )
+            if (isExtendedRelease) {
+                TimingRow(
+                    index = 1,
+                    icon = { Icon(Icons.Rounded.Timer, contentDescription = null) },
+                    label = stringResource(R.string.timing_release_time),
+                    value = formatDurationMinutes(durationMinutes),
+                    supportingText = stringResource(R.string.timing_release_time_locked),
+                    onClick = null,
+                )
+            } else {
+                TimingRow(
+                    index = 1,
+                    icon = { Icon(Icons.Rounded.Timer, contentDescription = null) },
+                    label = stringResource(R.string.timing_time_to_finish),
+                    value = formatDurationMinutes(durationMinutes),
+                    onClick = {
+                        haptics.toggle()
+                        showDurationPicker = true
+                    },
+                )
+            }
         }
     }
 
@@ -204,12 +221,16 @@ private fun TimingRow(
     icon: @Composable () -> Unit,
     label: String,
     value: String,
-    onClick: () -> Unit,
+    // Null = shown for information only (there is no non-interactive SegmentedListItem).
+    onClick: (() -> Unit)?,
+    supportingText: String? = null,
 ) {
     SegmentedListItem(
-        onClick = onClick,
+        onClick = onClick ?: {},
+        enabled = onClick != null,
         leadingContent = icon,
         content = { Text(text = label) },
+        supportingContent = supportingText?.let { { Text(text = it) } },
         trailingContent = {
             Text(
                 text = value,
@@ -540,6 +561,200 @@ fun DurationPickerDialog(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         ),
                     )
+                }
+            }
+        },
+    )
+}
+
+/**
+ * Custom-drink setting for extended-release products (#58): an ordinary drink is sipped over a
+ * time to finish chosen when logging; an extended-release one is taken in one go and releases its
+ * caffeine linearly over a fixed [releaseMinutes]. Null = ordinary drink.
+ */
+@Composable
+fun ReleaseTimeSetting(
+    releaseMinutes: Int?,
+    onReleaseMinutesChange: (Int?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberAppHaptics()
+    var showPicker by remember { mutableStateOf(false) }
+    val options = listOf(false, true)
+
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = stringResource(R.string.custom_drink_release_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            options.forEachIndexed { index, extended ->
+                ToggleButton(
+                    checked = (releaseMinutes != null) == extended,
+                    onCheckedChange = {
+                        haptics.toggle()
+                        onReleaseMinutesChange(if (extended) releaseMinutes ?: DEFAULT_RELEASE_MINUTES else null)
+                    },
+                    modifier = Modifier.weight(1f),
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (extended) R.string.custom_drink_release_extended else R.string.custom_drink_release_normal
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+        if (releaseMinutes != null) {
+            SegmentedListItem(
+                onClick = {
+                    haptics.toggle()
+                    showPicker = true
+                },
+                leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null) },
+                content = { Text(text = stringResource(R.string.timing_release_time)) },
+                trailingContent = {
+                    Text(
+                        text = formatDurationMinutes(releaseMinutes),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                    )
+                },
+                verticalAlignment = Alignment.CenterVertically,
+                shapes = segmentedListItemShapes(0, 1),
+                colors = ListItemDefaults.colors(
+                    containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
+                ),
+            )
+        }
+        Text(
+            text = stringResource(
+                if (releaseMinutes != null) R.string.custom_drink_release_extended_hint else R.string.custom_drink_release_normal_hint
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+
+    if (showPicker && releaseMinutes != null) {
+        ReleaseTimePickerDialog(
+            currentReleaseMinutes = releaseMinutes,
+            onReleaseTimeSelected = {
+                onReleaseMinutesChange(it)
+                showPicker = false
+            },
+            onDismiss = { showPicker = false },
+        )
+    }
+}
+
+/** Like [DurationPickerDialog], in [RELEASE_STEP_MINUTES] steps up to [MAX_RELEASE_MINUTES]. */
+@Composable
+private fun ReleaseTimePickerDialog(
+    currentReleaseMinutes: Int,
+    onReleaseTimeSelected: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    // The slider works in steps so a 24-hour range stays draggable and ticks once per step.
+    val stepRange = (MIN_RELEASE_MINUTES / RELEASE_STEP_MINUTES)..(MAX_RELEASE_MINUTES / RELEASE_STEP_MINUTES)
+    var selectedStep by remember(currentReleaseMinutes) {
+        mutableIntStateOf((currentReleaseMinutes / RELEASE_STEP_MINUTES).coerceIn(stepRange))
+    }
+    val selectedMinutes = selectedStep * RELEASE_STEP_MINUTES
+    val haptics = rememberAppHaptics()
+
+    fun nudge(delta: Int) {
+        val next = (selectedStep + delta).coerceIn(stepRange)
+        if (next != selectedStep) {
+            if (next == stepRange.first || next == stepRange.last) haptics.sliderEdge() else haptics.tick()
+            selectedStep = next
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = { onReleaseTimeSelected(selectedMinutes) }) {
+                Text(stringResource(R.string.action_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+        title = { Text(stringResource(R.string.timing_release_time)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FilledTonalIconButton(
+                        onClick = { nudge(-1) },
+                        enabled = selectedStep > stepRange.first,
+                        shapes = IconButtonDefaults.shapes(),
+                        modifier = Modifier.size(IconButtonDefaults.smallContainerSize()),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Remove,
+                            contentDescription = stringResource(R.string.timing_release_decrease_cd),
+                        )
+                    }
+                    RollingNumberText(
+                        text = formatDurationMinutes(selectedMinutes),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        ),
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.weight(1f),
+                        labelPrefix = "release_picker_value",
+                    )
+                    FilledTonalIconButton(
+                        onClick = { nudge(1) },
+                        enabled = selectedStep < stepRange.last,
+                        shapes = IconButtonDefaults.shapes(),
+                        modifier = Modifier.size(IconButtonDefaults.smallContainerSize()),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Add,
+                            contentDescription = stringResource(R.string.timing_release_increase_cd),
+                        )
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    ExpressiveIntSlider(
+                        value = selectedStep,
+                        onValueChange = { selectedStep = it },
+                        valueRange = stepRange,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = formatDurationMinutes(MIN_RELEASE_MINUTES),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = formatDurationMinutes(MAX_RELEASE_MINUTES),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         },

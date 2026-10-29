@@ -145,7 +145,10 @@ fun resolveAutomationEntry(
     units: List<DrinkUnit>,
     settings: UserSettings = UserSettings(),
 ): AutomationEntryResolution {
-    val durationMinutes = request.durationMinutes ?: settings.defaultDurationFor(preset)
+    // A release time is fixed by the product, so it wins over a requested time to finish.
+    val durationMinutes = preset?.releaseMinutes
+        ?: request.durationMinutes
+        ?: settings.defaultDurationFor(preset)
     if (preset == null) {
         val name = request.drinkName
         val caffeineMg = request.caffeineMg

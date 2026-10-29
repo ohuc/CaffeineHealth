@@ -7,6 +7,15 @@ const val MIN_CONSUMPTION_DURATION_MINUTES = 1
 const val MAX_CONSUMPTION_DURATION_MINUTES = 180
 
 /**
+ * Release time for extended-release custom drinks (#58). Unlike "time to finish" it isn't capped
+ * at 3 hours: slow-release pills spread their dose over most of a day.
+ */
+const val RELEASE_STEP_MINUTES = 15
+const val MIN_RELEASE_MINUTES = RELEASE_STEP_MINUTES
+const val MAX_RELEASE_MINUTES = 24 * 60
+const val DEFAULT_RELEASE_MINUTES = 8 * 60
+
+/**
  * Built-in "time to finish" per category, used until the user sets their own.
  * Pills (and gummies, which live in the pill category) are swallowed, not sipped.
  */
@@ -29,6 +38,8 @@ fun UserSettings.defaultDurationForCategory(categoryKey: String?): Int {
  */
 fun UserSettings.defaultDurationFor(preset: DrinkPreset?): Int {
     if (preset == null) return defaultDurationMinutes
+    // An extended-release drink is taken in one go; its release time is the window.
+    preset.releaseMinutes?.let { return it }
     preset.itemId.takeIf { it.isNotBlank() }
         ?.let { drinkDurationMinutes[it] }
         ?.let { return it }
@@ -37,3 +48,6 @@ fun UserSettings.defaultDurationFor(preset: DrinkPreset?): Int {
 
 fun coerceConsumptionDuration(minutes: Int): Int =
     minutes.coerceIn(MIN_CONSUMPTION_DURATION_MINUTES, MAX_CONSUMPTION_DURATION_MINUTES)
+
+fun coerceReleaseMinutes(minutes: Int): Int =
+    minutes.coerceIn(MIN_RELEASE_MINUTES, MAX_RELEASE_MINUTES)

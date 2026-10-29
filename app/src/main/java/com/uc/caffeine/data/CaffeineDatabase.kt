@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [DrinkPreset::class, DrinkUnit::class, ConsumptionEntry::class, DismissedHealthConnectRecord::class],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class CaffeineDatabase : RoomDatabase() {
@@ -93,6 +93,13 @@ abstract class CaffeineDatabase : RoomDatabase() {
             }
         }
 
+        // Release time for extended-release custom drinks (#58).
+        private val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE drink_presets ADD COLUMN releaseMinutes INTEGER")
+            }
+        }
+
         fun getDatabase(context: Context): CaffeineDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -100,7 +107,7 @@ abstract class CaffeineDatabase : RoomDatabase() {
                     CaffeineDatabase::class.java,
                     "caffeine_database"
                 )
-                    .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+                    .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)

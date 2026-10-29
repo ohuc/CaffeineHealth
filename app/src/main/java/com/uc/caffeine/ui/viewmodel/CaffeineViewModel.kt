@@ -29,12 +29,14 @@ import com.uc.caffeine.ui.onboarding.WeightUnit
 import com.uc.caffeine.R
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.util.defaultDurationFor
+import com.uc.caffeine.util.coerceReleaseMinutes
 import com.uc.caffeine.data.model.DismissedHealthConnectRecord
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.data.model.RecentDrink
 import com.uc.caffeine.util.CaffeineCalculator
 import com.uc.caffeine.util.CaffeineCoach
+import com.uc.caffeine.util.CaffeineTolerance
 import com.uc.caffeine.util.CoachInput
 import com.uc.caffeine.util.CoachRecommendation
 import com.uc.caffeine.util.AnalyticsRange
@@ -70,6 +72,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 import java.io.File
 
 private const val HEALTH_CONNECT_IMPORT_WINDOW_MILLIS = 30L * 24 * 60 * 60 * 1000
@@ -96,6 +99,29 @@ sealed interface MyDataUiState {
 }
 
 enum class CaffeineTrend { RISING, STEADY, FALLING }
+
+internal fun determineCaffeineTrend(
+    currentLevel: Double,
+    futureLevel: Double,
+): CaffeineTrend {
+    val delta = futureLevel - currentLevel
+    if (delta > 0.01) {
+        return CaffeineTrend.RISING
+    }
+    // Once decaying caffeine drops below 0.5 mg, the circular view rounds to "0 mg" —
+    // treat negligible tail decay as steady rather than showing "Falling" at 0 mg.
+    if (currentLevel < 0.5) {
+        return CaffeineTrend.STEADY
+    }
+    // Exponential decay with a ~5h half-life drops ~1.15% in 5 minutes (e.g. ~0.08 mg at
+    // 7 mg, ~0.006 mg at 0.5 mg), so a small negative threshold is needed to detect decay
+    // across the full circular progress range (#56).
+    return if (delta < -0.001) {
+        CaffeineTrend.FALLING
+    } else {
+        CaffeineTrend.STEADY
+    }
+}
 
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -380,6 +406,26 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             initialValue = null,
         )
 
+    /** The Coach's current tolerance baseline in mg/day, or null while tolerance is off. */
+    val coachToleranceMgPerDay: StateFlow<Int?> = combine(
+        allConsumptionEntries,
+        userSettings,
+        chartTickerFlow,
+    ) { entries, settings, now ->
+        if (!settings.coachToleranceEnabled) return@combine null
+        CaffeineTolerance.toleranceMgPerDay(
+            entries = entries,
+            nowMillis = now,
+            zoneId = settings.resolvedZoneId(),
+            seedMgPerDay = settings.coachToleranceSeedMg,
+        ).roundToInt()
+    }.flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null,
+        )
+
     private fun buildCoachInput(
         entries: List<ConsumptionEntry>,
         settings: UserSettings,
@@ -400,6 +446,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             wakeMillis = lastNight?.wakeMillis ?: estimatedWakeMillis(nowMillis, settings, zoneId),
             lastNightSleepMinutes = lastNight?.asleepMinutes,
             zoneId = zoneId,
+            // Tolerance needs weeks of history, not just the coach's recent window.
+            toleranceMgPerDay = if (settings.coachToleranceEnabled) {
+                CaffeineTolerance.toleranceMgPerDay(entries, nowMillis, zoneId, settings.coachToleranceSeedMg)
+            } else {
+                0.0
+            },
         )
     }
 
@@ -428,6 +480,9 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         val now = System.currentTimeMillis()
         val peakTime = allEntries
             .asSequence()
+            // An entry's peak can't lie past its search window, so entries whose window has
+            // closed can't peak in the future â€” skip the per-minute scan for the whole history.
+            .filter { entry -> CaffeineCalculator.peakSearchEndMillis(entry) > now }
             .map { entry ->
                 CaffeineCalculator.calculatePeakTime(
                     entry = entry,
@@ -444,21 +499,27 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         initialValue = null
     )
 
+    // Both levels come from the same tick: combining with currentCaffeineLevel (itself driven by
+    // liveTickerFlow) would emit twice per second and could pair a level with a newer timestamp.
     val caffeineTrend: StateFlow<CaffeineTrend> = combine(
-        currentCaffeineLevel,
         allConsumptionEntries,
+        liveTickerFlow,
         userSettings,
-    ) { currentLevel, allEntries, settings ->
-        val futureLevel = CaffeineCalculator.calculateCurrentLevel(
+    ) { allEntries, currentTime, settings ->
+        val currentLevel = CaffeineCalculator.calculateCurrentLevel(
             entries = allEntries,
-            currentTimeMillis = System.currentTimeMillis() + 5 * 60 * 1000L,
+            currentTimeMillis = currentTime,
             halfLifeMinutes = settings.effectiveHalfLifeMinutes,
         )
-        when {
-            futureLevel > currentLevel + 1.0 -> CaffeineTrend.RISING
-            futureLevel < currentLevel - 1.0 -> CaffeineTrend.FALLING
-            else -> CaffeineTrend.STEADY
-        }
+        val futureLevel = CaffeineCalculator.calculateCurrentLevel(
+            entries = allEntries,
+            currentTimeMillis = currentTime + 5 * 60 * 1000L,
+            halfLifeMinutes = settings.effectiveHalfLifeMinutes,
+        )
+        determineCaffeineTrend(
+            currentLevel = currentLevel,
+            futureLevel = futureLevel,
+        )
     }.flowOn(Dispatchers.Default)
     .stateIn(
         scope = viewModelScope,
@@ -977,6 +1038,18 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateCoachToleranceEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateCoachToleranceEnabled(enabled)
+        }
+    }
+
+    fun updateCoachToleranceSeedMg(mg: Int) {
+        viewModelScope.launch {
+            settingsRepo.updateCoachToleranceSeedMg(mg)
+        }
+    }
+
     fun updateHcSleepMode(mode: com.uc.caffeine.data.HcSleepMode) {
         viewModelScope.launch {
             settingsRepo.updateHcSleepMode(mode)
@@ -1213,6 +1286,11 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         return unitDao.getUnitsForDrink(drinkId)
     }
 
+    suspend fun getPresetForItemId(presetItemId: String): DrinkPreset? {
+        if (presetItemId.isBlank()) return null
+        return presetDao.getPresetByItemId(presetItemId)
+    }
+
     suspend fun getUnitsForPresetItemId(presetItemId: String): List<DrinkUnit> {
         if (presetItemId.isBlank()) return emptyList()
         return unitDao.getUnitsForPresetItemId(presetItemId)
@@ -1262,6 +1340,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         unitKey: String,
         caffeineMg: Double,
         barcode: String? = null,
+        releaseMinutes: Int? = null,
     ) {
         viewModelScope.launch {
             val preset = DrinkPreset(
@@ -1275,6 +1354,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 isCustom = true,
                 relevance = 10000,
                 barcode = barcode,
+                releaseMinutes = releaseMinutes?.let(::coerceReleaseMinutes),
             )
             val presetId = presetDao.insertAndGetId(preset).toInt()
             unitDao.insert(
@@ -1298,6 +1378,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         category: String,
         unitKey: String,
         caffeineMg: Double,
+        releaseMinutes: Int?,
     ) {
         viewModelScope.launch {
             val updated = preset.copy(
@@ -1307,6 +1388,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 category = category,
                 defaultUnit = unitKey,
                 defaultCaffeineMg = caffeineMg.toInt(),
+                releaseMinutes = releaseMinutes?.let(::coerceReleaseMinutes),
             )
             presetDao.update(updated)
             unitDao.deleteUnitsForDrink(preset.id)

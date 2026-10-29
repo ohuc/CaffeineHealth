@@ -27,6 +27,11 @@ data class DrinkPreset(
 
     // EAN-13 form of the product barcode (see normalizeProductBarcode), so a scan finds the drink.
     val barcode: String? = null,
+
+    // Extended-release products (e.g. slow-release caffeine pills): minutes over which the dose is
+    // released, spread linearly like "time to finish". Null = an ordinary drink. When set, it is
+    // taken in one go and the release time replaces the user-chosen time to finish.
+    val releaseMinutes: Int? = null,
 )
 
 val defaultDrinkPresets = listOf(

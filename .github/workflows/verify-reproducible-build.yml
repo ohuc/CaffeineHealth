@@ -1,0 +1,137 @@
+# Rebuilds a release from its tag the way F-Droid and IzzyOnDroid do: a clean Linux checkout,
+# an unsigned assembleRelease, and the same postbuild fix as fdroiddata's com.uc.caffeine.yml.
+# It then checks that the APK attached to the GitHub release is exactly that build plus a
+# signature (apksigcopier compare, which is what F-Droid's AllowedAPKSigningKeys check does).
+#
+# Release flow: push the tag -> create a DRAFT release with app-release.apk attached -> run
+# this workflow (Actions tab -> Run workflow -> tag). The draft is published only if the APK
+# reproduces. It also runs on every published release as a safety net.
+name: Verify reproducible build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to verify (e.g. v2.4.1)
+        required: true
+      publish:
+        description: Publish the draft release if the APK reproduces
+        type: boolean
+        default: true
+  release:
+    types: [published]
+
+permissions:
+  contents: write # download draft release assets and publish the draft
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      GH_TOKEN: ${{ github.token }}
+      BUILD_TOOLS: "36.0.0"
+      REBUILT_APK: app/build/outputs/apk/release/app-release-unsigned.apk
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "build-tools;${{ env.BUILD_TOOLS }} platform-tools"
+
+      - name: Put zipalign, apksigner and dexdump on PATH
+        run: echo "$ANDROID_HOME/build-tools/$BUILD_TOOLS" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install apksigcopier
+        run: pip install apksigcopier
+
+      - name: Download the release APK
+        run: |
+          set -eu
+          gh release download "$TAG" --pattern app-release.apk --dir upstream
+          ls -l upstream/app-release.apk
+
+      - name: APK was built from the tagged commit
+        run: |
+          set -eu
+          WANT=$(git rev-parse HEAD)
+          GOT=$(unzip -p upstream/app-release.apk META-INF/version-control-info.textproto | grep -oP 'revision: "\K[0-9a-f]+' || true)
+          echo "Tag $TAG is $WANT | APK says it was built from ${GOT:-<unknown>}"
+          if [ "$GOT" != "$WANT" ]; then
+            echo "::error::app-release.apk was built from ${GOT:-an unknown commit}, not $TAG ($WANT). Rebuild from the tag."
+            exit 1
+          fi
+
+      # Same prebuild as fdroiddata (it runs in subdir app/).
+      - name: Prebuild (as fdroiddata)
+        run: sed -i -e '/signingConfig = signingConfigs/d' app/build.gradle.kts
+
+      - name: Build unsigned release from the tag
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      # Same postbuild as fdroiddata.
+      - name: Postbuild (as fdroiddata)
+        run: |
+          set -eu
+          git clone --quiet --depth 1 --branch v0.3.0 https://github.com/obfusk/reproducible-apk-tools.git "$RUNNER_TEMP/rat"
+          python3 "$RUNNER_TEMP/rat/inplace-fix.py" --zipalign --page-size 16 \
+            fix-newlines "$REBUILT_APK" 'assets/consumable_items.json'
+
+      - name: Compare (release APK = clean rebuild + signature)
+        run: apksigcopier compare upstream/app-release.apk --unsigned "$REBUILT_APK"
+
+      - name: Show what differs
+        if: failure()
+        run: |
+          python3 - "upstream/app-release.apk" "$REBUILT_APK" <<'EOF'
+          import sys, zipfile
+          a, b = (zipfile.ZipFile(p) for p in sys.argv[1:3])
+          sig = lambda n: n.startswith("META-INF/") and n.rsplit(".", 1)[-1] in ("SF", "RSA", "EC", "DSA", "MF")
+          ea = {i.filename: i.CRC for i in a.infolist() if not sig(i.filename)}
+          eb = {i.filename: i.CRC for i in b.infolist() if not sig(i.filename)}
+          for n in sorted(ea.keys() | eb.keys()):
+              if ea.get(n) != eb.get(n):
+                  print(f"::warning::differs: {n}" if n in ea and n in eb else f"::warning::only in {'release' if n in ea else 'rebuild'}: {n}")
+          EOF
+          mkdir -p diff
+          for dex in $(unzip -Z1 upstream/app-release.apk 'classes*.dex'); do
+            unzip -p upstream/app-release.apk "$dex" > diff/release.dex
+            unzip -p "$REBUILT_APK" "$dex" > diff/rebuild.dex
+            if ! cmp -s diff/release.dex diff/rebuild.dex; then
+              echo "=== $dex (- release APK, + clean rebuild) ==="
+              dexdump -d diff/release.dex | sed 's/^[0-9a-f]*: [0-9a-f ]*|//' > diff/release.txt
+              dexdump -d diff/rebuild.dex | sed 's/^[0-9a-f]*: [0-9a-f ]*|//' > diff/rebuild.txt
+              diff -u diff/release.txt diff/rebuild.txt | head -150 || true
+            fi
+          done
+
+      - name: Keep both APKs for inspection
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks-${{ env.TAG }}
+          path: |
+            upstream/app-release.apk
+            ${{ env.REBUILT_APK }}
+
+      - name: Publish the draft release
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        run: |
+          set -eu
+          if [ "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = "true" ]; then
+            gh release edit "$TAG" --draft=false
+            echo "Published $TAG: the APK reproduces."
+          else
+            echo "$TAG is already published; nothing to do."
+          fi

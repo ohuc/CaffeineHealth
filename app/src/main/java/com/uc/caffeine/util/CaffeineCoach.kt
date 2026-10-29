@@ -52,6 +52,12 @@ object CaffeineCoach {
     private const val CAFFEINE_EMAX = 35.0
     private const val CAFFEINE_EC50_MG = 60.0
 
+    /**
+     * Tolerance (#59) shifts the dose-response right: a habitual intake of this many mg/day
+     * doubles the load needed for half the boost. Heuristic, like the constants above.
+     */
+    private const val TOLERANCE_EC50_DOUBLING_MG_PER_DAY = 300.0
+
     // ── Optimiser ─────────────────────────────────────────────────────────────
     /** Don't try to keep the user alert in the final wind-down before bed. */
     private const val WIND_DOWN_MINUTES = 120L
@@ -176,7 +182,9 @@ object CaffeineCoach {
         val dipDistance = circularHourDistance(clockHour, POST_LUNCH_DIP_HOUR)
         val circadianPenalty = POST_LUNCH_DIP_DEPTH * gaussian(dipDistance, POST_LUNCH_DIP_WIDTH_HOURS)
 
-        val caffeineBoost = CAFFEINE_EMAX * caffeineLoadMg / (CAFFEINE_EC50_MG + caffeineLoadMg)
+        val ec50 = CAFFEINE_EC50_MG *
+            (1.0 + input.toleranceMgPerDay.coerceAtLeast(0.0) / TOLERANCE_EC50_DOUBLING_MG_PER_DAY)
+        val caffeineBoost = CAFFEINE_EMAX * caffeineLoadMg / (ec50 + caffeineLoadMg)
 
         return BASE_ALERTNESS - homeostatic - debtPenalty - circadianPenalty + caffeineBoost
     }
@@ -288,6 +296,8 @@ data class CoachInput(
     val lastNightSleepMinutes: Int?,
     val sleepNeedMinutes: Int = CaffeineCoach.DEFAULT_SLEEP_NEED_MINUTES,
     val zoneId: ZoneId,
+    /** Habitual-intake baseline from [CaffeineTolerance]; 0 = tolerance not accounted for. */
+    val toleranceMgPerDay: Double = 0.0,
 )
 
 enum class CoachReason {

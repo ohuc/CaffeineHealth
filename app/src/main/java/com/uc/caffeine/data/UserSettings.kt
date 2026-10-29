@@ -197,6 +197,15 @@ data class UserSettings(
     val caffeineCoachEnabled: Boolean = true,
 
     /**
+     * Whether the Coach accounts for caffeine tolerance (#59): your recent daily intake raises how
+     * much it thinks you need to feel the lift. See [com.uc.caffeine.util.CaffeineTolerance].
+     */
+    val coachToleranceEnabled: Boolean = false,
+
+    /** Habitual mg/day before logging started, the tolerance baseline's starting point. */
+    val coachToleranceSeedMg: Int = 0,
+
+    /**
      * How many recent servings the Add screen offers as one-tap shortcuts.
      * 0 hides the section. Capped at [MAX_RECENT_SERVINGS] so the catalog stays reachable.
      */

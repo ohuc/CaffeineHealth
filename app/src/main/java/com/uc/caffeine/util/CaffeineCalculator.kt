@@ -151,11 +151,7 @@ object CaffeineCalculator {
         entry: ConsumptionEntry,
         halfLifeMinutes: Int = 300,
     ): Long {
-        val searchPaddingMinutes = maxOf(
-            MIN_PEAK_SEARCH_PADDING_MINUTES,
-            entry.absorptionRate.toLong() * PEAK_SEARCH_PADDING_MULTIPLIER,
-        )
-        val searchEndTime = entry.finishedAtMillis + (searchPaddingMinutes * MINUTE_MILLIS)
+        val searchEndTime = peakSearchEndMillis(entry)
 
         var bestTime = entry.startedAtMillis
         var bestLevel = Double.NEGATIVE_INFINITY
@@ -174,6 +170,15 @@ object CaffeineCalculator {
         }
 
         return bestTime
+    }
+
+    /** The latest moment [calculatePeakTime] considers, so its result never lies past it. */
+    fun peakSearchEndMillis(entry: ConsumptionEntry): Long {
+        val searchPaddingMinutes = maxOf(
+            MIN_PEAK_SEARCH_PADDING_MINUTES,
+            entry.absorptionRate.toLong() * PEAK_SEARCH_PADDING_MULTIPLIER,
+        )
+        return entry.finishedAtMillis + (searchPaddingMinutes * MINUTE_MILLIS)
     }
 
     fun predictTimeUntilLevel(

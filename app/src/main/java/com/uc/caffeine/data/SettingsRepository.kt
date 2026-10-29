@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.uc.caffeine.util.CaffeineTolerance
 import com.uc.caffeine.util.coerceConsumptionDuration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -55,6 +56,8 @@ object SettingsKeys {
     val WEEKLY_SLEEP_ROTA_ENABLED = booleanPreferencesKey("weekly_sleep_rota_enabled")
     val WEEKLY_SLEEP_ROTA = stringSetPreferencesKey("weekly_sleep_rota")
     val CAFFEINE_COACH_ENABLED = booleanPreferencesKey("caffeine_coach_enabled")
+    val COACH_TOLERANCE_ENABLED = booleanPreferencesKey("coach_tolerance_enabled")
+    val COACH_TOLERANCE_SEED_MG = intPreferencesKey("coach_tolerance_seed_mg")
     val RECENT_SERVINGS_COUNT = intPreferencesKey("recent_servings_count")
     val AUTOMATION_ENABLED = booleanPreferencesKey("automation_enabled")
     val DEFAULT_DURATION_MINUTES = intPreferencesKey("default_duration_minutes")
@@ -316,6 +319,18 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateCoachToleranceEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.COACH_TOLERANCE_ENABLED] = enabled
+        }
+    }
+
+    suspend fun updateCoachToleranceSeedMg(mg: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.COACH_TOLERANCE_SEED_MG] = mg.coerceIn(0, CaffeineTolerance.MAX_SEED_MG_PER_DAY)
+        }
+    }
+
     suspend fun updateRecentServingsCount(count: Int) {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.RECENT_SERVINGS_COUNT] = count.coerceIn(0, MAX_RECENT_SERVINGS)
@@ -404,6 +419,9 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] = settings.weeklySleepRotaEnabled
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = encodeWeeklySleepRota(settings.weeklySleepRota)
             prefs[SettingsKeys.CAFFEINE_COACH_ENABLED] = settings.caffeineCoachEnabled
+            prefs[SettingsKeys.COACH_TOLERANCE_ENABLED] = settings.coachToleranceEnabled
+            prefs[SettingsKeys.COACH_TOLERANCE_SEED_MG] =
+                settings.coachToleranceSeedMg.coerceIn(0, CaffeineTolerance.MAX_SEED_MG_PER_DAY)
             prefs[SettingsKeys.RECENT_SERVINGS_COUNT] = settings.recentServingsCount.coerceIn(0, MAX_RECENT_SERVINGS)
             prefs[SettingsKeys.DEFAULT_DURATION_MINUTES] = coerceConsumptionDuration(settings.defaultDurationMinutes)
             prefs[SettingsKeys.CATEGORY_DURATION_MINUTES] = encodeDurationMap(settings.categoryDurationMinutes)
@@ -455,6 +473,9 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         weeklySleepRotaEnabled = this[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] ?: false,
         weeklySleepRota = decodeWeeklySleepRota(this[SettingsKeys.WEEKLY_SLEEP_ROTA]),
         caffeineCoachEnabled = this[SettingsKeys.CAFFEINE_COACH_ENABLED] ?: defaultSettings.caffeineCoachEnabled,
+        coachToleranceEnabled = this[SettingsKeys.COACH_TOLERANCE_ENABLED] ?: defaultSettings.coachToleranceEnabled,
+        coachToleranceSeedMg = (this[SettingsKeys.COACH_TOLERANCE_SEED_MG] ?: defaultSettings.coachToleranceSeedMg)
+            .coerceIn(0, CaffeineTolerance.MAX_SEED_MG_PER_DAY),
         recentServingsCount = (this[SettingsKeys.RECENT_SERVINGS_COUNT] ?: defaultSettings.recentServingsCount)
             .coerceIn(0, MAX_RECENT_SERVINGS),
         automationEnabled = this[SettingsKeys.AUTOMATION_ENABLED] ?: false,

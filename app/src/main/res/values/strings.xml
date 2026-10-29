@@ -10,6 +10,8 @@
     <string name="widget_quick_add_description">Log your recent drinks directly from the home screen.</string>
     <string name="widget_combined_label">Caffeine Dashboard</string>
     <string name="widget_combined_description">See your caffeine level and log drinks without opening the app.</string>
+    <string name="widget_caffeine_ring_label">Caffeine Ring</string>
+    <string name="widget_caffeine_ring_description">Your active caffeine as a ring that fills up to your sleep threshold.</string>
 
     <!-- Common actions -->
     <string name="action_back">Back</string>
@@ -254,6 +256,13 @@
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Caffeine Coach</string>
     <string name="coach_setting_description">Suggest the smallest, best-timed dose to stay sharp without hurting sleep</string>
+    <string name="coach_tolerance_label">Account for tolerance</string>
+    <string name="coach_tolerance_description">Regular caffeine blunts its lift, so the Coach suggests a little more when your recent intake is high. Your sleep threshold isn’t changed.</string>
+    <string name="coach_tolerance_seed_label">Usual intake before logging</string>
+    <string name="coach_tolerance_seed_description">Where your tolerance starts before the app has history. After that it follows what you log, adjusting over about a week.</string>
+    <string name="coach_tolerance_mg_per_day">%1$d mg/day</string>
+    <string name="coach_tolerance_current">Current tolerance</string>
+    <string name="coach_tolerance_current_description">Rises on days you have more than this and falls on days you have less. Today counts once it’s over.</string>
 
     <!-- Add screen -->
     <string name="add_title">Add a drink</string>
@@ -295,6 +304,11 @@
     <string name="custom_drink_amount_label">Amount</string>
     <string name="custom_drink_save">Save custom drink</string>
     <string name="custom_drink_edit_button">Edit custom drink</string>
+    <string name="custom_drink_release_title">How it’s taken</string>
+    <string name="custom_drink_release_normal">Sipped</string>
+    <string name="custom_drink_release_extended">Extended release</string>
+    <string name="custom_drink_release_normal_hint">You pick how long it takes to finish each time you log it.</string>
+    <string name="custom_drink_release_extended_hint">Taken in one go, like a slow-release pill. Its caffeine is released evenly over the release time.</string>
     <string name="custom_drink_delete_button">Delete drink</string>
     <string name="custom_drink_delete_title">Delete “%1$s”?</string>
     <string name="custom_drink_delete_body">It will be removed from your drinks list. Anything you\'ve already logged stays in your history.</string>
@@ -689,6 +703,10 @@
     <string name="timing_duration_increase_cd">One minute more</string>
     <string name="timing_duration_hint">Use a longer finish time to spread the caffeine intake over the drink window.</string>
     <string name="timing_always_use_for_drink">Always use for %1$s</string>
+    <string name="timing_release_time">Release time</string>
+    <string name="timing_release_time_locked">Set by this drink</string>
+    <string name="timing_release_decrease_cd">15 minutes less</string>
+    <string name="timing_release_increase_cd">15 minutes more</string>
 
     <!-- Settings → Time to finish -->
     <string name="settings_duration_title">Time to finish</string>

@@ -31,7 +31,7 @@ import kotlin.math.ceil
  * widget layouts in a restricted context. The only route to the app's font is drawing the text
  * ourselves, so this renders it as a white alpha mask and lets the launcher tint it. The tint is a
  * day/night pair, which keeps the text in step with the system theme like ordinary widget text.
- *D
+ *
  * Reserved for short display strings (the level readout); body text stays as real `Text` so it
  * ellipsizes, wraps and reaches TalkBack normally.
  */

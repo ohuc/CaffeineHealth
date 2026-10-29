@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -36,7 +37,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,6 +53,7 @@ import com.uc.caffeine.data.Cyp1a2Genotype
 import com.uc.caffeine.data.HormonalStatus
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.RollingNumberText
+import com.uc.caffeine.ui.components.ExpressiveIntSlider
 import com.uc.caffeine.ui.components.SettingsPageScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.onboarding.AgeBucket
@@ -66,6 +70,8 @@ import com.uc.caffeine.ui.onboarding.WeightUnit
 import com.uc.caffeine.ui.onboarding.buttonLabelRes
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.util.formatTimeOfDay
+import com.uc.caffeine.util.CaffeineTolerance
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalTime
 
 @Composable
@@ -179,6 +185,21 @@ internal fun CaffeineProfileSettingsScreen(
                 onToggle = viewModel::updateCaffeineCoachEnabled,
             )
 
+            AnimatedVisibility(
+                visible = userSettings.caffeineCoachEnabled,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                val toleranceMgPerDay by viewModel.coachToleranceMgPerDay.collectAsStateWithLifecycle()
+                CoachToleranceCard(
+                    enabled = userSettings.coachToleranceEnabled,
+                    seedMg = userSettings.coachToleranceSeedMg,
+                    toleranceMgPerDay = toleranceMgPerDay,
+                    onToggle = viewModel::updateCoachToleranceEnabled,
+                    onSeedChange = viewModel::updateCoachToleranceSeedMg,
+                )
+            }
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -205,6 +226,111 @@ internal fun CaffeineProfileSettingsScreen(
                         Text(
                             text = stringResource(R.string.profile_redo_onboarding),
                             modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Coach tolerance (#59): opt-in, with the habitual intake the baseline starts from. */
+@Composable
+private fun CoachToleranceCard(
+    enabled: Boolean,
+    seedMg: Int,
+    toleranceMgPerDay: Int?,
+    onToggle: (Boolean) -> Unit,
+    onSeedChange: (Int) -> Unit,
+) {
+    val haptics = rememberAppHaptics()
+    val seedSteps = 0..(CaffeineTolerance.MAX_SEED_MG_PER_DAY / CaffeineTolerance.SEED_STEP_MG)
+    // Saved when the drag ends, not on every step.
+    var seedStep by remember(seedMg) { mutableIntStateOf(seedMg / CaffeineTolerance.SEED_STEP_MG) }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        haptics.toggle()
+                        onToggle(!enabled)
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.coach_tolerance_label),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = stringResource(R.string.coach_tolerance_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = {
+                        haptics.toggle()
+                        onToggle(it)
+                    },
+                )
+            }
+
+            AnimatedVisibility(
+                visible = enabled,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.coach_tolerance_seed_label),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.coach_tolerance_mg_per_day,
+                                seedStep * CaffeineTolerance.SEED_STEP_MG,
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    ExpressiveIntSlider(
+                        value = seedStep,
+                        onValueChange = { seedStep = it },
+                        valueRange = seedSteps,
+                        onValueChangeFinished = { onSeedChange(seedStep * CaffeineTolerance.SEED_STEP_MG) },
+                    )
+                    Text(
+                        text = stringResource(R.string.coach_tolerance_seed_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (toleranceMgPerDay != null) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        ProfileSnapshotMetric(
+                            title = stringResource(R.string.coach_tolerance_current),
+                            value = stringResource(R.string.coach_tolerance_mg_per_day, toleranceMgPerDay),
+                            description = stringResource(R.string.coach_tolerance_current_description),
                         )
                     }
                 }

@@ -99,6 +99,7 @@ import com.uc.caffeine.util.calculateNextBedtimeMillis
 import kotlin.math.roundToInt
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
 import com.uc.caffeine.ui.components.ConsumptionTimingSection
+import com.uc.caffeine.ui.components.ReleaseTimeSetting
 import com.uc.caffeine.ui.components.DrinkDurationDefault
 import com.uc.caffeine.util.defaultDurationFor
 import com.uc.caffeine.ui.components.DrinkIcon
@@ -893,10 +894,12 @@ private fun AddDrinkServingSheet(
     val frozenTodayEntries = remember { todayEntries }
     var quantity by remember(preset.id) { mutableStateOf(1.0) }
     var startedAtMillis by remember(preset.id) { mutableStateOf(System.currentTimeMillis()) }
-    var durationMinutes by remember(preset.id) {
+    var durationMinutes by remember(preset.id, preset.releaseMinutes) {
         mutableIntStateOf(userSettings.defaultDurationFor(preset))
     }
-    val drinkDurationDefault = preset.itemId.takeIf { it.isNotBlank() }?.let { itemId ->
+    val isExtendedRelease = preset.releaseMinutes != null
+    // An extended-release drink's window is its release time, so there is no default to save.
+    val drinkDurationDefault = preset.itemId.takeIf { it.isNotBlank() && !isExtendedRelease }?.let { itemId ->
         DrinkDurationDefault(
             drinkName = preset.name,
             isSet = itemId in userSettings.drinkDurationMinutes,
@@ -1095,6 +1098,7 @@ private fun AddDrinkServingSheet(
                 onStartedAtChange = { startedAtMillis = it },
                 onDurationChange = { durationMinutes = it },
                 drinkDurationDefault = drinkDurationDefault,
+                isExtendedRelease = isExtendedRelease,
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1354,6 +1358,7 @@ private fun CreateCustomDrinkSheet(
     var selectedCategory by remember { mutableStateOf(draft.category) }
     var selectedUnitKey by remember { mutableStateOf(draft.unitKey) }
     var caffeineText by remember { mutableStateOf(draft.caffeineMg?.let(::formatCaffeineAmount).orEmpty()) }
+    var releaseMinutes by remember { mutableStateOf<Int?>(null) }
 
     val imageRequest = rememberImagePickerRequest()
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -1536,6 +1541,13 @@ private fun CreateCustomDrinkSheet(
             )
         }
 
+        HorizontalDivider()
+
+        ReleaseTimeSetting(
+            releaseMinutes = releaseMinutes,
+            onReleaseMinutesChange = { releaseMinutes = it },
+        )
+
         Button(
             onClick = {
                 val caffeine = caffeineValue ?: return@Button
@@ -1548,6 +1560,7 @@ private fun CreateCustomDrinkSheet(
                     unitKey = selectedUnitKey,
                     caffeineMg = caffeine,
                     barcode = barcode,
+                    releaseMinutes = releaseMinutes,
                 )
                 onDismiss()
             },
@@ -1583,6 +1596,7 @@ private fun EditCustomDrinkSheet(
     var imageUri by remember(preset.id) { mutableStateOf(preset.imageName) }
     var selectedCategory by remember(preset.id) { mutableStateOf(preset.category) }
     var selectedUnitKey by remember(preset.id) { mutableStateOf(preset.defaultUnit) }
+    var releaseMinutes by remember(preset.id) { mutableStateOf(preset.releaseMinutes) }
     var caffeineText by remember(preset.id, existingUnit) {
         val v = existingUnit?.caffeineMg
         mutableStateOf(
@@ -1650,6 +1664,7 @@ private fun EditCustomDrinkSheet(
                         category = selectedCategory,
                         unitKey = selectedUnitKey,
                         caffeineMg = caffeine,
+                        releaseMinutes = releaseMinutes,
                     )
                     onDone()
                 }
@@ -1789,6 +1804,13 @@ private fun EditCustomDrinkSheet(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+
+        HorizontalDivider()
+
+        ReleaseTimeSetting(
+            releaseMinutes = releaseMinutes,
+            onReleaseMinutesChange = { releaseMinutes = it },
+        )
 
         HorizontalDivider()
 

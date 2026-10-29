@@ -26,7 +26,7 @@ object CaffeineWidgetUpdater {
     suspend fun update(context: Context) {
         val manager = GlanceAppWidgetManager(context)
         val token = System.currentTimeMillis()
-        for (widget in listOf(CaffeineNowWidget(), QuickAddWidget(), CombinedWidget())) {
+        for (widget in listOf(CaffeineNowWidget(), QuickAddWidget(), CombinedWidget(), CaffeineRingWidget())) {
             for (id in manager.getGlanceIds(widget.javaClass)) {
                 // One broken instance must not keep the others from refreshing.
                 try {
@@ -63,5 +63,7 @@ object CaffeineWidgetUpdater {
             .onFailure { Log.w(TAG, "setWidgetPreviews(QuickAdd) failed", it) }
         runCatching { mgr.setWidgetPreviews<CombinedWidgetReceiver>() }
             .onFailure { Log.w(TAG, "setWidgetPreviews(Combined) failed", it) }
+        runCatching { mgr.setWidgetPreviews<CaffeineRingWidgetReceiver>() }
+            .onFailure { Log.w(TAG, "setWidgetPreviews(CaffeineRing) failed", it) }
     }
 }

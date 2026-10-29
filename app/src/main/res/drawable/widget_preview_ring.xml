@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ring for the static widget-picker preview: track plus a ~70% arc from 12 o'clock. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:strokeColor="@color/widget_icon_container"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M10.49,66.96 A50,50 0 0,1 51.32,10.76" />
+    <path
+        android:strokeColor="@color/widget_primary"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M60,10 A50,50 0 1,1 12.45,75.45" />
+</vector>

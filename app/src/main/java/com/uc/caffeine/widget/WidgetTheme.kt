@@ -32,6 +32,7 @@ internal class WidgetPalette(private val light: ColorScheme, private val dark: C
     val text = pair { it.onSurface }
     val textMuted = pair { it.onSurfaceVariant }
     val divider = pair { it.outlineVariant }
+    val ringTrack = pair { it.surfaceVariant }
     val warning = pair { it.tertiary }
     val danger = pair { it.error }
 }

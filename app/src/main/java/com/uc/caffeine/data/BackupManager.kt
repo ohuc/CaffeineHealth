@@ -7,6 +7,7 @@ import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
+import com.uc.caffeine.util.coerceReleaseMinutes
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.DayOfWeek
@@ -76,6 +77,8 @@ class BackupManager(
             put("profileMedications", JSONArray(pf.medications.toList()))
             put("hcSleepMode", settings.hcSleepMode.name)
             put("caffeineCoachEnabled", settings.caffeineCoachEnabled)
+            put("coachToleranceEnabled", settings.coachToleranceEnabled)
+            put("coachToleranceSeedMg", settings.coachToleranceSeedMg)
             put("recentServingsCount", settings.recentServingsCount)
             put("defaultDurationMinutes", settings.defaultDurationMinutes)
             put("categoryDurationMinutes", JSONObject(settings.categoryDurationMinutes.toMap()))
@@ -105,6 +108,7 @@ class BackupManager(
                 put("defaultUnit", preset.defaultUnit)
                 put("defaultCaffeineMg", preset.defaultCaffeineMg)
                 preset.barcode?.let { put("barcode", it) }
+                preset.releaseMinutes?.let { put("releaseMinutes", it) }
                 val unitsArray = JSONArray()
                 for (unit in units) {
                     unitsArray.put(JSONObject().apply {
@@ -195,6 +199,8 @@ class BackupManager(
                 hcSleepMode = HcSleepMode.fromStorage(settingsObj.optString("hcSleepMode")),
                 profileFactors = pf,
                 caffeineCoachEnabled = settingsObj.optBoolean("caffeineCoachEnabled", true),
+                coachToleranceEnabled = settingsObj.optBoolean("coachToleranceEnabled", false),
+                coachToleranceSeedMg = settingsObj.optInt("coachToleranceSeedMg", 0),
                 recentServingsCount = settingsObj.optInt("recentServingsCount", DEFAULT_RECENT_SERVINGS),
                 defaultDurationMinutes = settingsObj.optInt(
                     "defaultDurationMinutes",
@@ -241,6 +247,8 @@ class BackupManager(
                 defaultCaffeineMg = obj.optInt("defaultCaffeineMg", 0),
                 isCustom = true,
                 barcode = obj.optString("barcode").ifBlank { null },
+                releaseMinutes = obj.optInt("releaseMinutes", 0).takeIf { it > 0 }
+                    ?.let(::coerceReleaseMinutes),
             )
             val drinkId = presetDao.insertAndGetId(preset).toInt()
             val unitsArray = obj.optJSONArray("units") ?: JSONArray()
