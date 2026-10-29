@@ -582,4 +582,22 @@
     <string name="custom_drink_delete_body">Bude odstraněn ze seznamu vašich nápojů. Vše, co jste již zaznamenali, zůstane v historii.</string>
     <string name="custom_drink_delete_confirm">Odstranit</string>
     <string name="custom_drink_deleted_toast">Odstraněno: %1$s</string>
+    <string name="widget_caffeine_ring_label">Kofeinový kruh</string>
+    <string name="widget_caffeine_ring_description">Aktivní kofein zobrazený jako kruh, který se zaplňuje až k vašemu limitu před spaním.</string>
+    <string name="coach_tolerance_label">Zohlednit toleranci</string>
+    <string name="coach_tolerance_description">Pravidelný příjem kofeinu oslabuje jeho povzbuzující účinek. Pokud jste ho v poslední době přijímali hodně, poradce proto navrhuje o něco více. Váš limit před spaním se nemění.</string>
+    <string name="coach_tolerance_seed_label">Obvyklý příjem před vedením záznamů</string>
+    <string name="coach_tolerance_seed_description">Výchozí tolerance, než aplikace získá historii. Poté se řídí vašimi záznamy a přizpůsobuje se přibližně během týdne.</string>
+    <string name="coach_tolerance_mg_per_day">%1$d mg/den</string>
+    <string name="coach_tolerance_current">Aktuální tolerance</string>
+    <string name="coach_tolerance_current_description">Stoupá ve dnech, kdy přijmete více než toto množství, a klesá ve dnech, kdy přijmete méně. Dnešní den se započítá až po jeho skončení.</string>
+    <string name="custom_drink_release_title">Způsob konzumace</string>
+    <string name="custom_drink_release_normal">Po doušcích</string>
+    <string name="custom_drink_release_extended">Prodloužené uvolňování</string>
+    <string name="custom_drink_release_normal_hint">Při každém záznamu zvolíte, jak dlouho vám trvá nápoj vypít.</string>
+    <string name="custom_drink_release_extended_hint">Užívá se najednou, například jako tableta s prodlouženým uvolňováním. Kofein se uvolňuje rovnoměrně po celou dobu uvolňování.</string>
+    <string name="timing_release_time">Doba uvolňování</string>
+    <string name="timing_release_time_locked">Určeno tímto nápojem</string>
+    <string name="timing_release_decrease_cd">O 15 minut méně</string>
+    <string name="timing_release_increase_cd">O 15 minut více</string>
 </resources>
