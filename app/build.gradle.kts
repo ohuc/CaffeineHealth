@@ -120,7 +120,7 @@ android {
         minSdk = 31
         targetSdk = 36
         versionCode = 17
-        versionName = "2.5.1"
+        versionName = "2.5.2"
 
         buildConfigField("String", "TRANSLATION_COMPLETION", "\"$translationCompletion\"")
 
