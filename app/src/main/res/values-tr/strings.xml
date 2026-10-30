@@ -436,4 +436,25 @@
     <string name="home_circular_threshold_format">%1$d mg üzerinden</string>
     <string name="home_view_toggle_to_circular_cd">Dairesel görünüme geç</string>
     <string name="home_view_toggle_to_graph_cd">Grafik görünümüne geç</string>
+    <string name="widget_caffeine_ring_label">Kafein Dairesi</string>
+    <string name="widget_caffeine_ring_description">Aktif kafeininiz, uyku eşiğinize kadar dolduran bir halka olarak kullanılır.</string>
+    <string name="settings_automation_title">Otomasyon</string>
+    <string name="settings_automation_summary">Tasker, NFC etiketi ve başka uygulamalardan içecek girişi yapın.</string>
+    <string name="automation_enable_title">Başka uyugulamaların içecek girişi yapmasına izin verin.</string>
+    <string name="automation_enable_description">Tasker veya MacroDroid gibi uygulamalar, bir istek göndererek giriş ekleyebilir. Bu özelliği yalnızca bu uygulamaları kullanıyorsanız etkinleştirin.</string>
+    <string name="automation_setup_section">İstek kurulumu</string>
+    <string name="automation_action_label">Aksiyon</string>
+    <string name="automation_package_label">Paket</string>
+    <string name="automation_target_label">Hedef</string>
+    <string name="automation_target_value">Yayın alıcı</string>
+    <string name="automation_copy_cd">Kopyala</string>
+    <string name="automation_copied">Panoya kopyalandı</string>
+    <string name="automation_extras_section">Ekstralar</string>
+    <string name="automation_extra_drink_name">drink_id ayarlanmamışsa içecek adı, uygulamada gösterildiği şekilde tam olarak yazılması zorunludur; örneğin: Espresso.</string>
+    <string name="automation_extra_unit">Porsiyon şekli, örneğin; shot, kutu veya bardak (büyük boy). Boş bırakılırsa varsayılan porsiyonu kullanır</string>
+    <string name="automation_extra_quantity">Porsiyon sayısı. Varsayılan 1</string>
+    <string name="automation_extra_caffeine_mg">Toplam kafein mg şeklinde. Katolagdaki miktarı geçersiz kılar ve katologda olmayan içecekleri girmenizi sağlar</string>
+    <string name="automation_extra_timestamp" formatted="false">İçmeye başladığınızda, milisaniye veya saniye cinsinden zaman aralığı olarak (Tasker: %TIMEMS). Şu anda varsayılan.</string>
+    <string name="automation_extra_duration_minutes">İçeceği bitirmek için geçen süre. Varsayılan olarak “Bitirme Süresi” ayarınıza göre belirlenir.</string>
+    <string name="automation_example_section">Tasker örneği</string>
 </resources>
