@@ -66,6 +66,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -130,10 +131,10 @@ fun BarcodeScanner(
 
     var access by remember { mutableStateOf(initialCameraAccess(context)) }
     // After one refusal Android still shows its dialog once more; after that only Settings can help.
-    var canAskAgain by remember { mutableStateOf(true) }
-    var torchOn by remember { mutableStateOf(false) }
+    var canAskAgain by rememberSaveable { mutableStateOf(true) }
+    var torchOn by rememberSaveable { mutableStateOf(false) }
     var hasTorch by remember { mutableStateOf(false) }
-    var photoFailed by remember { mutableStateOf(false) }
+    var photoFailed by rememberSaveable { mutableStateOf(false) }
     var detected by remember { mutableStateOf<String?>(null) }
 
     val requestCamera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -181,7 +182,7 @@ fun BarcodeScanner(
         color = if (showingCamera) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
         contentColor = if (showingCamera) Color.White else MaterialTheme.colorScheme.onSurface,
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        ScannerLayout(viewfinder = {
             if (showingCamera) {
                 CameraFeed(
                     torchOn = torchOn,
@@ -217,6 +218,7 @@ fun BarcodeScanner(
                 )
             }
 
+        }, controls = {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -289,7 +291,7 @@ fun BarcodeScanner(
                     Text(stringResource(R.string.scanner_from_photo))
                 }
             }
-        }
+        })
     }
 }
 
@@ -363,8 +365,8 @@ private fun ScanWindow(lit: Boolean, modifier: Modifier = Modifier) {
     )
     // Offscreen so the cleared window punches through the scrim rather than the camera below.
     Canvas(modifier = modifier.graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
-        val width = minOf(size.width - 64.dp.toPx(), ScanWindowMaxWidth.toPx()) * scale
-        val height = ScanWindowHeight.toPx() * scale
+        val width = minOf((size.width - 64.dp.toPx()).coerceAtLeast(0f), ScanWindowMaxWidth.toPx()) * scale
+        val height = minOf(ScanWindowHeight.toPx(), size.height * 0.5f) * scale
         val topLeft = Offset((size.width - width) / 2f, (size.height - height) / 2f)
         val windowSize = androidx.compose.ui.geometry.Size(width, height)
         val radius = CornerRadius(28.dp.toPx())

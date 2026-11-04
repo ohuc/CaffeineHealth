@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
-    <!-- Only include DataStore preferences for cloud backup and device transfer.
-         Room database is intentionally omitted — restoring a DB across schema
-         versions can corrupt data. Caffeine history is local-only by design. -->
+    <!-- Only the actual shared health/preferences DataStore is portable.
+         Room and future Play billing/preview/identity files are not included. -->
     <cloud-backup>
-        <include domain="sharedpref" path="." />
+        <include domain="file" path="datastore/user_settings.preferences_pb" />
     </cloud-backup>
 
     <device-transfer>
-        <include domain="sharedpref" path="." />
+        <include domain="file" path="datastore/user_settings.preferences_pb" />
     </device-transfer>
 </data-extraction-rules>

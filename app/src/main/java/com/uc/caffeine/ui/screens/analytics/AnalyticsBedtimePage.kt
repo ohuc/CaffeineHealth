@@ -1,5 +1,7 @@
 package com.uc.caffeine.ui.screens.analytics
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -32,11 +34,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
@@ -53,7 +57,6 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
-import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
@@ -61,7 +64,7 @@ internal fun AnalyticsBedtimePage(
     uiState: AnalyticsUiState,
     onBack: () -> Unit,
 ) {
-    var displayMonth by remember { mutableStateOf(YearMonth.now()) }
+    var displayMonth by rememberSaveable(stateSaver = YearMonthSaver) { mutableStateOf(YearMonth.now()) }
     val haptics = rememberAppHaptics()
 
     SettingsPageScaffold(
@@ -92,6 +95,11 @@ internal fun AnalyticsBedtimePage(
     }
 }
 
+private val YearMonthSaver = Saver<YearMonth, String>(
+    save = { it.toString() },
+    restore = { YearMonth.parse(it) },
+)
+
 @Composable
 private fun BedtimeCalendarCard(
     displayMonth: YearMonth,
@@ -99,15 +107,16 @@ private fun BedtimeCalendarCard(
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
 ) {
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     val today = remember { LocalDate.now() }
     val currentMonth = remember { YearMonth.now() }
     val minNavigableMonth = remember { currentMonth.minusMonths(24) }
-    val monthYearFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
-    val weekFields = remember { WeekFields.of(Locale.getDefault()) }
-    val firstDayOfWeek = remember { weekFields.firstDayOfWeek }
-    val dayHeaders = remember {
+    val monthYearFormatter = remember(locale) { DateTimeFormatter.ofPattern("MMMM yyyy", locale) }
+    val weekFields = remember(locale) { WeekFields.of(locale) }
+    val firstDayOfWeek = remember(weekFields) { weekFields.firstDayOfWeek }
+    val dayHeaders = remember(firstDayOfWeek, locale) {
         (0..6).map { offset ->
-            firstDayOfWeek.plus(offset.toLong()).getDisplayName(TextStyle.NARROW, Locale.getDefault())
+            firstDayOfWeek.plus(offset.toLong()).getDisplayName(TextStyle.NARROW, locale)
         }
     }
 
@@ -188,7 +197,7 @@ private fun BedtimeCalendarCard(
                             ) {
                                 if (isValidDay) {
                                     CalendarDayCell(
-                                        dayNumber = dayOfMonth,
+                                        date = checkNotNull(date),
                                         stat = stat,
                                         isPast = !isFuture,
                                     )
@@ -204,17 +213,28 @@ private fun BedtimeCalendarCard(
 
 @Composable
 private fun CalendarDayCell(
-    dayNumber: Int,
+    date: LocalDate,
     stat: DailyBedtimeStat?,
     isPast: Boolean,
 ) {
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+    val description = listOf(
+        date.format(DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.FULL).withLocale(locale)),
+        stat?.let { stringResource(R.string.analytics_value_mg, it.caffeineMg.roundToInt()) },
+        stringResource(when {
+            stat != null && stat.isSafe -> R.string.analytics_calendar_safe
+            stat != null -> R.string.analytics_calendar_above
+            isPast -> R.string.analytics_calendar_no_data
+            else -> R.string.analytics_calendar_future
+        }),
+    ).filterNotNull().joinToString(", ")
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
-        modifier = Modifier.padding(vertical = 4.dp),
+        modifier = Modifier.padding(vertical = 4.dp).clearAndSetSemantics { contentDescription = description },
     ) {
         Text(
-            text = dayNumber.toString(),
+            text = date.dayOfMonth.toString(),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,

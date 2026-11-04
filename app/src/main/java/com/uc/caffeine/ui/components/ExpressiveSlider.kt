@@ -1,20 +1,15 @@
 package com.uc.caffeine.ui.components
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
-// Material 3 Expressive "medium" slider: thick rounded track, tall bar handle, stop indicator.
-private val ExpressiveTrackHeight = 40.dp
-private val ExpressiveTrackCornerSize = 12.dp
-private val ExpressiveThumbSize = DpSize(width = 4.dp, height = 52.dp)
+// Material 3 Expressive default (XS) slider: 16dp rounded track, 4x44dp bar handle, stop
+// indicator. The larger M/L/XL track sizes are for hero controls, not form rows.
 
 /**
  * Whole-number Material 3 Expressive slider with a haptic tick on every step and a stronger
@@ -59,14 +54,11 @@ fun ExpressiveIntSlider(
             SliderDefaults.Thumb(
                 interactionSource = interactionSource,
                 colors = colors,
-                thumbSize = ExpressiveThumbSize,
             )
         },
         track = { sliderState ->
             SliderDefaults.Track(
                 sliderState = sliderState,
-                trackCornerSize = ExpressiveTrackCornerSize,
-                modifier = Modifier.height(ExpressiveTrackHeight),
                 colors = colors,
             )
         },

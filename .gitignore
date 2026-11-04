@@ -8,9 +8,6 @@ local.properties
 .vscode/
 .claude/
 
-CLAUDE.md
-.claude/
-CLAUDE.md
 # Kotlin compiler errors
 .kotlin/
 
@@ -46,11 +43,15 @@ artifacts/
 /key.properties
 /signing.properties
 /local-signing.properties
+# Google Cloud OAuth client downloads; the app identifies itself by package + SHA-1 and needs none.
+client_secret*.json
+google-services.json
 
 # Backup files
 *- Backup*
 *- Copy*
 
-# Built APKs (attached to GitHub Releases instead)
+# Built APKs/AABs (attached to GitHub Releases / uploaded to Play instead)
 app/release/
-/AGENTS.md
+app/foss/release/
+app/play/release/

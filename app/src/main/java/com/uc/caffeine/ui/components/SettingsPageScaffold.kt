@@ -1,11 +1,12 @@
 package com.uc.caffeine.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -47,15 +48,17 @@ fun SettingsPageScaffold(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(LocalPanePlacement.current.headerInsetSides))
             .padding(
                 horizontal = SettingsPageHorizontalPadding,
                 vertical = SettingsPageTopPadding,
             ),
     ) {
-        if (showBackButton && onBack != null) {
+        if (showBackButton && onBack != null && (!isListPaneVisible() || LocalNestedDetailBack.current)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = ScreenHeaderMinHeight),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 FilledTonalIconButton(onClick = {
@@ -71,13 +74,22 @@ fun SettingsPageScaffold(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f),
                 )
             }
         } else {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-            )
+            // Same header height as Home, whose view switcher makes its header 48dp tall.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = ScreenHeaderMinHeight),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(SettingsHeaderBottomSpacing))

@@ -19,6 +19,7 @@ composeMaterial3 = "1.6.0"
 datastore = "1.2.1"
 vico = "3.1.0"
 navigation3 = "1.1.0"
+adaptive = "1.3.0"
 healthConnect = "1.1.0"
 graphicsShapes = "1.0.1"
 glance = "1.2.0-rc01"
@@ -28,8 +29,13 @@ haze = "1.7.2"
 camerax = "1.6.2"
 # Pure-Java barcode decoding; ML Kit is proprietary and would keep the app off F-Droid.
 zxing = "3.5.4"
+revenuecat = "10.30.1"
+playServicesAuth = "21.3.0"
 
 [libraries]
+revenuecat-purchases = { module = "com.revenuecat.purchases:purchases", version.ref = "revenuecat" }
+# Play edition only: Google authorization for the Drive app-data backup (never in FOSS).
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
@@ -62,6 +68,7 @@ vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", ve
 # Add these two libraries
 androidx-navigation3-runtime = { group = "androidx.navigation3", name = "navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { group = "androidx.navigation3", name = "navigation3-ui", version.ref = "navigation3" }
+androidx-adaptive-navigation3 = { module = "androidx.compose.material3.adaptive:adaptive-navigation3", version.ref = "adaptive" }
 health-connect = { group = "androidx.health.connect", name = "connect-client", version.ref = "healthConnect" }
 androidx-graphics-shapes = { group = "androidx.graphics", name = "graphics-shapes", version.ref = "graphicsShapes" }
 glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }

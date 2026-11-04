@@ -8,6 +8,17 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
+import com.uc.caffeine.R
+import com.uc.caffeine.ui.components.AdaptivePaneContent
+import com.uc.caffeine.ui.components.AdaptivePanePlaceholder
+import com.uc.caffeine.ui.components.caffeinePaneDirective
+import com.uc.caffeine.util.openPane
+import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -15,6 +26,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
+import com.uc.caffeine.monetization.ProvidePlusSettings
 import java.time.LocalDate
 
 private enum class AnalyticsDestination : NavKey {
@@ -24,6 +36,7 @@ private enum class AnalyticsDestination : NavKey {
     TimeOfDay,
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 internal fun AnalyticsRoot(
     viewModel: CaffeineViewModel,
@@ -32,7 +45,11 @@ internal fun AnalyticsRoot(
     val uiState by viewModel.analyticsUiState.collectAsStateWithLifecycle()
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val nestedBackStack = rememberNavBackStack(AnalyticsDestination.Main)
+    val paneStrategy = rememberListDetailSceneStrategy<NavKey>(
+        directive = caffeinePaneDirective(), backNavigationBehavior = BackNavigationBehavior.PopLatest,
+    )
 
+    ProvidePlusSettings(viewModel.distributionServices.featureAccess, { viewModel.openPlus() }, { viewModel.requestFeature(it) }) {
     NavDisplay(
         backStack = nestedBackStack,
         onBack = {
@@ -41,6 +58,7 @@ internal fun AnalyticsRoot(
             }
         },
         modifier = modifier,
+        sceneStrategies = listOf(paneStrategy),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
         ),
@@ -57,15 +75,22 @@ internal fun AnalyticsRoot(
                 slideOutHorizontally(targetOffsetX = { it })
         },
         entryProvider = entryProvider {
-            entry<AnalyticsDestination> { destination ->
+            AnalyticsDestination.entries.forEach { destination ->
+            entry(key = destination, metadata = if (destination == AnalyticsDestination.Main) {
+                ListDetailSceneStrategy.listPane(detailPlaceholder = {
+                    AdaptivePanePlaceholder(stringResource(R.string.analytics_title),
+                        stringResource(R.string.adaptive_analytics_placeholder))
+                }) + ListDetailSceneStrategy.preferredPaneSize(width = 360.dp)
+            } else ListDetailSceneStrategy.detailPane()) {
+                AdaptivePaneContent {
                 when (destination) {
                     AnalyticsDestination.Main -> AnalyticsMainPage(
                         uiState = uiState,
                         expressiveBlur = userSettings.expressiveBlur,
                         onRangeSelected = viewModel::setAnalyticsRange,
-                        onSourcesClick = { nestedBackStack.add(AnalyticsDestination.Sources) },
-                        onBedtimeClick = { nestedBackStack.add(AnalyticsDestination.Bedtime) },
-                        onTimeOfDayClick = { nestedBackStack.add(AnalyticsDestination.TimeOfDay) },
+                        onSourcesClick = { nestedBackStack.openPane(AnalyticsDestination.Sources) },
+                        onBedtimeClick = { nestedBackStack.openPane(AnalyticsDestination.Bedtime) },
+                        onTimeOfDayClick = { nestedBackStack.openPane(AnalyticsDestination.TimeOfDay) },
                     )
 
                     AnalyticsDestination.Sources -> AnalyticsBySourcePage(
@@ -89,7 +114,10 @@ internal fun AnalyticsRoot(
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )
                 }
+                }
+            }
             }
         },
     )
+    }
 }

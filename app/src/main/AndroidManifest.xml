@@ -23,6 +23,7 @@
     </queries>
 
     <application
+        android:name=".CaffeineApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -32,6 +33,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Caffeine">
+        <meta-data android:name="com.uc.caffeine.distribution" android:value="${distribution}" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -121,11 +123,13 @@
                 android:resource="@xml/widget_caffeine_ring_info" />
         </receiver>
 
+        <activity android:name=".HealthPermissionsActivity" android:exported="false" />
+
         <!-- Health Connect permissions rationale on Android 13 and below (standalone HC APK) -->
         <activity-alias
             android:name="PermissionsRationaleActivity"
             android:exported="true"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".HealthPermissionsActivity">
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
@@ -135,7 +139,7 @@
         <activity-alias
             android:name="ViewPermissionUsageActivity"
             android:exported="true"
-            android:targetActivity=".MainActivity"
+            android:targetActivity=".HealthPermissionsActivity"
             android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />

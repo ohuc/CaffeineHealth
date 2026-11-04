@@ -1,13 +1,11 @@
 package com.uc.caffeine
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -33,8 +31,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,15 +81,14 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -96,12 +96,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
+import com.uc.caffeine.ui.components.SinglePaneWindow
+import com.uc.caffeine.ui.components.rememberWindowLayoutPolicy
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.Dp
+import com.uc.caffeine.ui.viewmodel.SettingsDeepLink
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
@@ -129,9 +136,9 @@ import dev.chrisbanes.haze.rememberHazeState
 
 class MainActivity : ComponentActivity() {
 
-    private val requestNotificationPermission = registerForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { /* result handled by the system — no-op */ }
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(com.uc.caffeine.util.AppLocale.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must run before super.onCreate so the Android 12+ splash is themed correctly
@@ -146,12 +153,12 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         com.uc.caffeine.util.notifications.NotificationChannels.createChannels(this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        CaffeineWidgetUpdater.schedulePeriodicRefresh(this)
+        intent.getStringExtra("plus_feature")?.let { value ->
+            com.uc.caffeine.monetization.ProFeature.entries.firstOrNull { it.name == value }?.let { feature ->
+                androidx.lifecycle.ViewModelProvider(this)[CaffeineViewModel::class.java].requestFeature(feature)
             }
         }
-        CaffeineWidgetUpdater.schedulePeriodicRefresh(this)
         lifecycleScope.launch {
             CaffeineWidgetUpdater.publishWidgetPreviews(applicationContext)
         }
@@ -194,6 +201,27 @@ fun CaffeineApp(
         hasExistingConsumptionHistory = hasExistingConsumptionHistory,
         isOnboardingComplete = userSettings.isOnboardingComplete,
     )
+    // First-run setup finishing in this session queues the Play Plus showcase (no-op in FOSS).
+    var sawOnboarding by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(startupDestination) {
+        when (startupDestination) {
+            StartupDestination.Onboarding -> sawOnboarding = true
+            StartupDestination.Main -> if (sawOnboarding) {
+                sawOnboarding = false
+                viewModel.distributionServices.journey.onboardingCompleted()
+            }
+            else -> Unit
+        }
+    }
+    // Play's Caffeine Health+ introduction is offered once eligibility is first seen. Showing it marks
+    // the post-setup showcase as shown, which flips eligibility off, so the offer is latched here
+    // instead of letting the step vanish from the sequence while the user is looking at it.
+    val journeyState by viewModel.distributionServices.journey.state.collectAsStateWithLifecycle()
+    var introOffered by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(journeyState.onboardingIntroEligible) {
+        if (journeyState.onboardingIntroEligible) introOffered = true
+    }
+    var plusPlansOpen by rememberSaveable { mutableStateOf(false) }
     CaffeineTheme(
         darkTheme = darkTheme,
         colorPalette = userSettings.colorPalette,
@@ -236,7 +264,31 @@ fun CaffeineApp(
             ) { destination ->
                 when (destination) {
                     StartupDestination.Loading -> StartupLoadingScreen()
-                    StartupDestination.Onboarding -> OnboardingRoot(displaySettings = userSettings)
+                    StartupDestination.Onboarding -> {
+                        val distributionUi = viewModel.distributionServices.distributionUi
+                        Box(Modifier.fillMaxSize()) {
+                            OnboardingRoot(
+                                displaySettings = userSettings,
+                                plusIntro = if (introOffered) {
+                                    { onContinue, onSeePlans -> distributionUi.OnboardingPlusIntro(onContinue, onSeePlans) }
+                                } else null,
+                                onSeePlans = { plusPlansOpen = true },
+                                restoreAction = {
+                                    distributionUi.OnboardingRestore(onRestore = viewModel::restoreBackupDuringSetup)
+                                },
+                            )
+                            // The shell's Plus overlay does not exist during setup, so host the page here.
+                            AnimatedVisibility(
+                                visible = plusPlansOpen,
+                                enter = slideInVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) { it },
+                                exit = slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { it },
+                            ) {
+                                HingeSafePage {
+                                    distributionUi.PlusPage(showcase = true, onDismiss = { plusPlansOpen = false })
+                                }
+                            }
+                        }
+                    }
                     StartupDestination.Main -> MainAppShell(userSettings = userSettings)
                 }
             }
@@ -248,7 +300,13 @@ fun CaffeineApp(
 @Composable
 internal fun MainAppShell(
     userSettings: UserSettings,
+    viewModel: CaffeineViewModel = viewModel(),
 ) {
+    val featurePrompt by viewModel.featurePrompt.collectAsStateWithLifecycle()
+    val plusPage by viewModel.plusPage.collectAsStateWithLifecycle()
+    val distributionUi = viewModel.distributionServices.distributionUi
+    val journey = viewModel.distributionServices.journey
+    val journeyState by journey.state.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(AppDestinations.HOME)
     val currentRoute = backStack.lastOrNull() as? AppRoute ?: AppDestinations.HOME
     val haptics = rememberAppHaptics()
@@ -265,7 +323,156 @@ internal fun MainAppShell(
     // Null while expressive blur is off: the toolbar and Add button fall back to solid surfaces.
     val blurState = hazeState.takeIf { userSettings.expressiveBlur }
 
+    // Navigation is always the floating toolbar (no rail). The window policy only decides how it
+    // is arranged: on wide windows (landscape phones, foldables, tablets) Add sits beside the
+    // toolbar at the same height, and every destination shows its label when they fit.
+    val layoutPolicy = rememberWindowLayoutPolicy()
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val density = LocalDensity.current
+    val navTextMeasurer = rememberTextMeasurer()
+    val navLabelStyle = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+    val navLabel = stringResource(selectedToolbarDestination.labelRes)
+    val navLabelWidth = with(density) {
+        navTextMeasurer.measure(AnnotatedString(navLabel), style = navLabelStyle, softWrap = false).size.width.toDp()
+    }
+    val showToolbarLabel = navLabelWidth + 248.dp <= maxWidth
+    val inlineAdd = layoutPolicy.wideToolbar
+    val allNavLabels = toolbarDestinations.map { stringResource(it.labelRes) }
+    val allNavLabelsWidth = with(density) {
+        allNavLabels.sumOf {
+            navTextMeasurer.measure(AnnotatedString(it), style = navLabelStyle, softWrap = false).size.width
+        }.toDp()
+    }
+    // Icon, spacing and button padding per destination, the toolbar's own padding, the Add
+    // button beside it and the side margins.
+    val showAllToolbarLabels = layoutPolicy.wideToolbar &&
+        allNavLabelsWidth + 72.dp * toolbarDestinations.size + 16.dp + (if (inlineAdd) AddButtonReservedWidth else 0.dp) + 48.dp <= maxWidth
+    val navigate: (AppDestinations) -> Unit = { destination ->
+        if (currentRoute != destination) {
+            haptics.navigation()
+            while (backStack.size > 1) backStack.removeLastOrNull()
+            if (destination != AppDestinations.HOME) backStack.add(destination)
+        }
+    }
+    val openAdd: () -> Unit = {
+        haptics.confirm()
+        backStack.add(AddRoute)
+    }
+    var toolbarHeightPx by remember { mutableIntStateOf(0) }
+
+    val toolbar: @Composable () -> Unit = {
+        val buttonBounds = remember { mutableStateMapOf<Int, androidx.compose.ui.geometry.Rect>() }
+        val currentIndex = toolbarDestinations.indexOf(selectedToolbarDestination)
+        val targetRect = buttonBounds[currentIndex]
+        val button0Rect = buttonBounds[0]
+        val pillRelativeX = (targetRect?.left ?: 0f) - (button0Rect?.left ?: 0f)
+
+        val pillAnimatedX by animateFloatAsState(
+            targetValue = pillRelativeX,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
+            label = "pillX",
+        )
+        val pillAnimatedWidth by animateFloatAsState(
+            targetValue = targetRect?.width ?: 0f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
+            label = "pillWidth",
+        )
+        val pillColor = MaterialTheme.colorScheme.primary
+
+        HorizontalFloatingToolbar(
+            expanded = true,
+            // The container is drawn by the blur tint instead, so content behind
+            // the toolbar shows through frosted rather than being hidden.
+            modifier = Modifier
+                .frostedContainer(blurState, CircleShape)
+                .onSizeChanged { toolbarHeightPx = it.height },
+            colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(
+                toolbarContainerColor = Color.Transparent,
+                toolbarContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
+        ) {
+            CompositionLocalProvider(LocalRippleConfiguration provides null) {
+                toolbarDestinations.forEachIndexed { index, destination ->
+                    val selected = selectedToolbarDestination == destination
+
+                    ToggleButton(
+                        checked = selected,
+                        onCheckedChange = { navigate(destination) },
+                        modifier = Modifier
+                            .height(56.dp)
+                            .onGloballyPositioned { coords ->
+                                buttonBounds[index] = coords.boundsInParent()
+                            }
+                            .then(
+                                if (index == 0) {
+                                    Modifier.drawWithContent {
+                                        if (pillAnimatedWidth > 0f) {
+                                            drawRoundRect(
+                                                color = pillColor,
+                                                topLeft = Offset(pillAnimatedX, 0f),
+                                                size = Size(pillAnimatedWidth, size.height),
+                                                cornerRadius = CornerRadius(size.height / 2f),
+                                            )
+                                        }
+                                        drawContent()
+                                    }
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            checkedContainerColor = Color.Transparent,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                        shapes = ToggleButtonDefaults.shapes(
+                            shape = CircleShape,
+                            pressedShape = CircleShape,
+                            checkedShape = CircleShape,
+                        ),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            DestinationIcon(
+                                destination = destination,
+                                selected = selected,
+                            )
+                            AnimatedVisibility(
+                                visible = showAllToolbarLabels || (selected && showToolbarLabel),
+                                enter = expandHorizontally(
+                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                                ),
+                                exit = shrinkHorizontally(
+                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                                ),
+                            ) {
+                                Text(
+                                    text = stringResource(destination.labelRes),
+                                    modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                    ),
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
@@ -280,146 +487,65 @@ internal fun MainAppShell(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
                             .padding(bottom = 16.dp),
                         contentAlignment = Alignment.BottomCenter,
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            AnimatedVisibility(
-                                visible = shouldShowHomeFab,
-                                enter = fadeIn(tween(300)) + expandVertically(
-                                    expandFrom = Alignment.Bottom,
-                                    animationSpec = tween(300),
-                                ),
-                                exit = shrinkVertically(
-                                    shrinkTowards = Alignment.Bottom,
-                                    animationSpec = tween(250),
-                                ) + fadeOut(tween(250)),
+                        if (inlineAdd) {
+                            // Wide windows: one centred row, Add beside the toolbar and exactly as
+                            // tall, so neither steals height from a landscape screen.
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                AddConsumptionButton(
-                                    hazeState = blurState,
-                                    modifier = Modifier.padding(bottom = 8.dp),
-                                    onClick = {
-                                        haptics.confirm()
-                                        backStack.add(AddRoute)
-                                    },
-                                )
-                            }
-                            val buttonBounds = remember { mutableStateMapOf<Int, androidx.compose.ui.geometry.Rect>() }
-                            val currentIndex = toolbarDestinations.indexOf(selectedToolbarDestination)
-                            val targetRect = buttonBounds[currentIndex]
-                            val button0Rect = buttonBounds[0]
-                            val pillRelativeX = (targetRect?.left ?: 0f) - (button0Rect?.left ?: 0f)
-
-                            val pillAnimatedX by animateFloatAsState(
-                                targetValue = pillRelativeX,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessLow,
-                                ),
-                                label = "pillX",
-                            )
-                            val pillAnimatedWidth by animateFloatAsState(
-                                targetValue = targetRect?.width ?: 0f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessLow,
-                                ),
-                                label = "pillWidth",
-                            )
-                            val pillColor = MaterialTheme.colorScheme.primary
-
-                            HorizontalFloatingToolbar(
-                                expanded = true,
-                                // The container is drawn by the blur tint instead, so content behind
-                                // the toolbar shows through frosted rather than being hidden.
-                                modifier = Modifier.frostedContainer(blurState, CircleShape),
-                                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(
-                                    toolbarContainerColor = Color.Transparent,
-                                    toolbarContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                ),
-                            ) {
-                                CompositionLocalProvider(LocalRippleConfiguration provides null) {
-                                    toolbarDestinations.forEachIndexed { index, destination ->
-                                    val selected = selectedToolbarDestination == destination
-
-                                    ToggleButton(
-                                        checked = selected,
-                                        onCheckedChange = {
-                                            if (!selected) {
-                                                haptics.navigation()
-                                                if (currentRoute != AppDestinations.HOME) {
-                                                    backStack.removeLastOrNull()
-                                                }
-                                                if (destination != AppDestinations.HOME) {
-                                                    backStack.add(destination)
-                                                }
-                                            }
+                                toolbar()
+                                AnimatedVisibility(
+                                    visible = shouldShowHomeFab,
+                                    enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                                        expandHorizontally(
+                                            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                                            expandFrom = Alignment.Start,
+                                        ),
+                                    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) +
+                                        shrinkHorizontally(
+                                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                            shrinkTowards = Alignment.Start,
+                                        ),
+                                ) {
+                                    AddConsumptionButton(
+                                        hazeState = blurState,
+                                        height = if (toolbarHeightPx > 0) {
+                                            with(density) { toolbarHeightPx.toDp() }
+                                        } else {
+                                            AddButtonHeight
                                         },
-                                        modifier = Modifier
-                                            .height(56.dp)
-                                            .onGloballyPositioned { coords ->
-                                                buttonBounds[index] = coords.boundsInParent()
-                                            }
-                                            .then(
-                                                if (index == 0) {
-                                                    Modifier.drawWithContent {
-                                                        if (pillAnimatedWidth > 0f) {
-                                                            drawRoundRect(
-                                                                color = pillColor,
-                                                                topLeft = Offset(pillAnimatedX, 0f),
-                                                                size = Size(pillAnimatedWidth, size.height),
-                                                                cornerRadius = CornerRadius(size.height / 2f),
-                                                            )
-                                                        }
-                                                        drawContent()
-                                                    }
-                                                } else {
-                                                    Modifier
-                                                }
-                                            ),
-                                        colors = ToggleButtonDefaults.toggleButtonColors(
-                                            checkedContainerColor = Color.Transparent,
-                                            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                                            containerColor = Color.Transparent,
-                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        ),
-                                        shapes = ToggleButtonDefaults.shapes(
-                                            shape = CircleShape,
-                                            pressedShape = CircleShape,
-                                            checkedShape = CircleShape,
-                                        ),
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            DestinationIcon(
-                                                destination = destination,
-                                                selected = selected,
-                                            )
-                                            AnimatedVisibility(
-                                                visible = selected,
-                                                enter = expandHorizontally(
-                                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                                                ),
-                                                exit = shrinkHorizontally(
-                                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-                                                ),
-                                            ) {
-                                                Text(
-                                                    text = stringResource(destination.labelRes),
-                                                    modifier = Modifier.padding(start = ButtonDefaults.IconSpacing),
-                                                    style = MaterialTheme.typography.titleSmall.copy(
-                                                        fontWeight = FontWeight.Bold,
-                                                    ),
-                                                )
-                                            }
-                                        }
-                                    }
+                                        modifier = Modifier.padding(start = 12.dp),
+                                        onClick = openAdd,
+                                    )
                                 }
+                            }
+                        } else {
+                            // Phones in portrait: Add stacked above the toolbar.
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                AnimatedVisibility(
+                                    visible = shouldShowHomeFab,
+                                    enter = fadeIn(tween(300)) + expandVertically(
+                                        expandFrom = Alignment.Bottom,
+                                        animationSpec = tween(300),
+                                    ),
+                                    exit = shrinkVertically(
+                                        shrinkTowards = Alignment.Bottom,
+                                        animationSpec = tween(250),
+                                    ) + fadeOut(tween(250)),
+                                ) {
+                                    AddConsumptionButton(
+                                        hazeState = blurState,
+                                        modifier = Modifier.padding(bottom = 8.dp),
+                                        onClick = openAdd,
+                                    )
                                 }
+                                toolbar()
                             }
                         }
                     }
@@ -431,7 +557,19 @@ internal fun MainAppShell(
             LocalSnackbarHostState provides snackbarHostState,
             LocalAppScaffoldPadding provides innerPadding,
         ) {
-            Box(modifier = Modifier.fillMaxSize().then(blurState?.let { Modifier.hazeSource(it) } ?: Modifier)) {
+            // The page background is painted inside the haze source (after hazeSource) so the
+            // blurred copy is opaque. Without it, text on the bare background blurs to near
+            // transparency and the sharp original shows through the frosted toolbar's tint.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(blurState?.let { Modifier.hazeSource(it) } ?: Modifier)
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                // Every route owns its window adaptation: Settings and Analytics are list/detail
+                // scenes, Home and Add are main/supporting layouts (AdaptiveMainSupportingLayout),
+                // and each caps a single pane and keeps it clear of hinges itself.
                 NavDisplay(
                     backStack = backStack,
                     onBack = { backStack.removeLastOrNull() },
@@ -451,7 +589,15 @@ internal fun MainAppShell(
                     entryProvider = entryProvider {
                         entry<AppDestinations> { key ->
                             when (key) {
-                                AppDestinations.HOME -> HomeScreen()
+                                AppDestinations.HOME -> HomeScreen(
+                                    onOpenPlus = { viewModel.openPlus() },
+                                    onOpenHealthConnect = {
+                                        viewModel.requestFeature(com.uc.caffeine.monetization.ProFeature.HealthConnect) {
+                                            viewModel.openSettingsPage(SettingsDeepLink.HealthConnect)
+                                            navigate(AppDestinations.SETTINGS)
+                                        }
+                                    },
+                                )
                                 AppDestinations.ANALYTICS -> AnalyticsScreen()
                                 AppDestinations.SETTINGS -> SettingsScreen(
                                     onRedoOnboarding = {
@@ -473,16 +619,64 @@ internal fun MainAppShell(
                     },
                 )
 
+                featurePrompt?.let { feature ->
+                    viewModel.distributionServices.distributionUi.FeatureSheet(
+                        feature = feature,
+                        onSeePlans = {
+                            viewModel.dismissFeaturePrompt()
+                            viewModel.openPlus()
+                        },
+                        onDismiss = viewModel::dismissFeaturePrompt,
+                    )
+                }
+                LaunchedEffect(journeyState.prompt, manualOnboardingVisible) {
+                    if (journeyState.prompt == com.uc.caffeine.monetization.JourneyPrompt.SHOWCASE && !manualOnboardingVisible) {
+                        journey.promptHandled(com.uc.caffeine.monetization.JourneyPrompt.SHOWCASE)
+                        viewModel.openPlus(showcase = true)
+                    }
+                }
+                if (featurePrompt == null && !manualOnboardingVisible) {
+                    viewModel.distributionServices.distributionUi.JourneySheet(
+                        prompt = journeyState.prompt,
+                        onSeePlans = { viewModel.openPlus() },
+                    )
+                }
                 if (manualOnboardingVisible) {
                     OnboardingRoot(
                         displaySettings = userSettings,
                         resetSessionToken = manualOnboardingSession,
+                        redo = true,
                         onExit = { manualOnboardingVisible = false },
                         onFinished = { manualOnboardingVisible = false },
                     )
                 }
             }
         }
+    }
+    // Full-screen layers above everything, the toolbar included (slid up like a sheet).
+    var lastShowcase by remember { mutableStateOf(false) }
+    plusPage?.let { lastShowcase = it }
+    AnimatedVisibility(
+        visible = plusPage != null,
+        enter = slideInVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) { it },
+        exit = slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { it },
+    ) {
+        HingeSafePage {
+            distributionUi.PlusPage(showcase = lastShowcase, onDismiss = viewModel::closePlus)
+        }
+    }
+    distributionUi.Overlays()
+    }
+}
+
+/**
+ * A full-screen page (the Plus page) kept on one side of a separating or occluding hinge, over an
+ * opaque background so the app underneath never shows on the other side of the fold.
+ */
+@Composable
+private fun HingeSafePage(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        SinglePaneWindow { content() }
     }
 }
 
@@ -533,12 +727,18 @@ private fun Modifier.frostedContainer(hazeState: HazeState?, shape: Shape): Modi
     return clip(shape).frostedGlass(hazeState, tint)
 }
 
+private val AddButtonHeight = 72.dp
+
+/** Room kept for the Add button when it sits beside the toolbar (label plus burst and padding). */
+private val AddButtonReservedWidth = 240.dp
+
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 private fun AddConsumptionButton(
     hazeState: HazeState?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    height: Dp = AddButtonHeight,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "burst_rotation")
     val burstRotation by infiniteTransition.animateFloat(
@@ -558,7 +758,7 @@ private fun AddConsumptionButton(
         onClick = onClick,
         modifier = modifier
             .frostedContainer(hazeState, shape)
-            .height(72.dp),
+            .height(height),
         shape = shape,
         color = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

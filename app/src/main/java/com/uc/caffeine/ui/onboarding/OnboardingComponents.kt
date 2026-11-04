@@ -52,6 +52,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -63,6 +64,13 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.RichTooltip
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -132,6 +140,7 @@ import androidx.compose.ui.unit.sp
 import com.uc.caffeine.R
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.RollingNumberText
+import com.uc.caffeine.ui.components.AdaptiveConnectedButtonGroup
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.theme.MontserratFamily
 import com.uc.caffeine.util.formatTimeOfDay
@@ -150,8 +159,6 @@ import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.Fill
-
-internal const val OnboardingStepCount = 5
 
 internal enum class OnboardingLayoutProfile {
     Compact,
@@ -226,7 +233,8 @@ private fun rememberOnboardingLayoutMetrics(maxHeight: Dp): OnboardingLayoutMetr
 internal fun OnboardingScaffold(
     title: String,
     subtitle: String,
-    currentStep: Int,
+    step: Int,
+    stepCount: Int,
     showBackButton: Boolean,
     onBack: (() -> Unit)? = null,
     showSkipButton: Boolean,
@@ -236,6 +244,8 @@ internal fun OnboardingScaffold(
     onContinue: () -> Unit,
     disabledHint: String? = null,
     enabledHint: String? = null,
+    secondaryLabel: String? = null,
+    onSecondary: (() -> Unit)? = null,
     pushCardUpward: Boolean = false,
     leadingHeaderContent: (@Composable (OnboardingLayoutMetrics) -> Unit)? = null,
     heroContent: (@Composable ColumnScope.(OnboardingLayoutMetrics) -> Unit)? = null,
@@ -248,12 +258,12 @@ internal fun OnboardingScaffold(
         color = MaterialTheme.colorScheme.background,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            OnboardingBackdropDecoration(currentStep = currentStep)
+            OnboardingBackdropDecoration(step = step, stepCount = stepCount)
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 val layout = rememberOnboardingLayoutMetrics(maxHeight)
                 val scrollState = rememberScrollState()
 
-                Column(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.widthIn(max = 720.dp).fillMaxSize().align(Alignment.TopCenter)) {
                     Box(
                         modifier = Modifier
                             .weight(1f, fill = true)
@@ -272,7 +282,7 @@ internal fun OnboardingScaffold(
                                 .fillMaxWidth()
                                 .verticalScroll(scrollState),
                         ) {
-                            if (currentStep > 0) {
+                            if (step > 0) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -300,7 +310,7 @@ internal fun OnboardingScaffold(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
-                                            text = stringResource(R.string.onboarding_step_format, currentStep, OnboardingStepCount),
+                                            text = stringResource(R.string.onboarding_step_format, step, stepCount),
                                             style = MaterialTheme.typography.labelMedium.copy(
                                                 letterSpacing = 1.sp,
                                             ),
@@ -329,19 +339,22 @@ internal fun OnboardingScaffold(
                                         .padding(top = 6.dp, bottom = 2.dp),
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 ) {
-                                    repeat(OnboardingStepCount) { index ->
+                                    repeat(stepCount) { index ->
+                                        val segmentColor by animateColorAsState(
+                                            targetValue = if (index < step) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.surfaceContainerHighest
+                                            },
+                                            animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                            label = "onboardingProgressSegment",
+                                        )
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .height(3.dp)
                                                 .clip(RoundedCornerShape(999.dp))
-                                                .background(
-                                                    if (index < currentStep) {
-                                                        MaterialTheme.colorScheme.primary
-                                                    } else {
-                                                        MaterialTheme.colorScheme.surfaceContainerHighest
-                                                    },
-                                                ),
+                                                .background(segmentColor),
                                         )
                                     }
                                 }
@@ -384,8 +397,6 @@ internal fun OnboardingScaffold(
                                     MaterialTheme.typography.headlineMedium
                                 },
                                 modifier = Modifier.padding(top = layout.titleTopSpacing),
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
                             )
                             Text(
                                 text = subtitle,
@@ -430,6 +441,13 @@ internal fun OnboardingScaffold(
                         },
                         disabledHint = disabledHint,
                         enabledHint = enabledHint,
+                        secondaryLabel = secondaryLabel,
+                        onSecondary = onSecondary?.let { action ->
+                            {
+                                haptics.toggle()
+                                action()
+                            }
+                        },
                     )
                 }
             }
@@ -438,15 +456,16 @@ internal fun OnboardingScaffold(
 }
 
 @Composable
-private fun OnboardingBackdropDecoration(currentStep: Int) {
+private fun OnboardingBackdropDecoration(step: Int, stepCount: Int) {
+    // The morph lists have six shapes (indexes 0..5): spread however many steps this run has across them.
     val stepProgress by animateFloatAsState(
-        targetValue = currentStep.coerceIn(0, OnboardingStepCount).toFloat(),
-        animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+        targetValue = step.coerceIn(0, stepCount).toFloat() / stepCount.coerceAtLeast(1) * 5f,
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "onboardingBackdropStep",
     )
     val accentAlpha by animateFloatAsState(
-        targetValue = if (currentStep > 0) 1f else 0f,
-        animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing),
+        targetValue = if (step > 0) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
         label = "onboardingBackdropAccent",
     )
     val topPolygons = remember {
@@ -660,10 +679,16 @@ private fun OnboardingActionArea(
     onContinue: () -> Unit,
     disabledHint: String?,
     enabledHint: String?,
+    secondaryLabel: String?,
+    onSecondary: (() -> Unit)?,
 ) {
+    val compact = layout.profile == OnboardingLayoutProfile.Compact
+    // One hint slot whose height never changes, so toggling Continue between enabled and disabled
+    // never moves the layout above it.
+    val hint = if (continueEnabled) enabledHint else disabledHint
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.primaryContainer,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         shadowElevation = 6.dp,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
@@ -672,68 +697,57 @@ private fun OnboardingActionArea(
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                 .padding(
-                    horizontal = if (layout.profile == OnboardingLayoutProfile.Compact) 14.dp else 18.dp,
-                    vertical = if (layout.profile == OnboardingLayoutProfile.Compact) 12.dp else 14.dp,
+                    horizontal = if (compact) 14.dp else 18.dp,
+                    vertical = if (compact) 12.dp else 14.dp,
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = if (layout.profile == OnboardingLayoutProfile.Compact) 58.dp else 64.dp),
+                    .heightIn(min = 20.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = continueEnabled,
-                    enter = fadeIn() + slideInVertically { it / 4 } + scaleIn(initialScale = 0.96f),
-                    exit = fadeOut() + slideOutVertically { it / 4 } + scaleOut(targetScale = 0.96f),
-                ) {
-                    Button(
-                        onClick = onContinue,
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.inverseSurface,
-                            contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        ),
-                        contentPadding = PaddingValues(
-                            horizontal = 28.dp,
-                            vertical = if (layout.profile == OnboardingLayoutProfile.Compact) 16.dp else 18.dp,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                androidx.compose.animation.Crossfade(
+                    targetState = hint,
+                    animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                    label = "onboardingActionHint",
+                ) { text ->
+                    if (!text.isNullOrBlank()) {
                         Text(
-                            text = continueLabel,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    }
-                }
-
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = !continueEnabled,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    if (disabledHint != null) {
-                        Text(
-                            text = disabledHint,
+                            text = text,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
             }
-
-            if (continueEnabled && !enabledHint.isNullOrBlank()) {
+            Button(
+                onClick = onContinue,
+                enabled = continueEnabled,
+                shapes = ButtonDefaults.shapes(),
+                contentPadding = PaddingValues(horizontal = 28.dp, vertical = if (compact) 14.dp else 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp),
+            ) {
                 Text(
-                    text = enabledHint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.82f),
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    text = continueLabel,
+                    style = MaterialTheme.typography.titleMedium,
                 )
+            }
+            if (secondaryLabel != null && onSecondary != null) {
+                TextButton(
+                    onClick = onSecondary,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
+                    Text(text = secondaryLabel)
+                }
             }
         }
     }
@@ -922,30 +936,50 @@ internal fun <T> ConnectedChoiceButtonGroup(
 ) {
     val haptics = rememberAppHaptics()
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    ) {
-        options.forEachIndexed { index, option ->
-            val isSelected = selectedOption == option
-            OnboardingChoiceTile(
-                label = labelFor(option),
-                checked = isSelected,
-                onCheckedChange = { checked ->
-                    if (checked && !isSelected) {
-                        haptics.toggle()
-                        onOptionSelected(option)
-                    }
-                },
-                modifier = Modifier.weight(1f),
-                role = Role.RadioButton,
-                minHeight = 50.dp,
-                shapes = expressiveChoiceShapes(index = index, count = options.size),
-                checkedContainerColor = checkedContainerColor,
-                checkedContentColor = checkedContentColor,
-            )
-        }
+    AdaptiveConnectedButtonGroup(
+        itemCount = options.size,
+        modifier = modifier,
+        minimumHeight = 50.dp,
+        singleButtonShapes = expressiveChoiceShapes(0, 1),
+    ) { index, shapes ->
+        val option = options[index]
+        val isSelected = selectedOption == option
+        OnboardingChoiceTile(
+            label = labelFor(option),
+            checked = isSelected,
+            onCheckedChange = { checked ->
+                if (checked && !isSelected) {
+                    haptics.toggle()
+                    onOptionSelected(option)
+                }
+            },
+            role = Role.RadioButton,
+            minHeight = 50.dp,
+            shapes = shapes,
+            checkedContainerColor = checkedContainerColor,
+            checkedContentColor = checkedContentColor,
+        )
     }
+}
+
+/** The one order for every yes/no question: negative first, so answers read low to high like "None ... Heavy". */
+internal fun yesNoOptions(): List<Boolean> = listOf(false, true)
+
+@Composable
+internal fun YesNoChoiceGroup(
+    selected: Boolean?,
+    onSelected: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val yesLabel = stringResource(R.string.action_yes)
+    val noLabel = stringResource(R.string.action_no)
+    ConnectedChoiceButtonGroup(
+        options = yesNoOptions(),
+        selectedOption = selected,
+        labelFor = { if (it) yesLabel else noLabel },
+        onOptionSelected = onSelected,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -1008,81 +1042,21 @@ private fun <T> AdaptiveExpressiveChoiceGroup(
     modifier: Modifier = Modifier,
     minHeight: Dp,
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val useSingleRow = shouldUseConnectedRow(
-            maxWidth = maxWidth,
-            optionCount = options.size,
-            maxLabelLength = options.maxOfOrNull { option -> labelFor(option).length } ?: 0,
+    AdaptiveConnectedButtonGroup(
+        itemCount = options.size,
+        modifier = modifier,
+        minimumHeight = minHeight,
+        singleButtonShapes = expressiveChoiceShapes(0, 1),
+    ) { index, shapes ->
+        val option = options[index]
+        OnboardingChoiceTile(
+            label = labelFor(option),
+            checked = isChecked(option),
+            onCheckedChange = { checked -> onCheckedChange(option, checked) },
+            role = role,
+            minHeight = minHeight,
+            shapes = shapes,
         )
-
-        if (useSingleRow) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                options.forEachIndexed { index, option ->
-                    OnboardingChoiceTile(
-                        label = labelFor(option),
-                        checked = isChecked(option),
-                        onCheckedChange = { checked -> onCheckedChange(option, checked) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        role = role,
-                        minHeight = minHeight,
-                        shapes = expressiveChoiceShapes(index = index, count = options.size),
-                    )
-                }
-            }
-        } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                options.chunked(2).forEach { rowOptions ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Max),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                    ) {
-                        rowOptions.forEachIndexed { colIndex, option ->
-                            OnboardingChoiceTile(
-                                label = labelFor(option),
-                                checked = isChecked(option),
-                                onCheckedChange = { checked -> onCheckedChange(option, checked) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                role = role,
-                                minHeight = minHeight,
-                                shapes = expressiveChoiceShapes(
-                                    index = colIndex,
-                                    count = rowOptions.size,
-                                ),
-                            )
-                        }
-                        if (rowOptions.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun shouldUseConnectedRow(
-    maxWidth: Dp,
-    optionCount: Int,
-    maxLabelLength: Int,
-): Boolean {
-    return when {
-        optionCount <= 2 -> true
-        optionCount == 3 -> maxWidth >= 380.dp && maxLabelLength <= 16
-        optionCount == 4 -> maxWidth >= 560.dp && maxLabelLength <= 12
-        else -> false
     }
 }
 
@@ -1138,8 +1112,6 @@ private fun OnboardingChoiceTile(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Clip,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -1637,7 +1609,8 @@ internal fun ProfileMetricRow(
     title: String,
     value: String,
     description: String,
-    onInfoClick: () -> Unit,
+    /** Shown in a rich tooltip anchored to the info button, not a full dialog. */
+    info: String,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(
@@ -1662,12 +1635,7 @@ internal fun ProfileMetricRow(
                     labelPrefix = "profile_metric_$title",
                 )
             }
-            IconButton(onClick = onInfoClick) {
-                Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = stringResource(R.string.onboarding_about_format, title),
-                )
-            }
+            ProfileInfoButton(title = title, info = info)
         }
         Text(
             text = description,
@@ -1676,6 +1644,41 @@ internal fun ProfileMetricRow(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/** Info button that opens an M3 rich tooltip (title + body, with a caret) next to itself. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileInfoButton(title: String, info: String) {
+    val haptics = rememberAppHaptics()
+    val scope = rememberCoroutineScope()
+    val tooltipState = rememberTooltipState(isPersistent = true)
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+        tooltip = {
+            RichTooltip(
+                title = { Text(title) },
+                caretShape = TooltipDefaults.caretShape(),
+            ) {
+                Text(info)
+            }
+        },
+        state = tooltipState,
+        enableUserInput = false,
+    ) {
+        IconButton(
+            onClick = {
+                haptics.toggle()
+                scope.launch { if (tooltipState.isVisible) tooltipState.dismiss() else tooltipState.show() }
+            },
+            shapes = IconButtonDefaults.shapes(),
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Info,
+                contentDescription = stringResource(R.string.onboarding_about_format, title),
+            )
+        }
     }
 }
 

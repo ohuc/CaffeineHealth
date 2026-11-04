@@ -3,8 +3,10 @@ package com.uc.caffeine.util
 import com.uc.caffeine.data.AppDateFormat
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.ConsumptionEntry
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
 import org.junit.Assert.assertEquals
@@ -154,6 +156,78 @@ class UserDateTimePreferencesTest {
             utcGrouped.keys.toList()
         )
         assertEquals(listOf(LocalDate.of(2025, 1, 6)), losAngelesGrouped.keys.toList())
+    }
+
+    @Test
+    fun calculateNextBedtimeMillis_singleBedtimeBehavesAsBefore() {
+        val settings = UserSettings(sleepTimeHour = 1, sleepTimeMinute = 0, timeZoneId = "UTC", useSystemTimeZone = false)
+
+        assertEquals(
+            Instant.parse("2025-01-07T01:00:00Z").toEpochMilli(),
+            calculateNextBedtimeMillis(Instant.parse("2025-01-07T00:30:00Z").toEpochMilli(), settings),
+        )
+        assertEquals(
+            Instant.parse("2025-01-08T01:00:00Z").toEpochMilli(),
+            calculateNextBedtimeMillis(Instant.parse("2025-01-07T02:00:00Z").toEpochMilli(), settings),
+        )
+        val evening = settings.copy(sleepTimeHour = 23)
+        assertEquals(
+            Instant.parse("2025-01-07T23:00:00Z").toEpochMilli(),
+            calculateNextBedtimeMillis(Instant.parse("2025-01-07T10:00:00Z").toEpochMilli(), evening),
+        )
+    }
+
+    @Test
+    fun calculateNextBedtimeMillis_rotaAfterMidnightBelongsToThatDaysNight() {
+        // 2025-01-10 is a Friday. Friday's rota bedtime 1:00 AM = early Saturday morning;
+        // every other night is 11 PM.
+        val settings = UserSettings(
+            sleepTimeHour = 23,
+            sleepTimeMinute = 0,
+            weeklySleepRotaEnabled = true,
+            weeklySleepRota = mapOf(DayOfWeek.FRIDAY to LocalTime.of(1, 0)),
+            timeZoneId = "UTC",
+            useSystemTimeZone = false,
+        )
+
+        // Friday evening: next bedtime is Friday night's 1 AM (on Saturday), not 11 PM.
+        assertEquals(
+            Instant.parse("2025-01-11T01:00:00Z").toEpochMilli(),
+            calculateNextBedtimeMillis(Instant.parse("2025-01-10T20:00:00Z").toEpochMilli(), settings),
+        )
+        // Friday 00:30: Thursday's 11 PM has passed; Friday morning is not a bedtime any more.
+        assertEquals(
+            Instant.parse("2025-01-11T01:00:00Z").toEpochMilli(),
+            calculateNextBedtimeMillis(Instant.parse("2025-01-10T00:30:00Z").toEpochMilli(), settings),
+        )
+        // Saturday 00:30: Friday night's bedtime is still ahead.
+        assertEquals(
+            Instant.parse("2025-01-11T01:00:00Z").toEpochMilli(),
+            calculateNextBedtimeMillis(Instant.parse("2025-01-11T00:30:00Z").toEpochMilli(), settings),
+        )
+        // Saturday 02:00: next is Saturday's 11 PM.
+        assertEquals(
+            Instant.parse("2025-01-11T23:00:00Z").toEpochMilli(),
+            calculateNextBedtimeMillis(Instant.parse("2025-01-11T02:00:00Z").toEpochMilli(), settings),
+        )
+    }
+
+    @Test
+    fun formatConsumptionDateHeader_usesProvidedLabels() {
+        val settings = UserSettings(timeZoneId = "UTC", useSystemTimeZone = false)
+        val reference = Instant.parse("2025-01-07T10:15:00Z").toEpochMilli()
+
+        assertEquals(
+            "HOY",
+            formatConsumptionDateHeader(
+                date = LocalDate.of(2025, 1, 7),
+                settings = settings,
+                referenceTimeMillis = reference,
+                locale = Locale.US,
+                todayLabel = "Hoy",
+                yesterdayLabel = "Ayer",
+            ),
+        )
     }
 
     private fun testEntry(

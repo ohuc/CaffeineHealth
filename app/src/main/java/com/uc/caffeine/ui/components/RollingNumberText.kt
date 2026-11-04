@@ -22,6 +22,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.Text
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
+import androidx.compose.ui.unit.Constraints
 
 @Composable
 fun RollingNumberText(
@@ -42,12 +50,12 @@ fun RollingNumberText(
         fontWeight = style.fontWeight ?: FontWeight.Bold,
     )
 
-    Row(
+    Layout(
         // Read and found as one value rather than character by character.
         modifier = modifier.clearAndSetSemantics { this.text = AnnotatedString(text) },
-        horizontalArrangement = horizontalArrangement,
-        verticalAlignment = verticalAlignment,
-    ) {
+        measurePolicy = NumberFitPolicy,
+        content = {
+        Row(horizontalArrangement = horizontalArrangement, verticalAlignment = verticalAlignment) {
         text.forEachIndexed { index, char ->
             // Keyed from the end so the ones digit keeps its slot (and rolls) when the number
             // gains or loses digits, instead of every digit shifting one place over.
@@ -83,5 +91,30 @@ fun RollingNumberText(
                 }
             }
         }
+        }
+        Text(text = text, style = resolvedStyle)
+    })
+}
+
+private object NumberFitPolicy : MeasurePolicy {
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
+        val child = if (measurables[0].maxIntrinsicWidth(Constraints.Infinity) <= constraints.maxWidth) measurables[0] else measurables[1]
+        val placed = child.measure(constraints)
+        return layout(placed.width, placed.height) { placed.placeRelative(0, 0) }
     }
+
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int) =
+        measurables[1].minIntrinsicWidth(height)
+
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int) =
+        measurables[0].maxIntrinsicWidth(height)
+
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) =
+        fittingChild(measurables, width).minIntrinsicHeight(width)
+
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int) =
+        fittingChild(measurables, width).maxIntrinsicHeight(width)
+
+    private fun fittingChild(measurables: List<IntrinsicMeasurable>, width: Int) =
+        if (measurables[0].maxIntrinsicWidth(Constraints.Infinity) <= width) measurables[0] else measurables[1]
 }

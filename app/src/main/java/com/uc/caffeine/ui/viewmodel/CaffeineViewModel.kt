@@ -27,6 +27,7 @@ import com.uc.caffeine.ui.onboarding.OnboardingProfileCalculator
 import com.uc.caffeine.ui.onboarding.SmokingHabit
 import com.uc.caffeine.ui.onboarding.WeightUnit
 import com.uc.caffeine.R
+import com.uc.caffeine.monetization.*
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.util.defaultDurationFor
 import com.uc.caffeine.util.coerceReleaseMinutes
@@ -69,6 +70,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -124,7 +126,29 @@ internal fun determineCaffeineTrend(
     }
 }
 
+/** Settings pages that can be opened from outside Settings. */
+enum class SettingsDeepLink { HealthConnect }
+
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
+    val distributionServices = (application as com.uc.caffeine.CaffeineApplication).distributionServices
+    val accessSnapshot = distributionServices.featureAccess.snapshots
+    private val _featurePrompt = MutableStateFlow<ProFeature?>(null)
+    val featurePrompt = _featurePrompt.asStateFlow()
+    fun dismissFeaturePrompt() { _featurePrompt.value = null }
+    /** Null while closed; otherwise whether the Plus page opens as the after-setup showcase. */
+    private val _plusPage = MutableStateFlow<Boolean?>(null)
+    val plusPage = _plusPage.asStateFlow()
+    fun openPlus(showcase: Boolean = false) { _plusPage.value = showcase }
+    fun closePlus() { _plusPage.value = null }
+    fun requestFeature(feature: ProFeature, action: () -> Unit = {}) {
+        if (distributionServices.featureAccess.canUse(feature)) action() else _featurePrompt.value = feature
+    }
+
+    /** A Settings page another screen asked to open (for example the Coach's "Connect sleep data"). */
+    private val _settingsDeepLink = MutableStateFlow<SettingsDeepLink?>(null)
+    val settingsDeepLink = _settingsDeepLink.asStateFlow()
+    fun openSettingsPage(link: SettingsDeepLink) { _settingsDeepLink.value = link }
+    fun consumeSettingsDeepLink() { _settingsDeepLink.value = null }
 
     private val db        = CaffeineDatabase.getDatabase(application)
     private val presetDao = db.drinkPresetDao()
@@ -138,13 +162,21 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
     private val _myDataState = MutableStateFlow<MyDataUiState>(MyDataUiState.Idle)
     val myDataState: StateFlow<MyDataUiState> = _myDataState.asStateFlow()
+    // A backup can be much larger than the saved-instance-state Bundle. Keep the pending
+    // import in the ViewModel while the owner chooses merge/replace across window changes.
+    private val _pendingImportJson = MutableStateFlow<String?>(null)
+    val pendingImportJson: StateFlow<String?> = _pendingImportJson.asStateFlow()
 
     // User settings flow
-    val userSettings = settingsRepo.settingsFlow.stateIn(
+    val savedUserSettings = settingsRepo.settingsFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = settingsRepo.defaultSettings
     )
+
+    val userSettings = combine(savedUserSettings, accessSnapshot) { settings, _ ->
+        settings.withEffectiveAccess(distributionServices.featureAccess)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, settingsRepo.defaultSettings.withEffectiveAccess(distributionServices.featureAccess))
 
     val isUserSettingsLoaded: StateFlow<Boolean> = settingsRepo.settingsFlow
         .map { true }
@@ -397,9 +429,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         userSettings,
         chartTickerFlow,
         _lastNightSleep,
-    ) { entries, settings, now, lastNight ->
+        accessSnapshot,
+    ) { entries, settings, now, lastNight, _ ->
         if (!settings.caffeineCoachEnabled) return@combine null
-        CaffeineCoach.recommend(buildCoachInput(entries, settings, now, lastNight))
+        distributionServices.featureAccess.withFeature(ProFeature.Coach) {
+            CaffeineCoach.recommend(buildCoachInput(entries, settings, now, lastNight))
+        }
     }.flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,
@@ -412,8 +447,9 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         allConsumptionEntries,
         userSettings,
         chartTickerFlow,
-    ) { entries, settings, now ->
-        if (!settings.coachToleranceEnabled) return@combine null
+        accessSnapshot,
+    ) { entries, settings, now, _ ->
+        if (!settings.coachToleranceEnabled || !distributionServices.featureAccess.canUse(ProFeature.Coach)) return@combine null
         CaffeineTolerance.toleranceMgPerDay(
             entries = entries,
             nowMillis = now,
@@ -558,16 +594,18 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         chartTickerFlow,
         _customRangeStart,
         _customRangeEnd,
+        accessSnapshot,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         buildAnalyticsUiState(
             entries = values[0] as List<ConsumptionEntry>,
             presets = values[1] as List<DrinkPreset>,
             settings = values[2] as UserSettings,
-            selectedRange = values[3] as AnalyticsRange,
+            selectedRange = effectiveAnalyticsRange(values[3] as AnalyticsRange, distributionServices.featureAccess),
             nowMillis = values[4] as Long,
             customStartDate = values[5] as? java.time.LocalDate,
             customEndDate = values[6] as? java.time.LocalDate,
+            includeExtendedHistory = distributionServices.featureAccess.canUse(ProFeature.ExtendedAnalytics),
         )
     }.flowOn(Dispatchers.Default)
         .stateIn(
@@ -612,6 +650,15 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     delay(500)
                     CaffeineWidgetUpdater.update(getApplication())
                 }
+        }
+
+        viewModelScope.launch {
+            accessSnapshot.map { it.source }.distinctUntilChanged().drop(1).collect {
+                if (distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) {
+                    if (savedUserSettings.value.hcSleepEnabled) refreshHcSleepData()
+                    if (savedUserSettings.value.healthConnectEnabled) importForeignCaffeine()
+                } else _lastNightSleep.value = null
+            }
         }
 
         viewModelScope.launch {
@@ -721,6 +768,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
      * (no preset) using the app's default absorption profile, timestamped now.
      */
     fun logCoachDose(doseMg: Int, entryName: String) {
+        if (!distributionServices.featureAccess.canUse(ProFeature.Coach)) return
         viewModelScope.launch {
             val entry = ConsumptionEntry(
                 drinkName = entryName,
@@ -826,7 +874,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 HomeScreenUiEvent.LogActionCompleted("Deleted ${entry.drinkName}")
             )
             val settings = userSettings.value
-            if (settings.healthConnectEnabled) {
+            if (savedUserSettings.value.healthConnectEnabled) {
                 runCatching { healthConnectManager.deleteEntry(entry) }
             }
         }
@@ -843,7 +891,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             tombstoneImportedRecords(todayEntriesToDelete)
             logDao.clearToday(startOfDay)
             triggerWidgetRefresh()
-            if (settings.healthConnectEnabled) {
+            if (savedUserSettings.value.healthConnectEnabled) {
                 runCatching { healthConnectManager.deleteEntries(todayEntriesToDelete) }
             }
         }
@@ -859,10 +907,15 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setAnalyticsRange(range: AnalyticsRange) {
+        if (range.requiresPlus() && !distributionServices.featureAccess.canUse(ProFeature.ExtendedAnalytics)) {
+            requestFeature(ProFeature.ExtendedAnalytics)
+            return
+        }
         _analyticsRange.value = range
     }
 
     fun setCustomRange(start: java.time.LocalDate, end: java.time.LocalDate) {
+        if (!distributionServices.featureAccess.canUse(ProFeature.ExtendedAnalytics)) { requestFeature(ProFeature.ExtendedAnalytics); return }
         _customRangeStart.value = start
         _customRangeEnd.value = end
         _analyticsRange.value = AnalyticsRange.CUSTOM
@@ -917,6 +970,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateExpressiveBlur(enabled: Boolean) {
+        if (enabled && !distributionServices.featureAccess.canUse(ProFeature.AdvancedAppearance)) { requestFeature(ProFeature.AdvancedAppearance); return }
         viewModelScope.launch {
             settingsRepo.updateExpressiveBlur(enabled)
         }
@@ -928,7 +982,14 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateStickyHomeChart(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateStickyHomeChart(enabled)
+        }
+    }
+
     fun updateColorPalette(palette: com.uc.caffeine.data.AppColorPalette) {
+        if (palette != com.uc.caffeine.data.AppColorPalette.DYNAMIC && !distributionServices.featureAccess.canUse(ProFeature.AdvancedAppearance)) { requestFeature(ProFeature.AdvancedAppearance); return }
         viewModelScope.launch {
             settingsRepo.updateColorPalette(palette)
         }
@@ -990,6 +1051,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateHealthConnectEnabled(enabled: Boolean) {
+        if (enabled && !distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) { requestFeature(ProFeature.HealthConnect); return }
         viewModelScope.launch {
             settingsRepo.updateHealthConnectEnabled(enabled)
             if (enabled) {
@@ -1003,6 +1065,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateHcSleepEnabled(enabled: Boolean) {
+        if (enabled && !distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) { requestFeature(ProFeature.HealthConnect); return }
         viewModelScope.launch {
             settingsRepo.updateHcSleepEnabled(enabled)
             if (enabled) refreshHcSleepData() else _lastNightSleep.value = null
@@ -1016,6 +1079,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateAutomationEnabled(enabled: Boolean) {
+        if (enabled && !distributionServices.featureAccess.canUse(ProFeature.Automation)) { requestFeature(ProFeature.Automation); return }
         viewModelScope.launch {
             settingsRepo.updateAutomationEnabled(enabled)
         }
@@ -1040,6 +1104,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateCaffeineCoachEnabled(enabled: Boolean) {
+        if (enabled && !distributionServices.featureAccess.canUse(ProFeature.Coach)) { requestFeature(ProFeature.Coach); return }
         viewModelScope.launch {
             settingsRepo.updateCaffeineCoachEnabled(enabled)
         }
@@ -1085,15 +1150,19 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onAppOpened() {
+        distributionServices.store.refresh()
+        distributionServices.journey.recordAppOpen()
         viewModelScope.launch {
             settingsRepo.recordAppOpened()
-            val settings = userSettings.value
-            if (settings.inactivityReminderEnabled) {
-                com.uc.caffeine.util.notifications.NotificationScheduler.scheduleInactivityReminder(getApplication())
-            }
+            val settings = settingsRepo.settingsFlow.first()
+            com.uc.caffeine.util.notifications.NotificationScheduler.scheduleAllFromSettings(getApplication(), settings)
             if (settings.hcSleepEnabled) refreshHcSleepData()
             if (settings.healthConnectEnabled) importForeignCaffeine()
         }
+    }
+
+    fun rescheduleReminders() {
+        com.uc.caffeine.util.notifications.NotificationScheduler.scheduleAllFromSettings(getApplication(), userSettings.value)
     }
 
     // Marks deleted imported entries so the next import doesn't resurrect them
@@ -1105,6 +1174,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     private suspend fun importForeignCaffeine() {
+        if (!distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return
         if (!userSettings.value.healthConnectEnabled) return
         val now = System.currentTimeMillis()
         val sinceMillis = now - HEALTH_CONNECT_IMPORT_WINDOW_MILLIS
@@ -1133,6 +1203,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     private suspend fun refreshHcSleepData() {
+        if (!distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) { _lastNightSleep.value = null; return }
         val settings = userSettings.value
         val zoneId = settings.resolvedZoneId()
         // If the user revoked READ_SLEEP in Health Connect, drop the cached bedtime so the
@@ -1480,7 +1551,21 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     }
 
     suspend fun createBackupJson(settings: UserSettings): String = withContext(Dispatchers.IO) {
-        backupManager.createBackup(settings)
+        backupManager.createBackup(settingsRepo.settingsFlow.first())
+    }
+
+    fun prepareBackupImport(json: String) {
+        _pendingImportJson.value = json
+    }
+
+    fun dismissBackupImport() {
+        _pendingImportJson.value = null
+    }
+
+    fun importPendingBackup(mode: com.uc.caffeine.data.ImportMode) {
+        val json = _pendingImportJson.value ?: return
+        _pendingImportJson.value = null
+        importBackup(json, mode)
     }
 
     fun importBackup(json: String, mode: com.uc.caffeine.data.ImportMode) {
@@ -1496,6 +1581,15 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
+
+    /**
+     * Restore from an edition's cloud backup during first-run setup: replaces the fresh install's data.
+     * Runs in the ViewModel's scope because importing the settings finishes setup, which disposes the
+     * setup screen (and its scope) before the custom drinks are written.
+     */
+    suspend fun restoreBackupDuringSetup(json: String): Boolean = viewModelScope.async(Dispatchers.IO) {
+        runCatching { backupManager.restoreBackup(json, com.uc.caffeine.data.ImportMode.REPLACE) }.isSuccess
+    }.await()
 
     fun onExportSuccess() {
         _myDataState.value = MyDataUiState.Success("Backup saved")

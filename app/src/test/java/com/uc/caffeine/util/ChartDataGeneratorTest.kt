@@ -136,6 +136,56 @@ class ChartDataGeneratorTest {
         assertTrue(data.dataPoints.dropLast(1).any { it.caffeineLevel > 0.0 })
     }
 
+    @Test
+    fun generateChartData_keepsDomainStartWhileOldestEntryAges() {
+        // The oldest drink crosses the 24 h, 7 d and 30 d sampling boundaries; the chart
+        // origin (and so the whole timeline under the user's scroll) must not move.
+        val entry = testEntry(id = 1, startedAt = "2026-04-05T09:40:00Z")
+        val starts = listOf(
+            "2026-04-05T12:00:00Z",
+            "2026-04-06T12:00:00Z",
+            "2026-04-13T12:00:00Z",
+            "2026-05-10T12:00:00Z",
+        ).map { now ->
+            ChartDataGenerator.generateChartData(
+                entries = listOf(entry),
+                settings = utcSettings,
+                currentTime = Instant.parse(now).toEpochMilli(),
+            ).domainStartMillis
+        }
+
+        assertEquals(1, starts.toSet().size)
+        assertEquals(Instant.parse("2026-04-05T00:00:00Z").toEpochMilli(), starts.first())
+    }
+
+    @Test
+    fun generateChartData_reusedLevelsMatchAFreshComputation() {
+        val entries = listOf(
+            testEntry(id = 1, startedAt = "2026-04-04T08:00:00Z", caffeineMg = 150, durationMinutes = 30),
+            testEntry(id = 2, startedAt = "2026-04-05T09:30:00Z", caffeineMg = 80),
+        )
+        val first = Instant.parse("2026-04-05T12:00:00Z").toEpochMilli()
+        // Warm the cache, then advance a minute with the same list instance.
+        ChartDataGenerator.generateChartData(entries, utcSettings, first)
+        val cached = ChartDataGenerator.generateChartData(entries, utcSettings, first + 60_000L)
+        val fresh = ChartDataGenerator.generateChartData(entries.toList(), utcSettings, first + 60_000L)
+
+        assertEquals(fresh.dataPoints, cached.dataPoints)
+    }
+
+    @Test
+    fun generateChartData_cacheIsDroppedWhenHalfLifeChanges() {
+        val entries = listOf(testEntry(id = 1, startedAt = "2026-04-05T09:30:00Z", caffeineMg = 200))
+        val now = Instant.parse("2026-04-05T12:00:00Z").toEpochMilli()
+        val slow = utcSettings.copy(halfLifeMinutes = 600)
+        val fastData = ChartDataGenerator.generateChartData(entries, utcSettings, now)
+        val slowData = ChartDataGenerator.generateChartData(entries, slow, now)
+        val slowFresh = ChartDataGenerator.generateChartData(entries.toList(), slow, now)
+
+        assertEquals(slowFresh.dataPoints, slowData.dataPoints)
+        assertTrue(fastData.dataPoints != slowData.dataPoints)
+    }
+
     private fun diffAfter(
         timestamp: Long,
         timestamps: List<Long>,

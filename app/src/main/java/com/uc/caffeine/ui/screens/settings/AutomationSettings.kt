@@ -33,6 +33,8 @@ import com.uc.caffeine.R
 import com.uc.caffeine.automation.AutomationContract
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.SettingsPageScaffold
+import com.uc.caffeine.ui.components.SettingsSectionLabel
+import com.uc.caffeine.ui.components.SettingsSwitchRow
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.components.segmentedListItemShapes
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
@@ -74,32 +76,12 @@ internal fun AutomationSettingsScreen(
                 .padding(bottom = bottomPadding + 24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            SegmentedListItem(
-                onClick = {
-                    haptics.toggle()
-                    onAutomationEnabledChange(!userSettings.automationEnabled)
-                },
-                leadingContent = {
-                    Icon(Icons.Rounded.SettingsRemote, contentDescription = null)
-                },
-                content = {
-                    Text(text = stringResource(R.string.automation_enable_title))
-                },
-                supportingContent = {
-                    Text(text = stringResource(R.string.automation_enable_description))
-                },
-                trailingContent = {
-                    Switch(
-                        checked = userSettings.automationEnabled,
-                        onCheckedChange = { enabled ->
-                            haptics.toggle()
-                            onAutomationEnabledChange(enabled)
-                        },
-                    )
-                },
-                verticalAlignment = Alignment.CenterVertically,
-                shapes = segmentedListItemShapes(0, 1),
-                colors = listColors,
+            SettingsSwitchRow(
+                title = stringResource(R.string.automation_enable_title),
+                summary = stringResource(R.string.automation_enable_description),
+                checked = userSettings.automationEnabled,
+                onCheckedChange = onAutomationEnabledChange,
+                icon = Icons.Rounded.SettingsRemote,
             )
 
             AutomationSection(title = stringResource(R.string.automation_setup_section)) {
@@ -177,12 +159,7 @@ private fun AutomationSection(
     content: @Composable () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
-        )
+        SettingsSectionLabel(title)
         content()
     }
 }

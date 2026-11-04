@@ -39,6 +39,7 @@ enum class AppDestinations(
 @Serializable
 object AddRoute : AppRoute
 
+
 internal val toolbarDestinations = listOf(
     AppDestinations.HOME,
     AppDestinations.ANALYTICS,

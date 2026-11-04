@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Caffeine Health+ adaptive-icon foreground: the Pulse Cup nudged up-left, with the Plus
+    badge (warm brown tile, cream plus) in the lower right. The cup is clipped out of the
+    badge corner so the badge reads as a cut-out, like the supplied artwork. Everything stays
+    inside the 66dp safe zone, so round and squircle masks never crop the badge.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:translateX="-4"
+        android:translateY="-4">
+        <clip-path android:pathData="M4,4 H112 V61.5 H61.5 V112 H4 Z" />
+        <path
+            android:pathData="M36.5,41 L39.5,68.5 C40,72.5 42.5,74.5 46.5,74.5 L61.5,74.5 C65.5,74.5 68,72.5 68.5,68.5 L71.5,41 Z"
+            android:strokeColor="#A99C8C"
+            android:strokeWidth="6.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M70.7,47 L73.5,47 C79,47 81.5,50 81.5,54 C81.5,58 79,61 73.5,61 L69.2,61"
+            android:strokeColor="#A99C8C"
+            android:strokeWidth="6.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M42,57 L49.5,57 L52.5,49 L56,65.5 L59.5,57 L66,57"
+            android:strokeColor="#E6C8A3"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+    <path
+        android:pathData="M65.5,60 H72.5 A5.5,5.5 0 0 1 78,65.5 V72.5 A5.5,5.5 0 0 1 72.5,78 H65.5 A5.5,5.5 0 0 1 60,72.5 V65.5 A5.5,5.5 0 0 1 65.5,60 Z"
+        android:fillColor="#7E6553" />
+    <path
+        android:pathData="M69,64.2 V73.8 M64.2,69 H73.8"
+        android:strokeColor="#FBF6EF"
+        android:strokeWidth="3.4"
+        android:strokeLineCap="round" />
+</vector>

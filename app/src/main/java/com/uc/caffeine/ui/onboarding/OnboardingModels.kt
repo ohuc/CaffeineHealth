@@ -7,15 +7,57 @@ import com.uc.caffeine.data.DerivedOnboardingProfile
 import java.time.LocalTime
 import kotlin.math.roundToInt
 
-enum class OnboardingDestination(
-    val stepNumber: Int,
-) : NavKey {
-    Intro(0),
-    BasicInfo(1),
-    Sleep(2),
-    Lifestyle(3),
-    Medical(4),
-    ProfileReady(5),
+enum class OnboardingDestination : NavKey {
+    Intro,
+    BasicInfo,
+    Sleep,
+    Lifestyle,
+    Medical,
+    Notifications,
+    PlusIntro,
+    ProfileReady,
+}
+
+/** Where a screen sits in the progress bar for the current run. */
+data class OnboardingProgress(val step: Int, val total: Int)
+
+/** The ordered steps for this run. Built per flavor and per entry point instead of hard-coded. */
+data class OnboardingSequence(val steps: List<OnboardingDestination>) {
+    private val questionnaire = setOf(
+        OnboardingDestination.BasicInfo,
+        OnboardingDestination.Sleep,
+        OnboardingDestination.Lifestyle,
+        OnboardingDestination.Medical,
+    )
+
+    /** Steps the progress bar counts: everything after the intro. */
+    val progressTotal: Int get() = steps.size - 1
+
+    /** 1-based position in the progress bar; 0 for the intro and for steps outside this run. */
+    fun progressOf(destination: OnboardingDestination): Int = steps.indexOf(destination).coerceAtLeast(0)
+
+    fun next(destination: OnboardingDestination): OnboardingDestination? {
+        val index = steps.indexOf(destination)
+        return if (index < 0) null else steps.getOrNull(index + 1)
+    }
+
+    /** Where "Skip" on a questionnaire step goes: past the questionnaire, never past the preference steps. */
+    fun skipTarget(): OnboardingDestination =
+        steps.first { it != OnboardingDestination.Intro && it !in questionnaire }
+}
+
+fun onboardingSequence(plusIntro: Boolean, remindersAnswered: Boolean, redo: Boolean): OnboardingSequence {
+    val steps = buildList {
+        add(OnboardingDestination.Intro)
+        add(OnboardingDestination.BasicInfo)
+        add(OnboardingDestination.Sleep)
+        add(OnboardingDestination.Lifestyle)
+        add(OnboardingDestination.Medical)
+        if (!remindersAnswered) add(OnboardingDestination.Notifications)
+        if (plusIntro && !redo) add(OnboardingDestination.PlusIntro)
+        add(OnboardingDestination.ProfileReady)
+    }
+    return OnboardingSequence(steps)
 }
 
 enum class AgeBucket(@StringRes val labelRes: Int) {
@@ -199,6 +241,7 @@ data class OnboardingUiState(
             OnboardingDestination.Sleep -> answers.isSleepComplete()
             OnboardingDestination.Lifestyle -> answers.isLifestyleComplete()
             OnboardingDestination.Medical -> answers.isMedicalComplete()
+            OnboardingDestination.Notifications, OnboardingDestination.PlusIntro -> true
             OnboardingDestination.ProfileReady -> currentProfile() != null && legalAcknowledged && !isSaving
         }
     }

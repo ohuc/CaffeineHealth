@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
+    <application>
+        <!-- Play launches through one of two aliases so Caffeine Health+ owners can pick the Plus
+             app icon (AppIconManager). FOSS keeps MainActivity as its launcher entry unchanged. -->
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter tools:node="removeAll" />
+        </activity>
+
+        <activity-alias
+            android:name=".LauncherClassic"
+            android:targetActivity=".MainActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".LauncherPlus"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_plus"
+            android:roundIcon="@mipmap/ic_launcher_plus_round">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Restarts the app into the chosen launcher icon from a separate process. -->
+        <activity
+            android:name=".monetization.IconRestartActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:process=":iconswitch"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    </application>
+</manifest>

@@ -5,10 +5,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.uc.caffeine.data.ProfileFactors
 import com.uc.caffeine.data.SettingsRepository
+import com.uc.caffeine.util.notifications.NotificationConsent
+import com.uc.caffeine.util.notifications.NotificationScheduler
+import com.uc.caffeine.util.notifications.ReminderPrefs
+import com.uc.caffeine.util.notifications.reminderPrefsAfterChoice
 import java.time.LocalTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -97,6 +102,46 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
 
     fun toggleMedication(medication: Medication) {
         updateAnswers { answers -> answers.toggleMedication(medication) }
+    }
+
+    /**
+     * The one reminders choice in setup. Turning on keeps the saved defaults and schedules them
+     * (delivery still depends on the system permission); "Not now" turns reminders off for real.
+     */
+    fun answerReminders(turnOn: Boolean) {
+        viewModelScope.launch {
+            val app = getApplication<Application>()
+            val settings = settingsRepository.settingsFlow.first()
+            val current = ReminderPrefs(settings.dailyReminderTimes, settings.inactivityReminderEnabled)
+            val target = reminderPrefsAfterChoice(turnOn, current)
+            if (target != current) {
+                settingsRepository.updateDailyReminderTimes(target.dailyTimes)
+                settingsRepository.updateInactivityReminderEnabled(target.inactivity)
+                NotificationScheduler.syncDailyReminders(app, current.dailyTimes, target.dailyTimes)
+                if (!target.inactivity) NotificationScheduler.cancelInactivityReminder(app)
+            } else if (turnOn) {
+                NotificationScheduler.scheduleAllFromSettings(app, settings)
+            }
+            NotificationConsent.markSetupAnswered(app)
+        }
+    }
+
+    /** Reminder edits from the Notifications step once access is on; same effects as Settings. */
+    fun updateInactivityReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateInactivityReminderEnabled(enabled)
+            val app = getApplication<Application>()
+            if (enabled) NotificationScheduler.scheduleInactivityReminder(app)
+            else NotificationScheduler.cancelInactivityReminder(app)
+        }
+    }
+
+    fun updateDailyReminderTimes(newTimes: Set<String>) {
+        viewModelScope.launch {
+            val oldTimes = settingsRepository.settingsFlow.first().dailyReminderTimes
+            settingsRepository.updateDailyReminderTimes(newTimes)
+            NotificationScheduler.syncDailyReminders(getApplication(), oldTimes, newTimes)
+        }
     }
 
     fun showLegalSheet() {

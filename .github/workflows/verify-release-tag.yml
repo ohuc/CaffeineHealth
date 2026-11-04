@@ -4,6 +4,8 @@
 #      versionCode exclusively — same code means "nothing new to publish")
 # Runs on every v* tag push and fails loudly BEFORE the F-Droid checkupdates
 # bot or IzzyOnDroid can ingest a mis-versioned release.
+# Both release flavors share defaultConfig's identity and version sequence.
+# GitHub/F-Droid/Izzy consume fossRelease, staged only as app-release.apk.
 name: Verify release tag
 
 on:

@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import com.uc.caffeine.R
+import com.uc.caffeine.ui.components.AdaptiveConnectedButtonGroup
 import com.uc.caffeine.ui.components.DrinkIcon
 import com.uc.caffeine.ui.components.ExpressiveIconBadge
 import com.uc.caffeine.ui.components.SettingsPageScaffold
@@ -102,12 +104,12 @@ internal fun AnalyticsBySourcePage(
     onBack: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
-    var selectedView by remember { mutableStateOf(SourceView.CATEGORY) }
-    var showRangeSheet by remember { mutableStateOf(false) }
+    var selectedView by rememberSaveable { mutableStateOf(SourceView.CATEGORY) }
+    var showRangeSheet by rememberSaveable { mutableStateOf(false) }
     val slices = remember(uiState.sourceCategoryKeys, uiState.sourceAxisLabels, uiState.sourceValues) {
         uiState.sourceSlices()
     }
-    var selectedSource by remember { mutableStateOf<String?>(null) }
+    var selectedSource by rememberSaveable { mutableStateOf<String?>(null) }
     // A range without the picked category simply shows the total again.
     val selectedSlice = slices.firstOrNull { it.key == selectedSource }
     val onSelectSource: (String) -> Unit = { key ->
@@ -170,15 +172,20 @@ internal fun AnalyticsBySourcePage(
                         if (uiState.hasData) {
                             VerticalDivider(modifier = Modifier.height(32.dp))
 
-                            Row(
+                            AdaptiveConnectedButtonGroup(
+                                itemCount = SourceView.entries.size,
                                 modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                            ) {
+                            ) { index, shapes ->
+                                val view = SourceView.entries[index]
                                 ToggleButton(
-                                    checked = selectedView == SourceView.CATEGORY,
-                                    onCheckedChange = { if (it && selectedView != SourceView.CATEGORY) { haptics.toggle(); selectedView = SourceView.CATEGORY } },
-                                    modifier = Modifier.weight(1f),
-                                    shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                                    checked = selectedView == view,
+                                    onCheckedChange = {
+                                        if (it && selectedView != view) {
+                                            haptics.toggle()
+                                            selectedView = view
+                                        }
+                                    },
+                                    shapes = shapes,
                                     colors = ToggleButtonDefaults.toggleButtonColors(
                                         checkedContainerColor = MaterialTheme.colorScheme.primary,
                                         checkedContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -188,26 +195,15 @@ internal fun AnalyticsBySourcePage(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        Icon(Icons.Rounded.DonutLarge, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Text(stringResource(R.string.analytics_view_category), style = MaterialTheme.typography.labelMedium)
-                                    }
-                                }
-                                ToggleButton(
-                                    checked = selectedView == SourceView.ITEM,
-                                    onCheckedChange = { if (it && selectedView != SourceView.ITEM) { haptics.toggle(); selectedView = SourceView.ITEM } },
-                                    modifier = Modifier.weight(1f),
-                                    shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                                    colors = ToggleButtonDefaults.toggleButtonColors(
-                                        checkedContainerColor = MaterialTheme.colorScheme.primary,
-                                        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                                    ),
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    ) {
-                                        Icon(Icons.Rounded.LocalCafe, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Text(stringResource(R.string.analytics_view_item), style = MaterialTheme.typography.labelMedium)
+                                        Icon(
+                                            imageVector = if (view == SourceView.CATEGORY) Icons.Rounded.DonutLarge else Icons.Rounded.LocalCafe,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Text(
+                                            text = stringResource(if (view == SourceView.CATEGORY) R.string.analytics_view_category else R.string.analytics_view_item),
+                                            style = MaterialTheme.typography.labelMedium,
+                                        )
                                     }
                                 }
                             }

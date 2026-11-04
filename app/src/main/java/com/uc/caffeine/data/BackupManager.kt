@@ -58,6 +58,7 @@ class BackupManager(
             put("themeMode", settings.themeMode.name)
             put("useDynamicColor", settings.useDynamicColor)
             put("expressiveBlur", settings.expressiveBlur)
+            put("stickyHomeChart", settings.stickyHomeChart)
             put("use24HourClock", settings.use24HourClock)
             put("dateFormat", settings.dateFormat.name)
             put("useSystemTimeZone", settings.useSystemTimeZone)
@@ -189,6 +190,7 @@ class BackupManager(
                 themeMode = ThemeMode.fromStorage(settingsObj.optString("themeMode")),
                 useDynamicColor = settingsObj.optBoolean("useDynamicColor", true),
                 expressiveBlur = settingsObj.optBoolean("expressiveBlur", true),
+                stickyHomeChart = settingsObj.optBoolean("stickyHomeChart", false),
                 use24HourClock = settingsObj.optBoolean("use24HourClock", false),
                 dateFormat = AppDateFormat.fromStorage(settingsObj.optString("dateFormat")),
                 useSystemTimeZone = settingsObj.optBoolean("useSystemTimeZone", true),

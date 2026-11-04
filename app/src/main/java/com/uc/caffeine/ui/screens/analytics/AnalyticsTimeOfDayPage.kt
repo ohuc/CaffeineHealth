@@ -50,6 +50,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -178,7 +179,7 @@ internal fun AnalyticsTimeOfDayPage(
     onBack: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
-    var showRangeSheet by remember { mutableStateOf(false) }
+    var showRangeSheet by rememberSaveable { mutableStateOf(false) }
 
     SettingsPageScaffold(
         title = stringResource(R.string.analytics_when_you_drink),

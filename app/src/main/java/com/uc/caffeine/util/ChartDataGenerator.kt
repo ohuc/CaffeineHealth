@@ -83,19 +83,6 @@ object ChartDataGenerator {
             endTime = endTime,
         )
 
-        val bedtimeIndex = dataPoints.indexOfFirst { it.timestampMillis >= bedtime }
-        if (bedtimeIndex >= 0) {
-            dataPoints[bedtimeIndex] = dataPoints[bedtimeIndex].copy(isBedtime = true)
-        }
-
-        markPeakPoints(
-            dataPoints = dataPoints,
-            entries = entries,
-            startTime = domainStartTime,
-            endTime = endTime,
-            halfLifeMinutes = settings.effectiveHalfLifeMinutes,
-        )
-
         return ChartData(
             dataPoints = dataPoints,
             consumptionMarkers = buildConsumptionMarkers(
@@ -217,12 +204,6 @@ object ChartDataGenerator {
             currentTimeMillis = currentTime,
             halfLifeMinutes = settings.effectiveHalfLifeMinutes,
         )
-        val peakMarkerIndex = dataPoints.indices.minByOrNull { index ->
-            abs(dataPoints[index].timestampMillis - peakTime)
-        } ?: 0
-        val currentX = ((currentTime - startTime).toDouble() / intervalMillis)
-            .coerceIn(0.0, dataPoints.lastIndex.toDouble())
-
         return ConsumptionContributionDetail(
             entryId = entry.id,
             drinkName = entry.drinkName,
@@ -239,8 +220,6 @@ object ChartDataGenerator {
             totalContributionMg = entry.caffeineMg.toDouble(),
             thresholdLevel = settings.sleepThresholdMg.toDouble(),
             currentTimeMillis = currentTime,
-            currentX = currentX,
-            peakMarkerIndex = peakMarkerIndex
         )
     }
 
@@ -282,20 +261,22 @@ object ChartDataGenerator {
         return domainStartMillis + (xValue * BASE_INTERVAL_MILLIS).roundToLong()
     }
 
-    private fun resolveChartStartTime(
+    /**
+     * The chart's x origin. It is anchored to a fixed 6-hour grid (the coarsest sampling step,
+     * which every finer step divides) so it does not move as the oldest drink ages past the
+     * 24 h / 7 d / 30 d sampling boundaries. Every move of the origin shifts the whole timeline
+     * under the user's scroll position, so it now only moves when the oldest drink itself changes.
+     */
+    internal fun resolveChartStartTime(
         entries: List<ConsumptionEntry>,
         currentTime: Long,
     ): Long {
-        if (entries.isEmpty()) {
-            return roundDownToInterval(
-                currentTime - (DEFAULT_EMPTY_HISTORY_LOOKBACK_HOURS * ONE_HOUR_MILLIS),
-                BASE_INTERVAL_MILLIS,
-            )
+        val referenceTime = if (entries.isEmpty()) {
+            currentTime - (DEFAULT_EMPTY_HISTORY_LOOKBACK_HOURS * ONE_HOUR_MILLIS)
+        } else {
+            entries.minOf { it.startedAtMillis }
         }
-
-        val oldestEntryTime = entries.minOf { it.startedAtMillis }
-        val initialBucketSize = samplingIntervalFor(oldestEntryTime, currentTime)
-        return roundDownToInterval(oldestEntryTime, initialBucketSize) - initialBucketSize
+        return roundDownToInterval(referenceTime, SIX_HOURS_MILLIS) - SIX_HOURS_MILLIS
     }
 
     private fun buildAdaptiveTimelinePoints(
@@ -307,14 +288,20 @@ object ChartDataGenerator {
     ): MutableList<CaffeineDataPoint> {
         val dataPoints = mutableListOf<CaffeineDataPoint>()
         val hasEntries = entries.isNotEmpty()
+        val halfLifeMinutes = settings.effectiveHalfLifeMinutes
+        val previousCache = levelCache
+            ?.takeIf { it.entries === entries && it.halfLifeMinutes == halfLifeMinutes }
+        val levels = HashMap<Long, Double>()
         var pointTime = startTime
 
         while (pointTime <= endTime) {
-            val actualCaffeineLevel = CaffeineCalculator.calculateCurrentLevel(
-                entries = entries,
-                currentTimeMillis = pointTime,
-                halfLifeMinutes = settings.effectiveHalfLifeMinutes,
-            )
+            val actualCaffeineLevel = previousCache?.levels?.get(pointTime)
+                ?: CaffeineCalculator.calculateCurrentLevel(
+                    entries = entries,
+                    currentTimeMillis = pointTime,
+                    halfLifeMinutes = halfLifeMinutes,
+                )
+            levels[pointTime] = actualCaffeineLevel
             val displayCaffeineLevel = toDisplayCaffeineLevel(
                 actualCaffeineLevel = actualCaffeineLevel,
                 hasEntries = hasEntries,
@@ -323,7 +310,6 @@ object ChartDataGenerator {
             dataPoints += CaffeineDataPoint(
                 timestampMillis = pointTime,
                 caffeineLevel = displayCaffeineLevel,
-                isHistorical = pointTime <= currentTime,
             )
 
             if (pointTime == endTime) break
@@ -337,8 +323,24 @@ object ChartDataGenerator {
             pointTime = nextPointTime
         }
 
+        levelCache = LevelCache(entries, halfLifeMinutes, levels)
         return dataPoints
     }
+
+    /**
+     * Levels from the previous run. A level depends only on (entries, half-life, timestamp), and
+     * Room hands out a new list only when the log changes, so the 60-second refresh reuses every
+     * sample it already computed and only evaluates the few new grid points. Replaced (never
+     * mutated) per run, so a concurrent call at worst misses the cache.
+     */
+    private class LevelCache(
+        val entries: List<ConsumptionEntry>,
+        val halfLifeMinutes: Int,
+        val levels: Map<Long, Double>,
+    )
+
+    @Volatile
+    private var levelCache: LevelCache? = null
 
     private fun nextAdaptivePointTime(
         pointTime: Long,
@@ -383,36 +385,6 @@ object ChartDataGenerator {
             ageMillis > SEVEN_DAYS_MILLIS -> THREE_HOURS_MILLIS
             ageMillis > ONE_DAY_MILLIS -> ONE_HOUR_MILLIS
             else -> BASE_INTERVAL_MILLIS
-        }
-    }
-
-    private fun markPeakPoints(
-        dataPoints: MutableList<CaffeineDataPoint>,
-        entries: List<ConsumptionEntry>,
-        startTime: Long,
-        endTime: Long,
-        halfLifeMinutes: Int,
-    ) {
-        // Compute each overlapping entry's peak once and mark the nearest data point.
-        entries.forEach { entry ->
-            if (
-                entry.startedAtMillis > endTime ||
-                CaffeineCalculator.peakSearchEndMillis(entry) < startTime
-            ) {
-                return@forEach
-            }
-            val peakTime = CaffeineCalculator.calculatePeakTime(
-                entry = entry,
-                halfLifeMinutes = halfLifeMinutes,
-            )
-            if (peakTime in startTime..endTime) {
-                val nearestIndex = dataPoints.indexOfFirst {
-                    it.timestampMillis >= peakTime
-                }
-                if (nearestIndex >= 0) {
-                    dataPoints[nearestIndex] = dataPoints[nearestIndex].copy(isPeak = true)
-                }
-            }
         }
     }
 
@@ -485,10 +457,7 @@ object ChartDataGenerator {
 
 data class CaffeineDataPoint(
     val timestampMillis: Long,
-    val caffeineLevel: Double,  // Back to normal Double
-    val isHistorical: Boolean,
-    val isBedtime: Boolean = false,
-    val isPeak: Boolean = false
+    val caffeineLevel: Double,
 )
 
 data class ChartData(
@@ -536,6 +505,4 @@ data class ConsumptionContributionDetail(
     val totalContributionMg: Double,
     val thresholdLevel: Double,
     val currentTimeMillis: Long,
-    val currentX: Double,
-    val peakMarkerIndex: Int
 )

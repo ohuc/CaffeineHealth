@@ -11,6 +11,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.LocalAppScaffoldPadding
 
+/**
+ * Every top-level page header (Home, Analytics, Settings, Add) is at least this tall, so the
+ * title sits at the same height whether or not the page has 48dp header actions such as the
+ * Home view switcher. Without it, pages with actions placed their title lower.
+ */
+val ScreenHeaderMinHeight = 48.dp
+
 @Composable
 fun CaffeineScreenScaffold(
     title: String,
@@ -26,7 +33,7 @@ fun CaffeineScreenScaffold(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(LocalPanePlacement.current.headerInsetSides))
             .padding(
                 start = contentPadding.calculateLeftPadding(LocalLayoutDirection.current),
                 end = contentPadding.calculateRightPadding(LocalLayoutDirection.current),
@@ -34,7 +41,9 @@ fun CaffeineScreenScaffold(
             )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = ScreenHeaderMinHeight),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

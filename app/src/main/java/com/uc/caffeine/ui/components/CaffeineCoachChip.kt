@@ -1,12 +1,24 @@
 package com.uc.caffeine.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -43,10 +55,11 @@ import com.uc.caffeine.util.formatTimestampToTime
 private const val COACH_SLEEP_DEBT_NOTE_MINUTES = 60
 
 /**
- * One-line Caffeine Coach status shown under the Home hero chart. Visual weight
- * scales with actionability: an actionable dose suggestion gets a tinted pill;
- * "hold" states shrink to a quiet text row so they never compete with the chart.
- * Tapping either opens [CaffeineCoachSheet] with the full reasoning.
+ * Compact Caffeine Coach pill that sits beside the Home "My Consumptions" title
+ * (`{icon} Coach: ~x mg`). The tone carries the state: primary for an actionable dose,
+ * tertiary while winding down for bedtime, secondary when no caffeine is needed. The
+ * spoken label is the full one-line summary. Tapping opens [CaffeineCoachSheet], which
+ * explains what the Coach recommends and why.
  */
 @Composable
 fun CaffeineCoachChip(
@@ -56,9 +69,20 @@ fun CaffeineCoachChip(
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val motion = MaterialTheme.motionScheme
+
+    val container: Color
+    val content: Color
+    val icon: ImageVector
+    val label: String
+    val spokenLabel: String
     when (recommendation) {
         is CoachRecommendation.Recommend -> {
-            val text = if (recommendation.isNow) {
+            container = colorScheme.primaryContainer
+            content = colorScheme.onPrimaryContainer
+            icon = Icons.Filled.Bolt
+            label = stringResource(R.string.coach_pill_dose, recommendation.doseMg)
+            spokenLabel = if (recommendation.isNow) {
                 stringResource(R.string.coach_chip_recommend_now, recommendation.doseMg)
             } else {
                 stringResource(
@@ -67,71 +91,60 @@ fun CaffeineCoachChip(
                     formatTimestampToTime(recommendation.atMillis, userSettings),
                 )
             }
-            Surface(
-                onClick = onClick,
-                modifier = modifier.fillMaxWidth(),
-                shape = CircleShape,
-                color = colorScheme.primaryContainer,
-                contentColor = colorScheme.onPrimaryContainer,
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Bolt,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-            }
         }
+        is CoachRecommendation.Hold -> if (recommendation.reason == CoachReason.BEDTIME_PROTECTION) {
+            container = colorScheme.tertiaryContainer
+            content = colorScheme.onTertiaryContainer
+            icon = Icons.Filled.Bedtime
+            label = stringResource(R.string.coach_pill_hold_bedtime)
+            spokenLabel = stringResource(R.string.coach_chip_hold_bedtime, formatBedtime(userSettings))
+        } else {
+            container = colorScheme.secondaryContainer
+            content = colorScheme.onSecondaryContainer
+            icon = Icons.Filled.CheckCircle
+            label = stringResource(R.string.coach_pill_hold_alert)
+            spokenLabel = stringResource(R.string.coach_chip_hold_alert)
+        }
+    }
+    // Effects springs for colour (never overshoot); a spatial spring lets the pill grow or
+    // shrink smoothly when the label changes width.
+    val containerColor by animateColorAsState(container, motion.defaultEffectsSpec(), label = "coach_pill_container")
+    val contentColor by animateColorAsState(content, motion.defaultEffectsSpec(), label = "coach_pill_content")
 
-        is CoachRecommendation.Hold -> {
-            val isBedtime = recommendation.reason == CoachReason.BEDTIME_PROTECTION
-            val text = if (isBedtime) {
-                stringResource(R.string.coach_chip_hold_bedtime, formatBedtime(userSettings))
-            } else {
-                stringResource(R.string.coach_chip_hold_alert)
-            }
-            Surface(
-                onClick = onClick,
-                modifier = modifier.fillMaxWidth(),
-                shape = CircleShape,
-                color = Color.Transparent,
-                contentColor = colorScheme.onSurfaceVariant,
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = if (isBedtime) Icons.Filled.Bedtime else Icons.Filled.CheckCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+    FilledTonalButton(
+        onClick = onClick,
+        shapes = ButtonDefaults.shapes(),
+        colors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+        ),
+        contentPadding = PaddingValues(start = 12.dp, end = 8.dp),
+        modifier = modifier
+            .animateContentSize(motion.defaultSpatialSpec())
+            .semantics { contentDescription = spokenLabel },
+    ) {
+        Row(
+            modifier = Modifier.clearAndSetSemantics { },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLargeEmphasized,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }
@@ -148,6 +161,7 @@ fun CaffeineCoachSheet(
     userSettings: UserSettings,
     onLogDose: (doseMg: Int, entryName: String) -> Unit,
     onDismiss: () -> Unit,
+    onConnectSleep: (() -> Unit)? = null,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val bedtimeStr = formatBedtime(userSettings)
@@ -274,11 +288,36 @@ fun CaffeineCoachSheet(
                 )
             }
 
+            // Without last night's sleep the Coach falls back to a generic plan; one tap takes the
+            // user to the Health Connect page, where they can turn sleep for bedtime on.
+            if (!recommendation.personalized && onConnectSleep != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                FilledTonalButton(
+                    onClick = onConnectSleep,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.health_connect_logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.coach_connect_sleep_action),
+                        style = MaterialTheme.typography.labelLargeEmphasized,
+                    )
+                }
+            }
+
             if (recommendation is CoachRecommendation.Recommend) {
                 Spacer(modifier = Modifier.height(8.dp))
                 val entryName = stringResource(R.string.coach_title)
                 Button(
                     onClick = { onLogDose(recommendation.doseMg, entryName) },
+                    shapes = ButtonDefaults.shapes(),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(

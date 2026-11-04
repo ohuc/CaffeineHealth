@@ -185,6 +185,13 @@ data class UserSettings(
     /** Highlights already shown on the Home "What's New" card or sheet. */
     val whatsNewSeen: Set<NewFeature> = emptySet(),
     val homeViewMode: HomeViewMode = HomeViewMode.GRAPH,
+
+    /**
+     * Pins the Home graph (or ring) above the consumption list so it stays visible while the
+     * list scrolls. Off by default: on short windows a pinned chart leaves little list (#45),
+     * so Home only pins when the window is tall enough.
+     */
+    val stickyHomeChart: Boolean = false,
     val colorPalette: AppColorPalette = AppColorPalette.DYNAMIC,
     val weeklySleepRotaEnabled: Boolean = false,
     val weeklySleepRota: Map<DayOfWeek, LocalTime> = emptyMap(),

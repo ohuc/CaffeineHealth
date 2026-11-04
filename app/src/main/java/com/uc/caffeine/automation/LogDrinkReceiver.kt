@@ -6,6 +6,8 @@ import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import com.uc.caffeine.R
+import com.uc.caffeine.distributionServices
+import com.uc.caffeine.monetization.ProFeature
 import com.uc.caffeine.data.CaffeineDatabase
 import com.uc.caffeine.data.HealthConnectManager
 import com.uc.caffeine.data.SettingsRepository
@@ -46,6 +48,8 @@ class LogDrinkReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handle(context: Context, extras: Map<String, Any?>) {
+        context.distributionServices.featureAccess.awaitReady()
+        if (!context.distributionServices.featureAccess.canUse(ProFeature.Automation)) return
         val settings = SettingsRepository(context).settingsFlow.first()
         if (!settings.automationEnabled) {
             Log.w(TAG, "Ignoring $extras: automation is disabled in settings")

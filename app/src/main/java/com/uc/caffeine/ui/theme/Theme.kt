@@ -1,8 +1,10 @@
 package com.uc.caffeine.ui.theme
 
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -302,7 +304,17 @@ fun CaffeineTheme(
         colorSchemeForPalette(colorPalette, darkTheme)
     }
 
-    MaterialTheme(
+    val activity = androidx.activity.compose.LocalActivity.current
+    LaunchedEffect(activity, darkTheme) {
+        val componentActivity = activity as? androidx.activity.ComponentActivity
+        componentActivity?.enableEdgeToEdge(
+            statusBarStyle = if (darkTheme) androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                else androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = if (darkTheme) androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                else androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+        )
+    }
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
         typography = Typography,
         motionScheme = MotionScheme.expressive(),

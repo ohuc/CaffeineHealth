@@ -6310,5 +6310,30 @@
                 "unit_text_key": "gummy"
             }
         ]
+    },
+    "indian_chai": {
+        "90_absorption_rate": 45,
+        "category": "tea",
+        "consumption_method": "drink",
+        "default_unit": "cup",
+        "description": "Traditional Indian masala chai prepared by simmering black tea leaves with water and milk. Commonly sweetened with sugar and optionally flavoured with ginger, cardamom, cinnamon or other Indian spices. The caffeine comes primarily from the black tea. Its caffeine concentration depends on the quantity and variety of tea leaves, brewing duration and milk-to-water ratio. Typically served hot in a small terracotta kulhad.",
+        "id": "indian_chai",
+        "image_src": "indian_chai.png",
+        "name": "Indian Masala Chai (Kulhad)",
+        "relevance": 60,
+        "units": [
+            {
+                "caffeine_content": 48,
+                "grams": null,
+                "milliliters": 150,
+                "unit_text_key": "cup"
+            },
+            {
+                "caffeine_content": 0.32,
+                "grams": null,
+                "milliliters": 1,
+                "unit_text_key": "ml"
+            }
+        ]
     }
 }

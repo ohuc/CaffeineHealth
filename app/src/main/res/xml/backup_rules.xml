@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- Only back up DataStore preferences (half-life, bedtime, threshold).
-         Omitting the database domain implicitly excludes Room — safer than
-         explicit excludes which trigger lint errors on this format. -->
-    <include domain="sharedpref" path="." />
+    <!-- Preferences DataStore lives in files/datastore, not shared_prefs.
+         An allowlist excludes Room and future billing/preview/identity files.
+         Play-private state must use noBackupFilesDir, never user_settings. -->
+    <include domain="file" path="datastore/user_settings.preferences_pb" />
 </full-backup-content>

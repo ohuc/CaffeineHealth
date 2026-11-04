@@ -5,13 +5,15 @@ name: Verify translations
 on:
   pull_request:
     paths:
-      - 'app/src/main/res/values-*/**'
+      - 'app/src/*/res/**'
+      - 'app/build.gradle.kts'
       - '.github/workflows/verify-translations.yml'
   push:
     branches:
       - master
     paths:
-      - 'app/src/main/res/values-*/**'
+      - 'app/src/*/res/**'
+      - 'app/build.gradle.kts'
       - '.github/workflows/verify-translations.yml'
   workflow_dispatch:
 
@@ -56,10 +58,10 @@ jobs:
                               count += 1
               return count
 
-          res_root = pathlib.Path("app/src/main/res")
+          res_roots = [pathlib.Path(f"app/src/{source}/res") for source in ("main", "foss", "play")]
           failed = False
           checked = 0
-          for d in sorted(res_root.iterdir()):
+          for d in sorted(d for root in res_roots if root.exists() for d in root.iterdir()):
               if not d.is_dir() or not is_locale_dir(d.name):
                   continue
               checked += 1

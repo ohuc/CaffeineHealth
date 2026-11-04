@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +55,7 @@ fun ServingQuantityStepper(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberAppHaptics()
-    var showInput by remember { mutableStateOf(false) }
+    var showInput by rememberSaveable { mutableStateOf(false) }
     val step = quantityStepFor(unitKey)
     val quickPicks = remember(unitKey) { quickPickQuantitiesFor(unitKey) }
 
@@ -129,28 +130,25 @@ fun ServingQuantityStepper(
         }
 
         if (quickPicks.isNotEmpty()) {
-            Row(
+            AdaptiveConnectedButtonGroup(
+                itemCount = quickPicks.size,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                quickPicks.forEachIndexed { index, value ->
+            ) { index, shapes ->
+                    val value = quickPicks[index]
                     ToggleButton(
                         checked = quantity == value,
                         onCheckedChange = {
                             haptics.toggle()
                             onQuantityChange(value)
                         },
-                        modifier = Modifier.weight(1f),
-                        shapes = connectedButtonShapes(index, quickPicks.size),
+                        shapes = shapes,
                         contentPadding = ButtonDefaults.ExtraSmallContentPadding,
                     ) {
                         Text(
                             text = "${formatQuantity(value)} ${formatUnitLabel(unitKey)}",
                             style = MaterialTheme.typography.labelMedium,
-                            maxLines = 1,
                         )
                     }
-                }
             }
         }
     }
@@ -173,7 +171,7 @@ private fun QuantityInputDialog(
     onConfirm: (Double) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var text by remember { mutableStateOf(formatQuantity(currentQuantity)) }
+    var text by rememberSaveable { mutableStateOf(formatQuantity(currentQuantity)) }
     val parsed = text.toDoubleOrNull()
     val isValid = parsed != null && parsed >= MIN_SERVING_QUANTITY
 
@@ -226,11 +224,11 @@ fun ServingUnitSelector(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberAppHaptics()
-    Row(
+    AdaptiveConnectedButtonGroup(
+        itemCount = units.size,
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    ) {
-        units.forEachIndexed { index, unit ->
+    ) { index, shapes ->
+            val unit = units[index]
             ToggleButton(
                 checked = unit.unitKey == selectedUnit?.unitKey,
                 onCheckedChange = {
@@ -239,16 +237,13 @@ fun ServingUnitSelector(
                         onUnitSelected(unit)
                     }
                 },
-                modifier = Modifier.weight(1f),
-                shapes = connectedButtonShapes(index, units.size),
+                shapes = shapes,
             ) {
                 Text(
                     text = formatUnitButtonLabel(unit.unitKey),
                     style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
                 )
             }
-        }
     }
 }
 

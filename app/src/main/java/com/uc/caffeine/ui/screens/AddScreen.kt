@@ -103,6 +103,9 @@ import com.uc.caffeine.ui.components.ReleaseTimeSetting
 import com.uc.caffeine.ui.components.DrinkDurationDefault
 import com.uc.caffeine.util.defaultDurationFor
 import com.uc.caffeine.ui.components.DrinkIcon
+import com.uc.caffeine.ui.components.DrinkListBadgeSize
+import com.uc.caffeine.ui.components.DrinkListImageSize
+import com.uc.caffeine.ui.components.DrinkListItem
 import com.uc.caffeine.ui.components.ExpressiveIconBadge
 import com.uc.caffeine.ui.components.RollingNumberText
 import com.uc.caffeine.ui.components.SegmentedListGroup
@@ -150,12 +153,25 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
+import com.uc.caffeine.ui.components.AdaptiveMainSupportingLayout
+import com.uc.caffeine.ui.components.AdaptivePanePlaceholder
+import com.uc.caffeine.ui.components.LocalPanePlacement
+import com.uc.caffeine.ui.components.PanePlacement
+import com.uc.caffeine.ui.components.rememberWindowLayoutPolicy
+import com.uc.caffeine.LocalAppScaffoldPadding
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.uc.caffeine.ui.components.AdaptiveConnectedButtonGroup
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -171,10 +187,13 @@ fun AddScreen(
 ) {
     val snackbarHostState = LocalSnackbarHostState.current
     val haptics = rememberAppHaptics()
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val context = LocalContext.current
     val activity = remember(context) { context.findComponentActivity() }
 
     val groupedDrinks by viewModel.groupedDrinkPresets.collectAsStateWithLifecycle()
+    val drinkPresets by viewModel.drinkPresets.collectAsStateWithLifecycle()
     val recentDrinks by viewModel.recentDrinks.collectAsStateWithLifecycle()
     val isCatalogLoading by viewModel.isDrinkCatalogLoading.collectAsStateWithLifecycle()
     val selectedFilter by viewModel.selectedCategoryFilter.collectAsStateWithLifecycle()
@@ -192,17 +211,35 @@ fun AddScreen(
     val categories = viewModel.getAvailableCategories()
     val focusManager = LocalFocusManager.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectedDrink by remember { mutableStateOf<DrinkPreset?>(null) }
-    var showCustomDrinkSheet by remember { mutableStateOf(false) }
-    var customDraft by remember { mutableStateOf(CustomDrinkDraft()) }
-    var customNotice by remember { mutableStateOf<CustomDrinkNotice?>(null) }
+    var selectedDrinkId by rememberSaveable { mutableStateOf<Int?>(null) }
+    val selectedDrink = drinkPresets.firstOrNull { it.id == selectedDrinkId }
+    // Which custom drink's editor is open over its serving view (null: the serving view).
+    var editingDrinkId by rememberSaveable { mutableStateOf<Int?>(null) }
+    // Keeps an unfinished serving per drink by key, not by position, so it survives the move
+    // between the bottom sheet and the side pane when the window is folded or resized.
+    val servingStateHolder = rememberSaveableStateHolder()
+    // Two-pane windows show the serving beside the catalog instead of in a bottom sheet.
+    val servingInPane = rememberWindowLayoutPolicy().twoPane
+    // Leaving a drink discards its unfinished serving and editor, so picking it again starts
+    // fresh, as a newly opened sheet always did. A fold or rotation keeps the same drink and so
+    // keeps the draft.
+    var lastServingDrinkId by rememberSaveable { mutableStateOf<Int?>(null) }
+    LaunchedEffect(selectedDrinkId) {
+        val previous = lastServingDrinkId
+        if (previous != null && previous != selectedDrinkId) servingStateHolder.removeState("serving-$previous")
+        if (editingDrinkId != selectedDrinkId) editingDrinkId = null
+        lastServingDrinkId = selectedDrinkId
+    }
+    var showCustomDrinkSheet by rememberSaveable { mutableStateOf(false) }
+    var customDraft by rememberSaveable(stateSaver = CustomDrinkDraftSaver) { mutableStateOf(CustomDrinkDraft()) }
+    var customNotice by rememberSaveable { mutableStateOf<CustomDrinkNotice?>(null) }
     val customSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var scannerOpen by rememberSaveable { mutableStateOf(false) }
     var scannedBarcode by rememberSaveable { mutableStateOf<String?>(null) }
-    var onlineLookup by remember { mutableStateOf<OnlineLookup?>(null) }
+    var onlineLookup by rememberSaveable(stateSaver = OnlineLookupSaver) { mutableStateOf<OnlineLookup?>(null) }
     var lookupJob by remember { mutableStateOf<Job?>(null) }
     // A scanned barcode that turned out to be a drink already here, kept on it once it's logged.
-    var pendingBarcodeLink by remember { mutableStateOf<BarcodeLink?>(null) }
+    var pendingBarcodeLink by rememberSaveable(stateSaver = BarcodeLinkSaver) { mutableStateOf<BarcodeLink?>(null) }
     val scope = rememberCoroutineScope()
 
     fun openCustomDrink(draft: CustomDrinkDraft, barcode: String? = null, notice: CustomDrinkNotice? = null) {
@@ -229,7 +266,7 @@ fun AddScreen(
                     onlineLookup = null
                     if (known != null) {
                         pendingBarcodeLink = BarcodeLink(known.id, barcode)
-                        selectedDrink = known
+                        selectedDrinkId = known.id
                         return@launch
                     }
                     val draft = result.product.toCustomDrinkDraft()
@@ -256,18 +293,18 @@ fun AddScreen(
         onDispose { onFullScreenChange(false) }
     }
 
-    LaunchedEffect(viewModel, snackbarHostState, sheetState) {
+    LaunchedEffect(viewModel, snackbarHostState, sheetState, configuration) {
         viewModel.addScreenEvents.collectLatest { event ->
             if (sheetState.isVisible) {
                 sheetState.hide()
             }
-            selectedDrink = null
+            selectedDrinkId = null
 
             when (event) {
                 is AddScreenUiEvent.CustomDrinkDeleted -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
-                    val message = context.getString(R.string.custom_drink_deleted_toast, event.drinkName)
-                    val undoLabel = context.getString(R.string.action_undo)
+                    val message = resources.getString(R.string.custom_drink_deleted_toast, event.drinkName)
+                    val undoLabel = resources.getString(R.string.action_undo)
                     val showUndo: suspend () -> Unit = {
                         val result = snackbarHostState.showSnackbar(
                             message = message,
@@ -285,7 +322,7 @@ fun AddScreen(
                 }
                 is AddScreenUiEvent.DrinkLogged -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
-                    val message = context.getString(R.string.add_logged_toast, event.drinkName)
+                    val message = resources.getString(R.string.add_logged_toast, event.drinkName)
                     activity?.lifecycleScope?.launch {
                         snackbarHostState.showSnackbar(
                             message = message,
@@ -301,10 +338,66 @@ fun AddScreen(
         }
     }
 
+    // The serving view (or a custom drink's editor) for one drink. Shared by the bottom sheet on
+    // phones and the supporting pane on wide windows; its state is kept per drink.
+    val servingContent: @Composable (DrinkPreset) -> Unit = { drink ->
+        servingStateHolder.SaveableStateProvider("serving-${drink.id}") {
+            AnimatedContent(
+                targetState = editingDrinkId == drink.id,
+                transitionSpec = {
+                    if (targetState) {
+                        slideInHorizontally { it } + fadeIn() togetherWith
+                            slideOutHorizontally { -it } + fadeOut()
+                    } else {
+                        slideInHorizontally { -it } + fadeIn() togetherWith
+                            slideOutHorizontally { it } + fadeOut()
+                    }
+                },
+                label = "edit-custom-drink-transition",
+            ) { editing ->
+                if (editing) {
+                    EditCustomDrinkSheet(
+                        preset = drink,
+                        viewModel = viewModel,
+                        onBack = { editingDrinkId = null },
+                        onDone = { selectedDrinkId = null },
+                    )
+                } else {
+                    AddDrinkServingSheet(
+                        preset = drink,
+                        viewModel = viewModel,
+                        userSettings = userSettings,
+                        todayEntries = todayEntries,
+                        onAdd = { quantity, unit, startedAtMillis, durationMinutes, drinkName ->
+                            haptics.confirm()
+                            pendingBarcodeLink?.takeIf { it.presetId == drink.id }?.let {
+                                viewModel.linkBarcode(it.presetId, it.barcode)
+                            }
+                            pendingBarcodeLink = null
+                            viewModel.logDrinkFromAddScreen(
+                                preset = drink,
+                                quantity = quantity,
+                                unit = unit,
+                                startedAtMillis = startedAtMillis,
+                                durationMinutes = durationMinutes,
+                                drinkName = drinkName,
+                            )
+                        },
+                        onEditCustomDrink = if (drink.isCustom) {
+                            { editingDrinkId = drink.id }
+                        } else null,
+                    )
+                }
+            }
+        }
+    }
+
     SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
+      val catalog: @Composable (PaddingValues) -> Unit = { catalogPadding ->
         CaffeineScreenScaffold(
             title = stringResource(R.string.add_title),
             headerBottomSpacing = 0.dp,
+            contentPadding = catalogPadding,
             actions = {
                 FilledIconButton(onClick = { showCustomDrinkSheet = true }) {
                     Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.add_create_custom_cd))
@@ -446,25 +539,25 @@ fun AddScreen(
                         haptics.confirm()
                         viewModel.logRecentDrink(recent)
                     },
-                    itemModifier = Modifier.heightIn(min = 65.dp),
+                    itemModifier = Modifier.heightIn(min = 72.dp),
                     leadingContent = { recent ->
                         ExpressiveIconBadge(
                             index = recent.quantity.toInt(),
-                            size = 44.dp,
+                            size = DrinkBadgeSize,
                         ) {
                             DrinkIcon(
                                 imageName = recent.imageName,
                                 emoji = recent.emoji,
                                 contentDescription = recent.drinkName,
-                                modifier = Modifier.size(28.dp),
-                                emojiSize = MaterialTheme.typography.titleLarge.fontSize,
+                                modifier = Modifier.size(DrinkImageSize),
+                                emojiSize = MaterialTheme.typography.headlineMedium.fontSize,
                             )
                         }
                     },
                     content = { recent ->
                         Text(
                             text = recent.drinkName,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleMediumEmphasized,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -472,7 +565,7 @@ fun AddScreen(
                     supportingContent = { recent ->
                         Text(
                             text = formatServingSummary(recent.quantity, recent.unitKey),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -567,7 +660,7 @@ fun AddScreen(
                                     count = drinks.size,
                                     onClick = {
                                         haptics.navigation()
-                                        selectedDrink = drink
+                                        selectedDrinkId = drink.id
                                     },
                                     modifier = Modifier
                                         .animateItem()
@@ -583,6 +676,15 @@ fun AddScreen(
                 }
             }
         }
+      }
+
+        AdaptiveMainSupportingLayout(
+            single = { catalog(PaddingValues(horizontal = 16.dp, vertical = 12.dp)) },
+            main = { catalog(PaddingValues(start = 16.dp, end = 8.dp, top = 12.dp)) },
+            supporting = {
+                AddServingPane(drink = selectedDrink, servingContent = servingContent)
+            },
+        )
 
         AnimatedVisibility(
             visible = scannerOpen,
@@ -595,7 +697,7 @@ fun AddScreen(
                     scope.launch {
                         val match = viewModel.findDrinkByBarcode(code)
                         if (match != null) {
-                            selectedDrink = match
+                            selectedDrinkId = match.id
                         } else {
                             onlineLookup = OnlineLookup(code, LookupPhase.Asking)
                         }
@@ -607,64 +709,16 @@ fun AddScreen(
         }
     }
 
-    selectedDrink?.let { drink ->
-        var isEditingCustomDrink by remember(drink.id) { mutableStateOf(false) }
-
+    if (!servingInPane) selectedDrink?.let { drink ->
         ModalBottomSheet(
             onDismissRequest = {
-                selectedDrink = null
+                selectedDrinkId = null
                 pendingBarcodeLink = null
             },
             sheetState = sheetState,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            AnimatedContent(
-                targetState = isEditingCustomDrink,
-                transitionSpec = {
-                    if (targetState) {
-                        slideInHorizontally { it } + fadeIn() togetherWith
-                            slideOutHorizontally { -it } + fadeOut()
-                    } else {
-                        slideInHorizontally { -it } + fadeIn() togetherWith
-                            slideOutHorizontally { it } + fadeOut()
-                    }
-                },
-                label = "edit-custom-drink-transition",
-            ) { editing ->
-                if (editing) {
-                    EditCustomDrinkSheet(
-                        preset = drink,
-                        viewModel = viewModel,
-                        onBack = { isEditingCustomDrink = false },
-                        onDone = { selectedDrink = null },
-                    )
-                } else {
-                    AddDrinkServingSheet(
-                        preset = drink,
-                        viewModel = viewModel,
-                        userSettings = userSettings,
-                        todayEntries = todayEntries,
-                        onAdd = { quantity, unit, startedAtMillis, durationMinutes, drinkName ->
-                            haptics.confirm()
-                            pendingBarcodeLink?.takeIf { it.presetId == drink.id }?.let {
-                                viewModel.linkBarcode(it.presetId, it.barcode)
-                            }
-                            pendingBarcodeLink = null
-                            viewModel.logDrinkFromAddScreen(
-                                preset = drink,
-                                quantity = quantity,
-                                unit = unit,
-                                startedAtMillis = startedAtMillis,
-                                durationMinutes = durationMinutes,
-                                drinkName = drinkName,
-                            )
-                        },
-                        onEditCustomDrink = if (drink.isCustom) {
-                            { isEditingCustomDrink = true }
-                        } else null,
-                    )
-                }
-            }
+            servingContent(drink)
         }
     }
 
@@ -700,11 +754,79 @@ fun AddScreen(
     }
 }
 
+/**
+ * The serving view as a persistent pane beside the catalog on two-pane windows. It shows a short
+ * prompt until a drink is picked, and cross-fades when the drink changes.
+ */
+@Composable
+private fun AddServingPane(
+    drink: DrinkPreset?,
+    servingContent: @Composable (DrinkPreset) -> Unit,
+) {
+    val placement = LocalPanePlacement.current
+    val motion = MaterialTheme.motionScheme
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(placement.headerInsetSides))
+            .padding(
+                start = if (placement == PanePlacement.End) 8.dp else 16.dp,
+                end = 16.dp,
+                top = 12.dp,
+                bottom = LocalAppScaffoldPadding.current.calculateBottomPadding() + 16.dp,
+            ),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        AnimatedContent(
+            targetState = drink,
+            contentKey = { it?.id },
+            transitionSpec = {
+                (fadeIn(motion.defaultEffectsSpec()) +
+                    slideInVertically(motion.defaultSpatialSpec()) { it / 16 }) togetherWith
+                    fadeOut(motion.fastEffectsSpec())
+            },
+            label = "add_serving_pane",
+        ) { shown ->
+            if (shown == null) {
+                AdaptivePanePlaceholder(
+                    title = stringResource(R.string.adaptive_add_placeholder_title),
+                    message = stringResource(R.string.adaptive_add_placeholder),
+                )
+            } else {
+                Box(Modifier.fillMaxSize().padding(top = 12.dp)) { servingContent(shown) }
+            }
+        }
+    }
+}
+
 private enum class LookupPhase { Asking, Searching, Failed }
 
 private data class OnlineLookup(val barcode: String, val phase: LookupPhase)
 
 private data class BarcodeLink(val presetId: Int, val barcode: String)
+
+private val CustomDrinkDraftSaver = listSaver<CustomDrinkDraft, String>(
+    save = { listOf(it.name, it.category, it.unitKey, it.caffeineMg?.toString().orEmpty()) },
+    restore = { CustomDrinkDraft(it[0], it[1], it[2], it[3].toDoubleOrNull()) },
+)
+
+private val OnlineLookupSaver = listSaver<OnlineLookup?, String>(
+    save = { lookup -> lookup?.let { listOf(it.barcode, it.phase.name) }.orEmpty() },
+    restore = { saved ->
+        saved.takeIf { it.size == 2 }?.let {
+            val phase = LookupPhase.valueOf(it[1])
+            // The composition's lookup job cannot survive recreation. Keep the barcode and
+            // offer Search again instead of restoring an unfinishable loading indicator.
+            OnlineLookup(it[0], if (phase == LookupPhase.Searching) LookupPhase.Asking else phase)
+        }
+    },
+)
+
+private val BarcodeLinkSaver = listSaver<BarcodeLink?, String>(
+    save = { link -> link?.let { listOf(it.presetId.toString(), it.barcode) }.orEmpty() },
+    restore = { saved -> saved.takeIf { it.size == 2 }?.let { BarcodeLink(it[0].toInt(), it[1]) } },
+)
 
 /** Why the custom drink sheet opened pre-filled (or not) after a scan. */
 private enum class CustomDrinkNotice {
@@ -892,9 +1014,9 @@ private fun AddDrinkServingSheet(
         value = viewModel.getUnitsForDrink(preset.id)
     }
     val frozenTodayEntries = remember { todayEntries }
-    var quantity by remember(preset.id) { mutableStateOf(1.0) }
-    var startedAtMillis by remember(preset.id) { mutableStateOf(System.currentTimeMillis()) }
-    var durationMinutes by remember(preset.id, preset.releaseMinutes) {
+    var quantity by rememberSaveable(preset.id) { mutableStateOf(1.0) }
+    var startedAtMillis by rememberSaveable(preset.id) { mutableStateOf(System.currentTimeMillis()) }
+    var durationMinutes by rememberSaveable(preset.id, preset.releaseMinutes) {
         mutableIntStateOf(userSettings.defaultDurationFor(preset))
     }
     val isExtendedRelease = preset.releaseMinutes != null
@@ -909,7 +1031,7 @@ private fun AddDrinkServingSheet(
     val defaultUnit = remember(units) {
         units?.firstOrNull { it.isDefault } ?: units?.firstOrNull()
     }
-    var selectedUnitKey by remember(preset.id, units) {
+    var selectedUnitKey by rememberSaveable(preset.id) {
         mutableStateOf(defaultUnit?.unitKey)
     }
     val selectedUnit = remember(units, selectedUnitKey, defaultUnit) {
@@ -918,7 +1040,7 @@ private fun AddDrinkServingSheet(
     val canResteep = remember(preset.category, units, selectedUnit) {
         canBeResteeped(preset.category, units.orEmpty().map { it.unitKey }, selectedUnit?.unitKey)
     }
-    var steep by remember(preset.id) { mutableStateOf(TeaSteep.First) }
+    var steep by rememberSaveable(preset.id) { mutableStateOf(TeaSteep.First) }
     val effectiveSteep = if (canResteep) steep else TeaSteep.First
     // What actually gets logged: the serving scaled down for a later steep.
     val loggedUnit = remember(selectedUnit, effectiveSteep) {
@@ -1160,8 +1282,8 @@ private fun TeaSteepSelector(
             text = stringResource(R.string.add_tea_steep_label),
             style = MaterialTheme.typography.titleMedium,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
-            steeps.forEachIndexed { index, (value, label) ->
+        AdaptiveConnectedButtonGroup(itemCount = steeps.size) { index, shapes ->
+            val (value, label) = steeps[index]
                 ToggleButton(
                     checked = steep == value,
                     onCheckedChange = {
@@ -1170,16 +1292,10 @@ private fun TeaSteepSelector(
                             onSteepChange(value)
                         }
                     },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        steeps.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
-                    modifier = Modifier.weight(1f),
+                    shapes = shapes,
                 ) {
                     Text(text = label, style = MaterialTheme.typography.labelLarge)
                 }
-            }
         }
         Text(
             text = stringResource(R.string.add_tea_steep_summary),
@@ -1255,6 +1371,10 @@ private fun EmptyDrinkResultsState(
     }
 }
 
+// Drink photo sizes are shared with Home through DrinkListItem.kt.
+private val DrinkBadgeSize = DrinkListBadgeSize
+private val DrinkImageSize = DrinkListImageSize
+
 @Composable
 private fun DrinkSupportingContent(
     drink: DrinkPreset,
@@ -1268,7 +1388,7 @@ private fun DrinkSupportingContent(
         if (drink.brand.isNotBlank()) {
             Text(
                 text = drink.brand,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -1276,13 +1396,13 @@ private fun DrinkSupportingContent(
             )
             Text(
                 text = "•",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Text(
             text = formatUnitLabel(drink.defaultUnit),
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
         )
@@ -1297,47 +1417,16 @@ private fun SegmentedDrinkListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SegmentedListItem(
-        modifier = modifier,
+    DrinkListItem(
+        name = drink.name,
+        imageName = drink.imageName,
+        emoji = drink.emoji,
+        caffeineMg = drink.defaultCaffeineMg,
+        index = index,
+        count = count,
         onClick = onClick,
-        leadingContent = {
-            ExpressiveIconBadge(
-                index = index,
-                size = 44.dp,
-            ) {
-                DrinkIcon(
-                    imageName = drink.imageName,
-                    emoji = drink.emoji,
-                    contentDescription = drink.name,
-                    modifier = Modifier.size(28.dp),
-                    emojiSize = MaterialTheme.typography.titleLarge.fontSize,
-                )
-            }
-        },
-        content = {
-            Text(
-                text = drink.name,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        supportingContent = {
-            DrinkSupportingContent(drink = drink)
-        },
-        trailingContent = {
-            Text(
-                text = stringResource(R.string.caffeine_mg_compact, drink.defaultCaffeineMg),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-            )
-        },
-        verticalAlignment = Alignment.CenterVertically,
-        shapes = segmentedListItemShapes(index, count),
-        colors = ListItemDefaults.colors(
-            containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-        ),
+        supportingContent = { DrinkSupportingContent(drink = drink) },
+        modifier = modifier,
     )
 }
 
@@ -1352,13 +1441,13 @@ private fun CreateCustomDrinkSheet(
     val scope = rememberCoroutineScope()
     val haptics = rememberAppHaptics()
 
-    var name by remember { mutableStateOf(draft.name) }
-    var emoji by remember { mutableStateOf("☕") }
-    var imageUri by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(draft.category) }
-    var selectedUnitKey by remember { mutableStateOf(draft.unitKey) }
-    var caffeineText by remember { mutableStateOf(draft.caffeineMg?.let(::formatCaffeineAmount).orEmpty()) }
-    var releaseMinutes by remember { mutableStateOf<Int?>(null) }
+    var name by rememberSaveable { mutableStateOf(draft.name) }
+    var emoji by rememberSaveable { mutableStateOf("☕") }
+    var imageUri by rememberSaveable { mutableStateOf("") }
+    var selectedCategory by rememberSaveable { mutableStateOf(draft.category) }
+    var selectedUnitKey by rememberSaveable { mutableStateOf(draft.unitKey) }
+    var caffeineText by rememberSaveable { mutableStateOf(draft.caffeineMg?.let(::formatCaffeineAmount).orEmpty()) }
+    var releaseMinutes by rememberSaveable { mutableStateOf<Int?>(null) }
 
     val imageRequest = rememberImagePickerRequest()
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -1585,27 +1674,24 @@ private fun EditCustomDrinkSheet(
 ) {
     val scope = rememberCoroutineScope()
     val haptics = rememberAppHaptics()
-    var showDeleteDialog by remember(preset.id) { mutableStateOf(false) }
+    var showDeleteDialog by rememberSaveable(preset.id) { mutableStateOf(false) }
 
     val existingUnit by produceState<DrinkUnit?>(initialValue = null, key1 = preset.id) {
         value = viewModel.getUnitsForDrink(preset.id).firstOrNull()
     }
 
-    var name by remember(preset.id) { mutableStateOf(preset.name) }
-    var emoji by remember(preset.id) { mutableStateOf(preset.emoji) }
-    var imageUri by remember(preset.id) { mutableStateOf(preset.imageName) }
-    var selectedCategory by remember(preset.id) { mutableStateOf(preset.category) }
-    var selectedUnitKey by remember(preset.id) { mutableStateOf(preset.defaultUnit) }
-    var releaseMinutes by remember(preset.id) { mutableStateOf(preset.releaseMinutes) }
-    var caffeineText by remember(preset.id, existingUnit) {
-        val v = existingUnit?.caffeineMg
-        mutableStateOf(
-            if (v != null) {
-                if (v == v.toLong().toDouble()) v.toLong().toString() else v.toString()
-            } else {
-                preset.defaultCaffeineMg.toString()
-            }
-        )
+    var name by rememberSaveable(preset.id) { mutableStateOf(preset.name) }
+    var emoji by rememberSaveable(preset.id) { mutableStateOf(preset.emoji) }
+    var imageUri by rememberSaveable(preset.id) { mutableStateOf(preset.imageName) }
+    var selectedCategory by rememberSaveable(preset.id) { mutableStateOf(preset.category) }
+    var selectedUnitKey by rememberSaveable(preset.id) { mutableStateOf(preset.defaultUnit) }
+    var releaseMinutes by rememberSaveable(preset.id) { mutableStateOf(preset.releaseMinutes) }
+    var caffeineText by rememberSaveable(preset.id) { mutableStateOf(preset.defaultCaffeineMg.toString()) }
+    var caffeineEdited by rememberSaveable(preset.id) { mutableStateOf(false) }
+    LaunchedEffect(preset.id, existingUnit) {
+        if (!caffeineEdited) {
+            existingUnit?.caffeineMg?.let { caffeineText = formatCaffeineAmount(it) }
+        }
     }
 
     val imageRequest = rememberImagePickerRequest()
@@ -1796,7 +1882,10 @@ private fun EditCustomDrinkSheet(
             Text(stringResource(R.string.custom_drink_caffeine_per_serving), style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(
                 value = caffeineText,
-                onValueChange = { caffeineText = it.filter { c -> c.isDigit() || c == '.' } },
+                onValueChange = {
+                    caffeineEdited = true
+                    caffeineText = it.filter { c -> c.isDigit() || c == '.' }
+                },
                 label = { Text(stringResource(R.string.custom_drink_amount_label)) },
                 suffix = { Text(stringResource(R.string.unit_mg)) },
                 singleLine = true,

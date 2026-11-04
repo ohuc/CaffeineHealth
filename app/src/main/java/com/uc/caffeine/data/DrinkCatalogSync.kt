@@ -25,7 +25,8 @@ object DrinkCatalogSync {
     // Bump whenever consumable_items.json gains new items or units that existing
     // users should receive. v1: added Moka Pot Coffee + "g" unit on dark chocolate.
     // v2: Arizona Arnold Palmer + Stacker 2 pills, shot and gummies (#44).
-    const val CURRENT_VERSION = 2
+    // v3: Indian Masala Chai (Kulhad).
+    const val CURRENT_VERSION = 3
 
     /** Marks the catalog as current without doing any work — used right after a fresh seed. */
     fun markCurrent(context: Context) {

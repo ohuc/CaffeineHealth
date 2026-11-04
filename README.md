@@ -77,7 +77,7 @@ Log drinks from a curated catalog, watch your active caffeine level in real time
 - **Search & filter:** Material 3 search bar with expressive category filter chips
 - **One-tap logging:** log a drink with a single tap and get snackbar confirmation
 - **Custom serving sizes:** adjust caffeine amount and timing before logging
-- **Recent servings:** your latest servings as one-tap shortcuts (choose how many in Settings → Appearance)
+- **Recent servings:** your latest servings as one-tap shortcuts (choose how many in Settings → Look & feel → Appearance)
 
 ### 🧬 Personalized Onboarding
 - **Guided profiling flow:** set your age range, weight, bedtime, sleep sensitivity, lifestyle factors, and relevant medications
@@ -94,7 +94,7 @@ Log drinks from a curated catalog, watch your active caffeine level in real time
 - **Automation:** opt-in broadcast intent so Tasker, MacroDroid or an NFC tag can log drinks for you
 
 ### 🤖 Automation (Tasker, NFC tags)
-Enable **Settings → Automation**, then send a broadcast:
+Enable **Settings → Connections & data → Automation**, then send a broadcast:
 
 | Field | Value |
 |---|---|
@@ -171,8 +171,8 @@ The app follows a **single-activity MVVM** pattern:
 
 The app uses a **one-compartment oral pharmacokinetic model**:
 
-- **Absorption phase:** linear ramp from ingestion to peak based on drink-specific absorption rate
-- **Elimination phase:** exponential decay governed by your personal half-life setting
+- **Absorption and elimination:** a Bateman equation with gastric smoothing combines uptake and exponential decay; drinks are split into minute-sized doses over their consumption duration
+- **Half-life setting:** your personal half-life controls the elimination rate
 - **Half-life personalization:** computed from age, weight, smoking, alcohol, liver health, and CYP1A2-inhibiting medications during onboarding
 
 This keeps the curve and sleep forecast grounded in real pharmacology while remaining practical for daily use.
@@ -184,7 +184,7 @@ This keeps the curve and sleep forecast grounded in real pharmacology while rema
 ### Prerequisites
 
 - **Android Studio** Ladybug (2024.3) or newer
-- **JDK 11+**
+- **JDK 21** (used by the repository's CI; Java/Kotlin bytecode targets 11)
 - **Android SDK 36** installed via SDK Manager
 
 ### Build & Run
@@ -195,24 +195,31 @@ git clone https://github.com/ohuc/CaffeineHealth.git
 cd CaffeineHealth
 
 # Open in Android Studio and sync Gradle, or build from CLI:
-./gradlew assembleDebug
+./gradlew :app:assembleFossDebug
 
 # Install on a connected device / emulator:
-./gradlew installDebug
+./gradlew :app:installFossDebug
 ```
 
 > **Note:** The app requires Android 12 (API 31) or higher. `compileSdk` targets API 36 - use an emulator with API 31+ to run it.
 
+There are two editions built from the same source: `foss` (GitHub, F-Droid, IzzyOnDroid; every feature free, no proprietary SDKs) and `play` (Google Play). Check both before a release:
+
+```bash
+./gradlew :app:testFossDebugUnitTest :app:testPlayDebugUnitTest :app:verifyTranslations
+```
+
 ### Release checklist
 
-1. Pull the latest translation changes into a clean working tree (`git pull --ff-only origin master`).
-2. Bump `versionName` and increase `versionCode`, then add the matching Fastlane changelog at `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`.
-3. Run a clean build before every release: `./gradlew clean --no-daemon`.
-4. For a publisher-signed APK, provide all four signing values only through the environment (`SIGNING_STORE_FILE`, `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS`, and `SIGNING_KEY_PASSWORD`) and run `./gradlew assembleSignedRelease --no-daemon`. The task fails early if any value is missing.
-5. Verify the resulting signed APK with Android SDK `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`.
-6. Commit the source release, tag it as `v<versionName>`, and push both `master` and the tag. The GitHub workflow rejects a tag whose name or version code is not publishable.
+1. Pull the latest translation changes from Weblate into a clean working tree on `master`.
+2. Bump `versionName` and increase `versionCode` in `app/build.gradle.kts`, and add `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`, in one commit. All other release source must already be committed.
+3. Tag that exact commit as `v<versionName>` (for example `v2.6.0`), push the commit and tag, and wait for **Verify release tag** to pass.
+4. With HEAD at the tag and nothing modified, run **Build → Clean Project**, then **Build → Generate Signed App Bundle or APK** in Android Studio: an APK for the `fossRelease` variant, and an App Bundle for `playRelease`. Clean immediately before building; an incremental build is not reproducible.
+5. Attach the FOSS APK to a **draft** GitHub release, renamed to `app-release.apk`. F-Droid and IzzyOnDroid download it by that name.
+6. Run **Verify reproducible build** for that tag. It rebuilds the FOSS APK from source and publishes the draft only if it matches. Never replace a published APK or move a published tag; ship a new patch instead.
+7. Upload the Play App Bundle to Google Play.
 
-`assembleRelease` deliberately remains unsigned when no signing environment is supplied. This is the expected input for F-Droid/IzzyOnDroid source builds; those repositories sign the APKs they build themselves. Android only permits in-place updates signed by the same certificate, so publisher-signed GitHub APKs and repository-signed APKs are separate update paths unless a reproducible publisher-signed APK is accepted by the repository.
+The unsigned `fossRelease` build is what F-Droid and IzzyOnDroid verify against. Both editions keep the application ID `com.uc.caffeine`; Android only updates an install in place when the new APK is signed with the same certificate.
 
 ### Project Structure
 
@@ -223,6 +230,10 @@ CaffeineHealth/
 │   │   ├── assets/         # Drink preset JSON database
 │   │   ├── java/           # Kotlin source code
 │   │   └── res/            # Resources (drawables, fonts, values)
+│   ├── src/foss/           # Free local-feature implementation, no billing SDK
+│   ├── src/play/           # Plus UI, billing adapter and launcher aliases
+│   ├── src/playDebug/      # Hidden developer controls for owner testing
+│   ├── src/playRelease/    # Release counterpart without developer controls
 │   └── build.gradle.kts    # App-level dependencies
 ├── build.gradle.kts        # Project-level config
 ├── settings.gradle.kts     # Module includes
@@ -260,7 +271,7 @@ Contributions are welcome! Here's how to get started:
 - Follow existing code style and architecture patterns
 - Keep the shared ViewModel pattern - avoid per-screen ViewModels unless there's a strong reason
 - Use Material 3 components and the app's existing design tokens
-- Test on API 31+ emulator before submitting
+- Compile and run JVM unit tests for both flavors; device/UI validation belongs to the owner
 
 ---
 

@@ -52,6 +52,7 @@ object SettingsKeys {
     val LAST_APP_OPENED_AT = longPreferencesKey("last_app_opened_at")
     val WHATS_NEW_SEEN = stringSetPreferencesKey("whats_new_seen")
     val HOME_VIEW_MODE = stringPreferencesKey("home_view_mode")
+    val STICKY_HOME_CHART = booleanPreferencesKey("sticky_home_chart")
     val COLOR_PALETTE = stringPreferencesKey("color_palette")
     val WEEKLY_SLEEP_ROTA_ENABLED = booleanPreferencesKey("weekly_sleep_rota_enabled")
     val WEEKLY_SLEEP_ROTA = stringSetPreferencesKey("weekly_sleep_rota")
@@ -163,6 +164,12 @@ class SettingsRepository(private val context: Context) {
     suspend fun updateHomeViewMode(mode: HomeViewMode) {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.HOME_VIEW_MODE] = mode.name
+        }
+    }
+
+    suspend fun updateStickyHomeChart(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.STICKY_HOME_CHART] = enabled
         }
     }
 
@@ -393,6 +400,7 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.SLEEP_TIME_MINUTE] = settings.sleepTimeMinute
             prefs[SettingsKeys.THEME_MODE] = settings.themeMode.name
             prefs[SettingsKeys.HOME_VIEW_MODE] = settings.homeViewMode.name
+            prefs[SettingsKeys.STICKY_HOME_CHART] = settings.stickyHomeChart
             prefs[SettingsKeys.COLOR_PALETTE] = settings.colorPalette.name
             prefs[SettingsKeys.USE_DYNAMIC_COLOR] = settings.useDynamicColor
             prefs[SettingsKeys.EXPRESSIVE_BLUR] = settings.expressiveBlur
@@ -467,6 +475,7 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         dailyReminderTimes = this[SettingsKeys.DAILY_REMINDER_TIMES] ?: setOf("11:00", "14:00"),
         whatsNewSeen = decodeNewFeatures(this[SettingsKeys.WHATS_NEW_SEEN]),
         homeViewMode = HomeViewMode.fromStorage(this[SettingsKeys.HOME_VIEW_MODE]),
+        stickyHomeChart = this[SettingsKeys.STICKY_HOME_CHART] ?: defaultSettings.stickyHomeChart,
         colorPalette = this[SettingsKeys.COLOR_PALETTE]?.let { AppColorPalette.fromStorage(it) }
             ?: if (this[SettingsKeys.USE_DYNAMIC_COLOR] != false) AppColorPalette.DYNAMIC
                else AppColorPalette.ESPRESSO,

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -298,12 +299,13 @@ private fun AnalyticsSummaryCard(
                     )
                 }
 
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    maxItemsInEachRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 1 else 2,
                 ) {
                     SummaryMetric(
-                        label = stringResource(R.string.analytics_average_per_day),
+                        label = stringResource(R.string.analytics_average_per_logged_day),
                         value = stringResource(R.string.analytics_value_mg, uiState.averageCaffeinePerDayMg),
                         modifier = Modifier.weight(1f),
                         contentColor = contentColor,
@@ -316,9 +318,10 @@ private fun AnalyticsSummaryCard(
                     )
                 }
 
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    maxItemsInEachRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 1 else 2,
                 ) {
                     SummaryMetric(
                         label = stringResource(R.string.analytics_top_source),
@@ -389,8 +392,6 @@ private fun SummaryMetric(
                 Text(
                     text = text,
                     style = valueStyle,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -540,6 +541,7 @@ private fun buildMorphPath(
 private fun headlineResForRange(range: AnalyticsRange): Int = when (range) {
     AnalyticsRange.TODAY -> R.string.analytics_headline_today
     AnalyticsRange.YESTERDAY -> R.string.analytics_headline_yesterday
+    AnalyticsRange.LAST_7_DAYS -> R.string.analytics_headline_last_7
     AnalyticsRange.LAST_30_DAYS -> R.string.analytics_headline_last_30
     AnalyticsRange.LAST_90_DAYS -> R.string.analytics_headline_last_90
     AnalyticsRange.CUSTOM -> R.string.analytics_headline_custom

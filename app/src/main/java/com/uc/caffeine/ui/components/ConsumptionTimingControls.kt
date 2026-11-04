@@ -1,12 +1,13 @@
 package com.uc.caffeine.ui.components
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -15,8 +16,6 @@ import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AlertDialogDefaults
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DatePicker
@@ -29,24 +28,19 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -68,7 +62,6 @@ import com.uc.caffeine.util.formatDurationMinutes
 import com.uc.caffeine.util.formatTimestampToTime
 import com.uc.caffeine.util.resolvedZoneId
 import com.uc.caffeine.util.toDatePickerMillis
-import kotlinx.coroutines.flow.drop
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -103,11 +96,11 @@ fun ConsumptionTimingSection(
     isExtendedRelease: Boolean = false,
 ) {
     val haptics = rememberAppHaptics()
-    var showDateTimePicker by remember { mutableStateOf(false) }
-    var showDurationPicker by remember { mutableStateOf(false) }
+    var showDateTimePicker by rememberSaveable { mutableStateOf(false) }
+    var showDurationPicker by rememberSaveable { mutableStateOf(false) }
     // Which quick option is active. Starts on "Now" only if the entry really is from just now
     // (new entries), so editing an old entry doesn't light up a misleading option.
-    var selectedQuickOffset by remember {
+    var selectedQuickOffset by rememberSaveable {
         mutableStateOf(
             QuickStartOffsetsMinutes.first().takeIf {
                 abs(System.currentTimeMillis() - startedAtMillis) < MINUTE_MILLIS
@@ -124,33 +117,22 @@ fun ConsumptionTimingSection(
             style = MaterialTheme.typography.titleMedium,
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            QuickStartOffsetsMinutes.forEachIndexed { index, offset ->
-                ToggleButton(
-                    checked = selectedQuickOffset == offset,
-                    onCheckedChange = {
-                        haptics.toggle()
-                        selectedQuickOffset = offset
-                        onStartedAtChange(System.currentTimeMillis() - offset * MINUTE_MILLIS)
-                    },
-                    modifier = Modifier.weight(1f),
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        QuickStartOffsetsMinutes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
-                    contentPadding = ButtonDefaults.ExtraSmallContentPadding,
-                ) {
-                    Text(
-                        text = quickStartLabel(offset),
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+        AdaptiveConnectedButtonGroup(itemCount = QuickStartOffsetsMinutes.size) { index, shapes ->
+            val offset = QuickStartOffsetsMinutes[index]
+            ToggleButton(
+                checked = selectedQuickOffset == offset,
+                onCheckedChange = {
+                    haptics.toggle()
+                    selectedQuickOffset = offset
+                    onStartedAtChange(System.currentTimeMillis() - offset * MINUTE_MILLIS)
+                },
+                shapes = shapes,
+                contentPadding = ButtonDefaults.ExtraSmallContentPadding,
+            ) {
+                Text(
+                    text = quickStartLabel(offset),
+                    style = MaterialTheme.typography.labelMedium,
+                )
             }
         }
 
@@ -225,20 +207,25 @@ private fun TimingRow(
     onClick: (() -> Unit)?,
     supportingText: String? = null,
 ) {
+    val stackValue = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.2f ||
+        androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 360
+    val valueContent: @Composable () -> Unit = {
+        Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+    }
     SegmentedListItem(
         onClick = onClick ?: {},
         enabled = onClick != null,
         leadingContent = icon,
         content = { Text(text = label) },
-        supportingContent = supportingText?.let { { Text(text = it) } },
-        trailingContent = {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-            )
-        },
+        supportingContent = if (stackValue || supportingText != null) {
+            {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (stackValue) valueContent()
+                    supportingText?.let { Text(it) }
+                }
+            }
+        } else null,
+        trailingContent = if (stackValue) null else valueContent,
         verticalAlignment = Alignment.CenterVertically,
         shapes = segmentedListItemShapes(index, 2),
         colors = ListItemDefaults.colors(
@@ -290,9 +277,9 @@ fun DateTimePickerDialog(
     onDateTimeSelected: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var step by remember { mutableStateOf(DateTimePickerStep.Time) }
+    var step by rememberSaveable { mutableStateOf(DateTimePickerStep.Time) }
     // Date picker selections are UTC-midnight millis; keep the picked date in that form.
-    var pickedDateMillis by remember {
+    var pickedDateMillis by rememberSaveable {
         mutableLongStateOf(toDatePickerMillis(currentTimestampMillis, settings))
     }
     val currentZonedTime = remember(currentTimestampMillis, settings.timeZoneId) {
@@ -360,62 +347,20 @@ private fun TimeStepDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val haptics = rememberAppHaptics()
-    LaunchedEffect(timePickerState) {
-        snapshotFlow { timePickerState.hour to timePickerState.minute }
-            .drop(1)
-            .collect { haptics.tick() }
-    }
-
-    BasicAlertDialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = AlertDialogDefaults.shape,
-            color = AlertDialogDefaults.containerColor,
-            tonalElevation = AlertDialogDefaults.TonalElevation,
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.timing_started_drinking),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                FilledTonalButton(
-                    onClick = {
-                        haptics.toggle()
-                        onChangeDate()
-                    },
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 20.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.CalendarMonth,
-                        contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize),
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.timing_change_date, dateLabel))
-                }
-                TimePicker(state = timePickerState)
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.action_cancel))
-                    }
-                    TextButton(onClick = onConfirm) {
-                        Text(stringResource(R.string.action_ok))
-                    }
-                }
+    AdaptiveTimePickerDialog(
+        title = stringResource(R.string.timing_started_drinking),
+        state = timePickerState,
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        confirmLabel = stringResource(R.string.action_ok),
+        extraContent = {
+            FilledTonalButton(onClick = onChangeDate, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Rounded.CalendarMonth, null, Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.timing_change_date, dateLabel))
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -427,10 +372,10 @@ fun DurationPickerDialog(
     drinkDurationDefault: DrinkDurationDefault? = null,
 ) {
     val range = MIN_CONSUMPTION_DURATION_MINUTES..MAX_CONSUMPTION_DURATION_MINUTES
-    var selectedDuration by remember(currentDurationMinutes) {
+    var selectedDuration by rememberSaveable(currentDurationMinutes) {
         mutableIntStateOf(currentDurationMinutes.coerceIn(range))
     }
-    var saveForDrink by remember(drinkDurationDefault) {
+    var saveForDrink by rememberSaveable(drinkDurationDefault?.drinkName, drinkDurationDefault?.isSet) {
         mutableStateOf(drinkDurationDefault?.isSet == true)
     }
     val haptics = rememberAppHaptics()
@@ -579,7 +524,7 @@ fun ReleaseTimeSetting(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberAppHaptics()
-    var showPicker by remember { mutableStateOf(false) }
+    var showPicker by rememberSaveable { mutableStateOf(false) }
     val options = listOf(false, true)
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -587,32 +532,22 @@ fun ReleaseTimeSetting(
             text = stringResource(R.string.custom_drink_release_title),
             style = MaterialTheme.typography.titleMedium,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            options.forEachIndexed { index, extended ->
-                ToggleButton(
-                    checked = (releaseMinutes != null) == extended,
-                    onCheckedChange = {
-                        haptics.toggle()
-                        onReleaseMinutesChange(if (extended) releaseMinutes ?: DEFAULT_RELEASE_MINUTES else null)
-                    },
-                    modifier = Modifier.weight(1f),
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    },
-                ) {
-                    Text(
-                        text = stringResource(
-                            if (extended) R.string.custom_drink_release_extended else R.string.custom_drink_release_normal
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+        AdaptiveConnectedButtonGroup(itemCount = options.size) { index, shapes ->
+            val extended = options[index]
+            ToggleButton(
+                checked = (releaseMinutes != null) == extended,
+                onCheckedChange = {
+                    haptics.toggle()
+                    onReleaseMinutesChange(if (extended) releaseMinutes ?: DEFAULT_RELEASE_MINUTES else null)
+                },
+                shapes = shapes,
+            ) {
+                Text(
+                    text = stringResource(
+                        if (extended) R.string.custom_drink_release_extended else R.string.custom_drink_release_normal
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                )
             }
         }
         if (releaseMinutes != null) {
@@ -668,7 +603,7 @@ private fun ReleaseTimePickerDialog(
 ) {
     // The slider works in steps so a 24-hour range stays draggable and ticks once per step.
     val stepRange = (MIN_RELEASE_MINUTES / RELEASE_STEP_MINUTES)..(MAX_RELEASE_MINUTES / RELEASE_STEP_MINUTES)
-    var selectedStep by remember(currentReleaseMinutes) {
+    var selectedStep by rememberSaveable(currentReleaseMinutes) {
         mutableIntStateOf((currentReleaseMinutes / RELEASE_STEP_MINUTES).coerceIn(stepRange))
     }
     val selectedMinutes = selectedStep * RELEASE_STEP_MINUTES

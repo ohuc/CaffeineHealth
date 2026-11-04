@@ -17,6 +17,7 @@ import kotlin.math.roundToInt
 enum class AnalyticsRange(@param:StringRes val labelRes: Int) {
     TODAY(R.string.analytics_range_today),
     YESTERDAY(R.string.analytics_range_yesterday),
+    LAST_7_DAYS(R.string.analytics_range_7_days),
     LAST_30_DAYS(R.string.analytics_range_30_days),
     LAST_90_DAYS(R.string.analytics_range_90_days),
     CUSTOM(R.string.analytics_range_custom),
@@ -102,6 +103,7 @@ fun buildAnalyticsUiState(
     locale: Locale = Locale.getDefault(),
     customStartDate: LocalDate? = null,
     customEndDate: LocalDate? = null,
+    includeExtendedHistory: Boolean = true,
 ): AnalyticsUiState {
     val zoneId = settings.resolvedZoneId()
     val today = Instant.ofEpochMilli(nowMillis).atZone(zoneId).toLocalDate()
@@ -118,7 +120,7 @@ fun buildAnalyticsUiState(
             settings = settings,
         )
     }
-    val allDatesWithEntries = entries
+    val allDatesWithEntries = (if (includeExtendedHistory) entries else entriesInRange)
         .map { entry -> Instant.ofEpochMilli(entry.startedAtMillis).atZone(zoneId).toLocalDate() }
         .toSortedSet()
     val allBedtimeDailyStats = allDatesWithEntries.associateWith { date ->
@@ -344,6 +346,10 @@ private fun resolveAnalyticsWindow(
         AnalyticsRange.YESTERDAY -> AnalyticsWindow(
             startDate = today.minusDays(1),
             endDate = today.minusDays(1),
+        )
+        AnalyticsRange.LAST_7_DAYS -> AnalyticsWindow(
+            startDate = today.minusDays(6),
+            endDate = today,
         )
         AnalyticsRange.LAST_30_DAYS -> AnalyticsWindow(
             startDate = today.minusDays(29),

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="adaptive_settings_placeholder">Choose a category to view its settings.</string>
+    <string name="adaptive_analytics_placeholder">Choose a view to explore your caffeine history.</string>
+    <string name="adaptive_add_placeholder_title">Pick a drink</string>
+    <string name="adaptive_add_placeholder">Choose a drink from the list to set the serving and time.</string>
+    <string name="adaptive_pane_resize_cd">Resize panes</string>
+</resources>

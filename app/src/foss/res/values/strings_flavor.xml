@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="distribution_edition_label">FOSS edition</string>
+    <string name="distribution_summary">All local features included</string>
+    <string name="distribution_description">This edition includes all local features without a purchase or account. Your history stays on this device unless you export it. Optional barcode lookup uses Open Food Facts after you agree to it.</string>
+</resources>

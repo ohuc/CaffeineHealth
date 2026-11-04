@@ -1,6 +1,8 @@
 package com.uc.caffeine.data
 
 import android.content.Context
+import com.uc.caffeine.distributionServices
+import com.uc.caffeine.monetization.ProFeature
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.HydrationRecord
@@ -43,6 +45,8 @@ class HealthConnectManager(private val context: Context) {
 
     val allPermissions = setOf(nutritionWrite, nutritionRead, sleepRead, hydrationWrite)
     val sleepPermissions = setOf(sleepRead)
+    /** Caffeine sync only: asking for these never requests (or implies) sleep access. */
+    val caffeinePermissions = setOf(nutritionWrite, nutritionRead, hydrationWrite)
 
     fun isAvailable(): Boolean =
         HealthConnectClient.getSdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
@@ -116,6 +120,8 @@ class HealthConnectManager(private val context: Context) {
         zoneId: ZoneId = ZoneId.systemDefault(),
         volumeMl: Double? = null,
     ) {
+        context.distributionServices.featureAccess.awaitReady()
+        if (!context.distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return
         val c = client ?: return
         // Imported records are owned by another app — never echo them back
         if (entry.healthConnectRecordId != null) return
@@ -128,6 +134,8 @@ class HealthConnectManager(private val context: Context) {
     }
 
     suspend fun syncAll(entries: List<ConsumptionEntry>, zoneId: ZoneId = ZoneId.systemDefault()) {
+        context.distributionServices.featureAccess.awaitReady()
+        if (!context.distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return
         val c = client ?: return
         if (!hasPermission()) return
         // Batched inserts: one permission check and one IPC per chunk, instead of two per
@@ -138,6 +146,7 @@ class HealthConnectManager(private val context: Context) {
             .map { it.toNutritionRecord(zoneId) }
             .chunked(INSERT_BATCH_SIZE)
             .forEach { batch ->
+                if (!context.distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return
                 runCatching { c.insertRecords(batch) }
             }
     }
@@ -173,12 +182,15 @@ class HealthConnectManager(private val context: Context) {
         sinceMillis: Long,
         excludeRecordIds: Set<String>,
     ): List<ImportedCaffeineRecord> {
+        context.distributionServices.featureAccess.awaitReady()
+        if (!context.distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return emptyList()
         val c = client ?: return emptyList()
         if (!hasNutritionReadPermission()) return emptyList()
         val results = mutableListOf<ImportedCaffeineRecord>()
         var pageToken: String? = null
         val ownPackage = context.packageName
         do {
+            if (!context.distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return emptyList()
             val response = runCatching {
                 c.readRecords(
                     ReadRecordsRequest(
@@ -213,6 +225,8 @@ class HealthConnectManager(private val context: Context) {
     }
 
     suspend fun readSleepBedtime(mode: HcSleepMode, zoneId: ZoneId = ZoneId.systemDefault()): LocalTime? {
+        context.distributionServices.featureAccess.awaitReady()
+        if (!context.distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return null
         val c = client ?: return null
         if (!hasSleepPermission()) return null
         val now = ZonedDateTime.now(zoneId)
@@ -260,6 +274,8 @@ class HealthConnectManager(private val context: Context) {
      * we fall back to the raw session span.
      */
     suspend fun readLastNightSleep(zoneId: ZoneId = ZoneId.systemDefault()): LastNightSleep? {
+        context.distributionServices.featureAccess.awaitReady()
+        if (!context.distributionServices.featureAccess.canUse(ProFeature.HealthConnect)) return null
         val c = client ?: return null
         if (!hasSleepPermission()) return null
         val now = ZonedDateTime.now(zoneId)

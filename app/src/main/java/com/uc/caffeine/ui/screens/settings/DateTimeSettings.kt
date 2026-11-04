@@ -38,6 +38,8 @@ import com.uc.caffeine.R
 import com.uc.caffeine.data.AppDateFormat
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.SettingsPageScaffold
+import com.uc.caffeine.ui.components.SettingsSwitchRow
+import com.uc.caffeine.ui.components.SettingsValueRow
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.util.formatTimeZoneName
 import java.time.ZoneId
@@ -70,86 +72,35 @@ internal fun DateTimeSettingsScreen(
         ) {
 
             item {
-                SegmentedListItem(
-                    onClick = {
-                        haptics.toggle()
-                        onUse24HourClockChange(!userSettings.use24HourClock)
-                    },
-                    content = {
-                        Text(text = stringResource(R.string.date_time_24h_label))
-                    },
-                    supportingContent = {
-                        Text(text = stringResource(R.string.date_time_24h_summary))
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = userSettings.use24HourClock,
-                            onCheckedChange = { enabled ->
-                                haptics.toggle()
-                                onUse24HourClockChange(enabled)
-                            },
-                        )
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                    shapes = segmentedListItemShapes(0, 4),
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
+                SettingsSwitchRow(
+                    title = stringResource(R.string.date_time_24h_label),
+                    summary = stringResource(R.string.date_time_24h_summary),
+                    checked = userSettings.use24HourClock,
+                    onCheckedChange = onUse24HourClockChange,
+                    index = 0,
+                    count = 4,
                 )
             }
 
             item {
-                SegmentedListItem(
-                    onClick = {
-                        haptics.toggle()
-                        showDateFormatSheet = true
-                    },
-                    content = {
-                        Text(text = stringResource(R.string.date_time_date_format_label))
-                    },
-                    supportingContent = {
-                        Text(text = userSettings.dateFormat.displayLabel)
-                    },
-                    trailingContent = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                            contentDescription = null,
-                        )
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                    shapes = segmentedListItemShapes(1, 4),
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
+                SettingsValueRow(
+                    title = stringResource(R.string.date_time_date_format_label),
+                    summary = userSettings.dateFormat.displayLabel,
+                    value = null,
+                    onClick = { showDateFormatSheet = true },
+                    index = 1,
+                    count = 4,
                 )
             }
 
             item {
-                SegmentedListItem(
-                    onClick = {
-                        haptics.toggle()
-                        onUseSystemTimeZoneChange(!userSettings.useSystemTimeZone)
-                    },
-                    content = {
-                        Text(text = stringResource(R.string.date_time_match_system_tz_label))
-                    },
-                    supportingContent = {
-                        Text(text = stringResource(R.string.date_time_match_system_tz_summary))
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = userSettings.useSystemTimeZone,
-                            onCheckedChange = { enabled ->
-                                haptics.toggle()
-                                onUseSystemTimeZoneChange(enabled)
-                            },
-                        )
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                    shapes = segmentedListItemShapes(2, 4),
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
+                SettingsSwitchRow(
+                    title = stringResource(R.string.date_time_match_system_tz_label),
+                    summary = stringResource(R.string.date_time_match_system_tz_summary),
+                    checked = userSettings.useSystemTimeZone,
+                    onCheckedChange = onUseSystemTimeZoneChange,
+                    index = 2,
+                    count = 4,
                 )
             }
 
@@ -159,36 +110,14 @@ internal fun DateTimeSettingsScreen(
                 // the manual picker again.
                 val usingSystem = userSettings.useSystemTimeZone
                 val shownZoneId = if (usingSystem) ZoneId.systemDefault().id else userSettings.timeZoneId
-                val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                SegmentedListItem(
-                    onClick = {
-                        if (!usingSystem) {
-                            haptics.toggle()
-                            showTimeZoneSheet = true
-                        }
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(R.string.date_time_timezone_label),
-                            color = if (usingSystem) mutedColor else Color.Unspecified,
-                        )
-                    },
-                    supportingContent = {
-                        Text(text = formatTimeZoneName(shownZoneId))
-                    },
-                    trailingContent = {
-                        if (!usingSystem) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                    shapes = segmentedListItemShapes(3, 4),
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
+                SettingsValueRow(
+                    title = stringResource(R.string.date_time_timezone_label),
+                    summary = formatTimeZoneName(shownZoneId),
+                    value = null,
+                    enabled = !usingSystem,
+                    onClick = { showTimeZoneSheet = true },
+                    index = 3,
+                    count = 4,
                 )
             }
         }

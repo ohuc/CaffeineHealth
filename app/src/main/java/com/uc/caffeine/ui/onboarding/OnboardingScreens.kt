@@ -13,12 +13,24 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -53,6 +65,8 @@ import com.uc.caffeine.util.formatTimeOfDay
 internal fun IntroScreen(
     onStart: () -> Unit,
     onSkip: () -> Unit,
+    /** The edition's "restore my data" action for returning users (Play: Google Drive). */
+    restoreAction: (@Composable () -> Unit)? = null,
 ) {
     val haptics = rememberAppHaptics()
 
@@ -172,13 +186,11 @@ internal fun IntroScreen(
             ) {
                 Button(
                     onClick = { haptics.confirm(); onStart() },
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    ),
-                    contentPadding = PaddingValues(horizontal = 28.dp, vertical = 18.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                    shapes = ButtonDefaults.shapes(),
+                    contentPadding = PaddingValues(horizontal = 28.dp, vertical = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.onboarding_get_started),
@@ -190,6 +202,7 @@ internal fun IntroScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                restoreAction?.invoke()
             }
         }
     }
@@ -198,6 +211,7 @@ internal fun IntroScreen(
 @Composable
 internal fun BasicInfoScreen(
     uiState: OnboardingUiState,
+    progress: OnboardingProgress,
     onBack: () -> Unit,
     onSkip: () -> Unit,
     onContinue: () -> Unit,
@@ -211,7 +225,8 @@ internal fun BasicInfoScreen(
     OnboardingScaffold(
         title = stringResource(R.string.onboarding_basic_info_title),
         subtitle = stringResource(R.string.onboarding_basic_info_subtitle),
-        currentStep = OnboardingDestination.BasicInfo.stepNumber,
+        step = progress.step,
+        stepCount = progress.total,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
@@ -255,6 +270,7 @@ internal fun BasicInfoScreen(
 @Composable
 internal fun SleepScreen(
     uiState: OnboardingUiState,
+    progress: OnboardingProgress,
     displaySettings: UserSettings,
     onBack: () -> Unit,
     onSkip: () -> Unit,
@@ -262,12 +278,11 @@ internal fun SleepScreen(
     onSleepTimeChanged: (java.time.LocalTime) -> Unit,
     onInsomniaChanged: (Boolean) -> Unit,
 ) {
-    val yesLabel = stringResource(R.string.action_yes)
-    val noLabel = stringResource(R.string.action_no)
     OnboardingScaffold(
         title = stringResource(R.string.onboarding_sleep_title),
         subtitle = stringResource(R.string.onboarding_sleep_subtitle),
-        currentStep = OnboardingDestination.Sleep.stepNumber,
+        step = progress.step,
+        stepCount = progress.total,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
@@ -296,11 +311,9 @@ internal fun SleepScreen(
             title = stringResource(R.string.profile_sleep_sensitivity),
             supportingText = stringResource(R.string.onboarding_sleep_sensitivity_supporting),
         ) {
-            ConnectedChoiceButtonGroup(
-                options = listOf(true, false),
-                selectedOption = uiState.answers.hasInsomnia,
-                labelFor = { if (it) yesLabel else noLabel },
-                onOptionSelected = onInsomniaChanged,
+            YesNoChoiceGroup(
+                selected = uiState.answers.hasInsomnia,
+                onSelected = onInsomniaChanged,
             )
         }
     }
@@ -309,6 +322,7 @@ internal fun SleepScreen(
 @Composable
 internal fun LifestyleScreen(
     uiState: OnboardingUiState,
+    progress: OnboardingProgress,
     onBack: () -> Unit,
     onSkip: () -> Unit,
     onContinue: () -> Unit,
@@ -316,13 +330,12 @@ internal fun LifestyleScreen(
     onHeavyAlcoholChanged: (Boolean) -> Unit,
     onHeavyCaffeineChanged: (Boolean) -> Unit,
 ) {
-    val yesLabel = stringResource(R.string.action_yes)
-    val noLabel = stringResource(R.string.action_no)
     val smokingHabitLabels = SmokingHabit.entries.associateWith { stringResource(it.buttonLabelRes()) }
     OnboardingScaffold(
         title = stringResource(R.string.onboarding_lifestyle_title),
         subtitle = stringResource(R.string.onboarding_lifestyle_subtitle),
-        currentStep = OnboardingDestination.Lifestyle.stepNumber,
+        step = progress.step,
+        stepCount = progress.total,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
@@ -343,20 +356,16 @@ internal fun LifestyleScreen(
         }
 
         OnboardingSection(title = stringResource(R.string.profile_heavy_alcohol)) {
-            ConnectedChoiceButtonGroup(
-                options = listOf(true, false),
-                selectedOption = uiState.answers.heavyAlcohol,
-                labelFor = { if (it) yesLabel else noLabel },
-                onOptionSelected = onHeavyAlcoholChanged,
+            YesNoChoiceGroup(
+                selected = uiState.answers.heavyAlcohol,
+                onSelected = onHeavyAlcoholChanged,
             )
         }
 
         OnboardingSection(title = stringResource(R.string.profile_high_caffeine)) {
-            ConnectedChoiceButtonGroup(
-                options = listOf(true, false),
-                selectedOption = uiState.answers.heavyCaffeine,
-                labelFor = { if (it) yesLabel else noLabel },
-                onOptionSelected = onHeavyCaffeineChanged,
+            YesNoChoiceGroup(
+                selected = uiState.answers.heavyCaffeine,
+                onSelected = onHeavyCaffeineChanged,
             )
         }
 
@@ -380,6 +389,7 @@ internal fun LifestyleScreen(
 @Composable
 internal fun MedicalScreen(
     uiState: OnboardingUiState,
+    progress: OnboardingProgress,
     onBack: () -> Unit,
     onSkip: () -> Unit,
     onContinue: () -> Unit,
@@ -391,7 +401,8 @@ internal fun MedicalScreen(
     OnboardingScaffold(
         title = stringResource(R.string.onboarding_medical_title),
         subtitle = stringResource(R.string.onboarding_medical_subtitle),
-        currentStep = OnboardingDestination.Medical.stepNumber,
+        step = progress.step,
+        stepCount = progress.total,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = true,
@@ -439,6 +450,7 @@ internal fun MedicalScreen(
 @Composable
 internal fun ProfileReadyScreen(
     uiState: OnboardingUiState,
+    progress: OnboardingProgress,
     displaySettings: UserSettings,
     onBack: () -> Unit,
     onOpenLegalSheet: () -> Unit,
@@ -447,12 +459,12 @@ internal fun ProfileReadyScreen(
     onComplete: () -> Unit,
 ) {
     val profile = uiState.currentProfile() ?: OnboardingProfileCalculator.defaultProfile
-    var infoDialog by rememberSaveable { mutableStateOf<ProfileInfoDialog?>(null) }
 
     OnboardingScaffold(
         title = stringResource(R.string.onboarding_profile_ready_title),
         subtitle = stringResource(R.string.onboarding_profile_ready_subtitle),
-        currentStep = OnboardingDestination.ProfileReady.stepNumber,
+        step = progress.step,
+        stepCount = progress.total,
         showBackButton = true,
         onBack = onBack,
         showSkipButton = false,
@@ -474,14 +486,14 @@ internal fun ProfileReadyScreen(
                     title = stringResource(R.string.profile_estimated_half_life),
                     value = formatHalfLife(profile.halfLifeMinutes),
                     description = stringResource(R.string.onboarding_metric_half_life_description),
-                    onInfoClick = { infoDialog = ProfileInfoDialog.HalfLife },
+                    info = stringResource(R.string.onboarding_dialog_half_life_body),
                 )
                 HorizontalDivider()
                 ProfileMetricRow(
                     title = stringResource(R.string.profile_sleep_threshold),
                     value = stringResource(R.string.profile_sleep_threshold_value, profile.sleepThresholdMg),
                     description = stringResource(R.string.onboarding_metric_sleep_threshold_description),
-                    onInfoClick = { infoDialog = ProfileInfoDialog.SleepThreshold },
+                    info = stringResource(R.string.onboarding_dialog_sleep_threshold_body),
                 )
                 HorizontalDivider()
                 ProfileMetricRow(
@@ -492,7 +504,7 @@ internal fun ProfileReadyScreen(
                         settings = displaySettings,
                     ),
                     description = stringResource(R.string.onboarding_metric_bedtime_description),
-                    onInfoClick = { infoDialog = ProfileInfoDialog.Bedtime },
+                    info = stringResource(R.string.onboarding_dialog_bedtime_body),
                 )
             }
         }
@@ -507,39 +519,82 @@ internal fun ProfileReadyScreen(
             onComplete = onComplete,
         )
     }
-
-    infoDialog?.let { dialog ->
-        AlertDialog(
-            onDismissRequest = { infoDialog = null },
-            confirmButton = {
-                TextButton(onClick = { infoDialog = null }) {
-                    Text(stringResource(R.string.action_close))
-                }
-            },
-            title = {
-                Text(stringResource(dialog.titleRes))
-            },
-            text = {
-                Text(stringResource(dialog.bodyRes))
-            },
-        )
-    }
 }
 
-internal enum class ProfileInfoDialog(
-    val titleRes: Int,
-    val bodyRes: Int,
+@Composable
+internal fun NotificationsScreen(
+    progress: OnboardingProgress,
+    permissionNeeded: Boolean,
+    /** Access is on: show the reminder controls from Settings instead of the question. */
+    configuring: Boolean,
+    displaySettings: UserSettings,
+    onBack: () -> Unit,
+    onTurnOn: () -> Unit,
+    onNotNow: () -> Unit,
+    onContinue: () -> Unit,
+    onInactivityReminderToggle: (Boolean) -> Unit,
+    onDailyReminderTimesChange: (Set<String>) -> Unit,
 ) {
-    HalfLife(
-        titleRes = R.string.profile_estimated_half_life,
-        bodyRes = R.string.onboarding_dialog_half_life_body,
-    ),
-    SleepThreshold(
-        titleRes = R.string.profile_sleep_threshold,
-        bodyRes = R.string.onboarding_dialog_sleep_threshold_body,
-    ),
-    Bedtime(
-        titleRes = R.string.profile_typical_bedtime,
-        bodyRes = R.string.onboarding_dialog_bedtime_body,
-    ),
+    OnboardingScaffold(
+        title = stringResource(if (configuring) R.string.onboarding_notifications_ready_title else R.string.onboarding_notifications_title),
+        subtitle = stringResource(if (configuring) R.string.onboarding_notifications_ready_subtitle else R.string.onboarding_notifications_subtitle),
+        step = progress.step,
+        stepCount = progress.total,
+        showBackButton = true,
+        onBack = onBack,
+        showSkipButton = false,
+        continueLabel = stringResource(if (configuring) R.string.action_continue else R.string.onboarding_notifications_turn_on),
+        continueEnabled = true,
+        onContinue = if (configuring) onContinue else onTurnOn,
+        enabledHint = if (!configuring && permissionNeeded) stringResource(R.string.onboarding_notifications_permission_hint) else null,
+        secondaryLabel = if (configuring) null else stringResource(R.string.onboarding_notifications_not_now),
+        onSecondary = if (configuring) null else onNotNow,
+    ) {
+        val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+        val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        val sizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>()
+        AnimatedContent(
+            targetState = configuring,
+            transitionSpec = {
+                (fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec))
+                    .using(SizeTransform(clip = false, sizeAnimationSpec = { _, _ -> sizeSpec }))
+            },
+            label = "onboarding_reminders",
+        ) { showControls ->
+            if (showControls) {
+                com.uc.caffeine.ui.screens.settings.ReminderSettingsSections(
+                    userSettings = displaySettings,
+                    onInactivityReminderToggle = onInactivityReminderToggle,
+                    onDailyReminderTimesChange = onDailyReminderTimesChange,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(MaterialShapes.Cookie12Sided.toShape())
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.NotificationsActive,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(32.dp),
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.onboarding_notifications_body),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
 }

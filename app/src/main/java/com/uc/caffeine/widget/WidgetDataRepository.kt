@@ -1,6 +1,9 @@
 package com.uc.caffeine.widget
 
 import android.content.Context
+import com.uc.caffeine.distributionServices
+import com.uc.caffeine.monetization.withEffectiveAccess
+import com.uc.caffeine.monetization.canRenderWidget
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -32,6 +35,7 @@ data class WidgetData(
     val recentDrinks: List<WidgetDrink>,
     val allEntries: List<ConsumptionEntry>,
     val settings: UserSettings,
+    val premiumWidgetsAllowed: Boolean = true,
 ) {
     val sleepOutlook: SleepOutlook
         get() = when {
@@ -43,7 +47,8 @@ data class WidgetData(
 
 class WidgetDataRepository(private val context: Context) {
     suspend fun load(): WidgetData {
-        val settings = SettingsRepository(context).settingsFlow.first()
+        context.distributionServices.featureAccess.awaitReady()
+        val settings = SettingsRepository(context).settingsFlow.first().withEffectiveAccess(context.distributionServices.featureAccess)
         val db = CaffeineDatabase.getDatabase(context)
         val entries = db.consumptionLogDao().getAllEntriesOnce()
         // Larger widget sizes show more tiles; each layout takes as many of these as fit.
@@ -63,6 +68,7 @@ class WidgetDataRepository(private val context: Context) {
             recentDrinks = recentDrinks,
             allEntries = entries,
             settings = settings,
+            premiumWidgetsAllowed = canRenderWidget("ring", context.distributionServices.featureAccess),
         )
     }
 

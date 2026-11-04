@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plus_unlock_coach">Unlock with Caffeine Health+</string>
+    <string name="plus_locked_state">Locked</string>
+    <string name="plus_feature_coach">Caffeine Coach</string>
+    <string name="plus_feature_coach_body">Get a personalized suggestion for when to have caffeine and how much, using your recent intake and sleep schedule. Coach is included in Caffeine Health+ on Google Play.</string>
+    <string name="plus_coach_sample_label">Sample insight · illustration only</string>
+    <string name="plus_coach_sample">“You may want to wait before another coffee to keep caffeine lower near bedtime.”</string>
+    <string name="plus_coach_sample_note">This sample does not use your data and is not a recommendation for you.</string>
+    <string name="plus_feature_health">Health Connect</string>
+    <string name="plus_feature_health_body">Write caffeine and hydration, and read sleep and external caffeine records with your permission.</string>
+    <string name="plus_feature_automation">Automated logging</string>
+    <string name="plus_feature_automation_body">Log drinks through Tasker, MacroDroid and NFC. Automation stays off until you enable it.</string>
+    <string name="plus_feature_widgets">Ring and Combined widgets</string>
+    <string name="plus_feature_widgets_body">See your caffeine ring or combine your curve with quick logging. Now and Quick Add remain free.</string>
+    <string name="plus_feature_appearance">More appearance choices</string>
+    <string name="plus_feature_appearance_body">Choose Espresso, Matcha, Ocean or Sakura, and add blur to the expressive toolbar.</string>
+    <string name="plus_feature_analytics">Extended analytics</string>
+    <string name="plus_feature_analytics_body">Explore 30 days, 90 days or a custom range. Today, Yesterday and Last 7 days remain free.</string>
+    <string name="plus_see_plans">See Plus plans</string>
+    <string name="plus_not_now">Not now</string>
+    <string name="analytics_range_7_days">Last 7 days</string>
+    <string name="analytics_headline_last_7">Your last 7 days</string>
+    <string name="plus_divider_customize">Customize further with Caffeine Health+</string>
+    <string name="plus_divider_connect">Connect more with Caffeine Health+</string>
+    <string name="plus_divider_label">Caffeine Health+</string>
+    <string name="appearance_more_palettes">More palettes</string>
+    <string name="plus_badge_label">Plus</string>
+    <string name="plus_locked_description">Locked. Needs Caffeine Health+</string>
+    <string name="plus_locked_click_label">Learn about Caffeine Health+</string>
+    <string name="plus_analytics_locked_caption">30 days, 90 days and custom ranges need Caffeine Health+</string>
+    <string name="plus_coach_locked_summary">Get a suggestion for when to have caffeine</string>
+    <string name="plus_saved_on">Saved setting: On.</string>
+    <string name="plus_saved_off">Saved setting: Off.</string>
+    <string name="plus_turn_off_saved">Turn off %1$s</string>
+    <string name="plus_manage_saved">Manage saved %1$s settings</string>
+</resources>

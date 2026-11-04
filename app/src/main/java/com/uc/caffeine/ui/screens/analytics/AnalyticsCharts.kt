@@ -1,5 +1,7 @@
 package com.uc.caffeine.ui.screens.analytics
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,8 +39,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
@@ -50,6 +54,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import com.uc.caffeine.monetization.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -69,6 +74,7 @@ import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.data.ExtraStore
+import com.uc.caffeine.ui.components.AdaptiveConnectedButtonGroup
 import com.uc.caffeine.R
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 import com.uc.caffeine.util.AnalyticsRange
@@ -112,20 +118,15 @@ internal fun AnalyticsRange.colors(): AnalyticsRangeColors {
             onContainer = scheme.onSecondaryContainer,
             glow = scheme.secondary,
         )
-        AnalyticsRange.LAST_30_DAYS, AnalyticsRange.CUSTOM -> AnalyticsRangeColors(
+        // Every multi-day view shares the tertiary accent. (90 days used the inverse surface roles,
+        // which read as a stray white/black pill outside the scheme's accent hues.)
+        AnalyticsRange.LAST_7_DAYS, AnalyticsRange.LAST_30_DAYS, AnalyticsRange.LAST_90_DAYS,
+        AnalyticsRange.CUSTOM -> AnalyticsRangeColors(
             accent = scheme.tertiary,
             onAccent = scheme.onTertiary,
             container = scheme.tertiaryContainer,
             onContainer = scheme.onTertiaryContainer,
             glow = scheme.tertiary,
-        )
-        // The scheme has three accent hues; the inverse roles give the longest view a fourth look.
-        AnalyticsRange.LAST_90_DAYS -> AnalyticsRangeColors(
-            accent = scheme.inverseSurface,
-            onAccent = scheme.inverseOnSurface,
-            container = scheme.inverseSurface,
-            onContainer = scheme.inverseOnSurface,
-            glow = scheme.inversePrimary,
         )
     }
 }
@@ -145,40 +146,26 @@ internal fun AnalyticsRangePicker(
     selectedRange: AnalyticsRange,
     onRangeSelected: (AnalyticsRange) -> Unit,
 ) {
-    // Today | Yesterday on top, 30 Days | 90 Days below.
-    val rows = remember {
-        AnalyticsRange.entries.filter { it != AnalyticsRange.CUSTOM }.chunked(2)
-    }
+    val extendedLocked = isPlusFeatureLocked(ProFeature.ExtendedAnalytics)
+    val request = LocalRequestPlusFeature.current
+    val haptics = com.uc.caffeine.ui.components.rememberAppHaptics()
+    val ranges = AnalyticsRange.entries.filter { it != AnalyticsRange.CUSTOM || extendedLocked }
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    ) {
-        rows.forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                row.forEachIndexed { index, range ->
-                    ToggleButton(
-                        checked = selectedRange == range,
-                        onCheckedChange = { checked ->
-                            if (checked && selectedRange != range) onRangeSelected(range)
-                        },
-                        modifier = Modifier.weight(1f),
-                        shapes = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        },
-                        colors = rangeToggleColors(range),
-                    ) {
-                        Text(
-                            text = stringResource(range.labelRes),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    }
-                }
-            }
+    AdaptiveConnectedButtonGroup(itemCount = ranges.size) { index, shapes ->
+        val range = ranges[index]
+        val locked = extendedLocked && range.requiresPlus()
+        ToggleButton(
+            checked = selectedRange == range,
+            onCheckedChange = { checked ->
+                if (locked) { haptics.toggle(); request(ProFeature.ExtendedAnalytics) }
+                else if (checked && selectedRange != range) onRangeSelected(range)
+            },
+            modifier = Modifier.plusLockedSemantics(locked),
+            shapes = shapes,
+            colors = rangeToggleColors(range),
+        ) {
+            Text(stringResource(range.labelRes), style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.plusLockedContent(locked))
         }
     }
 }
@@ -230,6 +217,9 @@ internal fun AnalyticsRangeBottomSheet(
     onCustomRange: (java.time.LocalDate, java.time.LocalDate) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val extendedLocked = isPlusFeatureLocked(ProFeature.ExtendedAnalytics)
+    val request = LocalRequestPlusFeature.current
+    val haptics = com.uc.caffeine.ui.components.rememberAppHaptics()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     val today = remember { java.time.LocalDate.now() }
@@ -237,10 +227,12 @@ internal fun AnalyticsRangeBottomSheet(
     fun animatedDismiss() {
         scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
     }
-    var customStart by remember { mutableStateOf(today.minusDays(29)) }
-    var customEnd by remember { mutableStateOf(today) }
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
+    var customStartEpochDay by rememberSaveable { mutableLongStateOf(today.minusDays(29).toEpochDay()) }
+    var customEndEpochDay by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
+    val customStart = java.time.LocalDate.ofEpochDay(customStartEpochDay)
+    val customEnd = java.time.LocalDate.ofEpochDay(customEndEpochDay)
+    var showStartPicker by rememberSaveable { mutableStateOf(false) }
+    var showEndPicker by rememberSaveable { mutableStateOf(false) }
     val startPickerState = rememberDatePickerState(
         initialSelectedDateMillis = customStart.toEpochDay() * 86400000L,
     )
@@ -256,6 +248,7 @@ internal fun AnalyticsRangeBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -266,42 +259,40 @@ internal fun AnalyticsRangeBottomSheet(
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
             )
 
-            // Row 1: Today, Yesterday, 30 Days
-            Row(
+            // Keep the free calendar ranges together.
+            val freeRanges = listOf(AnalyticsRange.TODAY, AnalyticsRange.YESTERDAY, AnalyticsRange.LAST_7_DAYS)
+            AdaptiveConnectedButtonGroup(
+                itemCount = freeRanges.size,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                listOf(AnalyticsRange.TODAY, AnalyticsRange.YESTERDAY, AnalyticsRange.LAST_30_DAYS)
-                    .forEachIndexed { index, range ->
+            ) { index, shapes ->
+                        val range = freeRanges[index]
                         ToggleButton(
                             checked = selectedRange == range,
                             onCheckedChange = { checked ->
                                 if (checked) { onRangeSelected(range); animatedDismiss() }
                             },
-                            modifier = Modifier.weight(1f),
-                            shapes = when (index) {
-                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                2 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                            },
+                            shapes = shapes,
                             colors = rangeToggleColors(range),
                         ) {
                             Text(text = stringResource(range.labelRes), style = MaterialTheme.typography.labelLarge)
                         }
-                    }
             }
 
-            // Row 2: 90 Days, Custom
-            Row(
+            // Extended ranges share the same access check in the ViewModel.
+            val extendedRanges = listOf(AnalyticsRange.LAST_30_DAYS, AnalyticsRange.LAST_90_DAYS, AnalyticsRange.CUSTOM)
+            AdaptiveConnectedButtonGroup(
+                itemCount = extendedRanges.size,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                listOf(AnalyticsRange.LAST_90_DAYS, AnalyticsRange.CUSTOM)
-                    .forEachIndexed { index, range ->
+            ) { index, shapes ->
+                        val range = extendedRanges[index]
                         ToggleButton(
                             checked = selectedRange == range,
                             onCheckedChange = { checked ->
-                                if (checked) {
+                                if (extendedLocked) {
+                                    haptics.toggle()
+                                    animatedDismiss()
+                                    request(ProFeature.ExtendedAnalytics)
+                                } else if (checked) {
                                     if (range != AnalyticsRange.CUSTOM) {
                                         onRangeSelected(range)
                                         animatedDismiss()
@@ -310,48 +301,47 @@ internal fun AnalyticsRangeBottomSheet(
                                     }
                                 }
                             },
-                            modifier = Modifier.weight(1f),
-                            shapes = when (index) {
-                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            },
+                            modifier = Modifier.plusLockedSemantics(extendedLocked),
+                            shapes = shapes,
                             colors = rangeToggleColors(range),
                         ) {
-                            Text(text = stringResource(range.labelRes), style = MaterialTheme.typography.labelLarge)
+                            Text(stringResource(range.labelRes), style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.plusLockedContent(extendedLocked))
                         }
-                    }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            if (!extendedLocked) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-            Text(
-                text = stringResource(R.string.analytics_custom_range_section),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 4.dp),
-            )
+                Text(
+                    text = stringResource(R.string.analytics_custom_range_section),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
 
-            RangePickerDateField(
-                label = stringResource(R.string.analytics_from),
-                date = customStart,
-                formatter = dateFormatter,
-                onClick = { showStartPicker = true },
-            )
+                RangePickerDateField(
+                    label = stringResource(R.string.analytics_from),
+                    date = customStart,
+                    formatter = dateFormatter,
+                    onClick = { showStartPicker = true },
+                )
 
-            RangePickerDateField(
-                label = stringResource(R.string.analytics_to),
-                date = customEnd,
-                formatter = dateFormatter,
-                onClick = { showEndPicker = true },
-            )
+                RangePickerDateField(
+                    label = stringResource(R.string.analytics_to),
+                    date = customEnd,
+                    formatter = dateFormatter,
+                    onClick = { showEndPicker = true },
+                )
 
-            Button(
-                onClick = {
-                    onCustomRange(customStart, customEnd)
-                    animatedDismiss()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.analytics_apply_custom_range))
+                Button(
+                    onClick = {
+                        onCustomRange(customStart, customEnd)
+                        animatedDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.analytics_apply_custom_range))
+                }
             }
         }
     }
@@ -362,9 +352,7 @@ internal fun AnalyticsRangeBottomSheet(
             confirmButton = {
                 TextButton(onClick = {
                     startPickerState.selectedDateMillis?.let { millis ->
-                        customStart = java.time.Instant.ofEpochMilli(millis)
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDate()
+                        customStartEpochDay = Math.floorDiv(millis, 86_400_000L)
                     }
                     showStartPicker = false
                 }) { Text(stringResource(R.string.action_ok)) }
@@ -383,9 +371,7 @@ internal fun AnalyticsRangeBottomSheet(
             confirmButton = {
                 TextButton(onClick = {
                     endPickerState.selectedDateMillis?.let { millis ->
-                        customEnd = java.time.Instant.ofEpochMilli(millis)
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDate()
+                        customEndEpochDay = Math.floorDiv(millis, 86_400_000L)
                     }
                     showEndPicker = false
                 }) { Text(stringResource(R.string.action_ok)) }

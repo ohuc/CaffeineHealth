@@ -35,6 +35,7 @@ class CombinedWidget : CaffeineGlanceWidget() {
 
     @Composable
     override fun Content(data: WidgetData, confirmedDrinkKey: String?, isPreview: Boolean) {
+        if (!isPreview && !data.premiumWidgetsAllowed) { LockedPlusWidget(); return }
         val size = LocalSize.current
         WidgetSurface {
             if (size.height >= 150.dp) {

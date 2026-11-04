@@ -100,13 +100,15 @@ fun formatConsumptionDateHeader(
     settings: UserSettings,
     referenceTimeMillis: Long = System.currentTimeMillis(),
     locale: Locale = Locale.getDefault(),
+    todayLabel: String = "Today",
+    yesterdayLabel: String = "Yesterday",
 ): String {
     val zoneId = settings.resolvedZoneId()
     val today = Instant.ofEpochMilli(referenceTimeMillis).atZone(zoneId).toLocalDate()
 
     return when (date) {
-        today -> "TODAY"
-        today.minusDays(1) -> "YESTERDAY"
+        today -> todayLabel.uppercase(locale)
+        today.minusDays(1) -> yesterdayLabel.uppercase(locale)
         else -> {
             val formatter = DateTimeFormatter.ofPattern(
                 "EEEE, ${settings.dateFormat.pattern}",
@@ -142,30 +144,35 @@ fun nextStartOfDayMillis(
         .toEpochMilli()
 }
 
+/**
+ * Bedtimes before this hour are "after midnight": a rota entry of Friday 1:00 AM means the
+ * early hours of Saturday (Friday's night), not the morning of Friday itself.
+ */
+internal const val NIGHT_ROLLOVER_HOUR = 12
+
+/** The bedtime instant for the night that starts on the evening of [nightOf]. */
+fun UserSettings.bedtimeForNightOf(nightOf: LocalDate, zoneId: ZoneId): ZonedDateTime {
+    val time = effectiveSleepTimeFor(nightOf.dayOfWeek)
+    val bedDate = if (time.hour < NIGHT_ROLLOVER_HOUR) nightOf.plusDays(1) else nightOf
+    return ZonedDateTime.of(bedDate, time.withSecond(0).withNano(0), zoneId)
+}
+
 fun calculateNextBedtimeMillis(
     currentTimeMillis: Long,
     settings: UserSettings,
 ): Long {
     val zoneId = settings.resolvedZoneId()
-    val currentZonedTime = Instant.ofEpochMilli(currentTimeMillis).atZone(zoneId)
-    val todayTime = settings.effectiveSleepTimeFor(currentZonedTime.dayOfWeek)
-    var bedtime = currentZonedTime
-        .withHour(todayTime.hour)
-        .withMinute(todayTime.minute)
-        .withSecond(0)
-        .withNano(0)
-
-    if (bedtime.toInstant().toEpochMilli() <= currentTimeMillis) {
-        val tomorrow = currentZonedTime.plusDays(1)
-        val tomorrowTime = settings.effectiveSleepTimeFor(tomorrow.dayOfWeek)
-        bedtime = tomorrow
-            .withHour(tomorrowTime.hour)
-            .withMinute(tomorrowTime.minute)
-            .withSecond(0)
-            .withNano(0)
+    val today = Instant.ofEpochMilli(currentTimeMillis).atZone(zoneId).toLocalDate()
+    // Yesterday's night can still be ahead (an after-midnight bedtime early this morning).
+    // With one bedtime for every day this is identical to the old "today, else tomorrow" rule;
+    // it only differs for a weekly rota with after-midnight times.
+    for (offset in -1L..2L) {
+        val bedtimeMillis = settings.bedtimeForNightOf(today.plusDays(offset), zoneId)
+            .toInstant()
+            .toEpochMilli()
+        if (bedtimeMillis > currentTimeMillis) return bedtimeMillis
     }
-
-    return bedtime.toInstant().toEpochMilli()
+    return settings.bedtimeForNightOf(today.plusDays(3), zoneId).toInstant().toEpochMilli()
 }
 
 fun combineDateWithTime(

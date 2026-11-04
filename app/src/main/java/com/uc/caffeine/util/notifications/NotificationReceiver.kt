@@ -16,15 +16,14 @@ class NotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != NotificationScheduler.INTENT_ACTION) return
-        if (!hasNotificationPermission(context)) return
 
         when (intent.getStringExtra(NotificationScheduler.EXTRA_NOTIFICATION_TYPE)) {
             NotificationScheduler.TYPE_DAILY_REMINDER -> {
                 val hour = intent.getIntExtra(NotificationScheduler.EXTRA_HOUR, -1)
                 val minute = intent.getIntExtra(NotificationScheduler.EXTRA_MINUTE, -1)
                 if (hour == -1 || minute == -1) return
-                showDailyReminderNotification(context, hour, minute)
                 NotificationScheduler.scheduleDailyReminder(context, hour, minute)
+                showDailyReminderNotification(context, hour, minute)
             }
             NotificationScheduler.TYPE_INACTIVITY -> {
                 showInactivityNotification(context)
@@ -65,6 +64,8 @@ class NotificationReceiver : BroadcastReceiver() {
         title: String,
         body: String,
     ) {
+        if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
         val tapIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -83,14 +84,11 @@ class NotificationReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
-        NotificationManagerCompat.from(context).notify(notificationId, notification)
+        try {
+            NotificationManagerCompat.from(context).notify(notificationId, notification)
+        } catch (_: SecurityException) {
+            // Permission can be revoked between checking it and posting.
+        }
     }
 
-    private fun hasNotificationPermission(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-        }
-        return true
-    }
 }

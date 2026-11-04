@@ -1,5 +1,5 @@
 # Rebuilds a release from its tag the way F-Droid and IzzyOnDroid do: a clean Linux checkout,
-# an unsigned assembleRelease, and the same postbuild fix as fdroiddata's com.uc.caffeine.yml.
+# an unsigned assembleFossRelease, and the same postbuild fix as fdroiddata's com.uc.caffeine.yml.
 # It then checks that the APK attached to the GitHub release is exactly that build plus a
 # signature (apksigcopier compare, which is what F-Droid's AllowedAPKSigningKeys check does).
 #
@@ -31,7 +31,7 @@ jobs:
       TAG: ${{ inputs.tag || github.event.release.tag_name }}
       GH_TOKEN: ${{ github.token }}
       BUILD_TOOLS: "36.0.0"
-      REBUILT_APK: app/build/outputs/apk/release/app-release-unsigned.apk
+      REBUILT_APK: app/build/outputs/apk/foss/release/app-foss-release-unsigned.apk
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,7 +78,7 @@ jobs:
         run: sed -i -e '/signingConfig = signingConfigs/d' app/build.gradle.kts
 
       - name: Build unsigned release from the tag
-        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+        run: ./gradlew :app:verifyFossReleaseIsolation --no-daemon --stacktrace
 
       # Same postbuild as fdroiddata.
       - name: Postbuild (as fdroiddata)

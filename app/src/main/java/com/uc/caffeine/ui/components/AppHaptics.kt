@@ -44,6 +44,31 @@ class AppHaptics(
         view.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE)
     }
 
+    /** A press-and-hold gesture has engaged (e.g. the chart scrubber opening). */
+    fun gestureStart() {
+        val constant = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE
+        } else {
+            HapticFeedbackConstants.LONG_PRESS
+        }
+        view.performHapticFeedback(constant)
+    }
+
+    /**
+     * A firm click for landmarks while scrubbing (now, bedtime, a logged drink, the sleep
+     * threshold) so they stand out from the light [sliderTick] marks between them.
+     */
+    fun landmark() {
+        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+    }
+
+    /** The held gesture was released. Silent below Android 14, where no light constant exists. */
+    fun gestureEnd() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_DEACTIVATE)
+        }
+    }
+
     suspend fun celebration() {
         confirm()
         delay(150)

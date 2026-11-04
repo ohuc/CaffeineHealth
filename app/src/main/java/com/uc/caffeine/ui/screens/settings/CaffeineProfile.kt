@@ -1,12 +1,9 @@
 package com.uc.caffeine.ui.screens.settings
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +18,9 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
@@ -29,12 +29,14 @@ import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -44,6 +46,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,7 +58,17 @@ import com.uc.caffeine.data.HormonalStatus
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.RollingNumberText
 import com.uc.caffeine.ui.components.ExpressiveIntSlider
+import com.uc.caffeine.ui.components.SettingsActionRow
+import com.uc.caffeine.ui.components.SettingsExpandableGroup
+import com.uc.caffeine.ui.components.settingsCollapseExit
+import com.uc.caffeine.ui.components.settingsExpandEnter
+import com.uc.caffeine.ui.components.SettingsField
+import com.uc.caffeine.ui.components.SettingsNavGroup
+import com.uc.caffeine.ui.components.SettingsNavItem
 import com.uc.caffeine.ui.components.SettingsPageScaffold
+import com.uc.caffeine.ui.components.SettingsSectionLabel
+import com.uc.caffeine.ui.components.SettingsSwitchRow
+import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.onboarding.AgeBucket
 import com.uc.caffeine.ui.onboarding.ConnectedChoiceButtonGroup
@@ -63,6 +77,7 @@ import com.uc.caffeine.ui.onboarding.GridSingleSelectButtonGroup
 import com.uc.caffeine.ui.onboarding.LiverDisease
 import com.uc.caffeine.ui.onboarding.Medication
 import com.uc.caffeine.ui.onboarding.MedicationGroupLabel
+import com.uc.caffeine.ui.onboarding.YesNoChoiceGroup
 import com.uc.caffeine.ui.onboarding.SleepTimePickerCard
 import com.uc.caffeine.ui.onboarding.SmokingHabit
 import com.uc.caffeine.ui.onboarding.WeightStepperCard
@@ -71,6 +86,7 @@ import com.uc.caffeine.ui.onboarding.buttonLabelRes
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.util.formatTimeOfDay
 import com.uc.caffeine.util.CaffeineTolerance
+import com.uc.caffeine.monetization.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalTime
 
@@ -81,7 +97,11 @@ internal fun CaffeineProfileSettingsScreen(
     onBack: () -> Unit,
     onRedoOnboarding: () -> Unit,
     onWeeklySleepRotaClick: () -> Unit = {},
+    onTimeToFinishClick: () -> Unit = {},
 ) {
+    val coachLocked = isPlusFeatureLocked(ProFeature.Coach)
+    val openPlus = LocalOpenPlus.current
+    val requestPlus = LocalRequestPlusFeature.current
     val halfLifeHours = userSettings.halfLifeMinutes / 60
     val effectiveHalfLifeHours = userSettings.effectiveHalfLifeMinutes / 60
     val hasModifiers = userSettings.clearanceFactor != 1.0
@@ -117,7 +137,7 @@ internal fun CaffeineProfileSettingsScreen(
                 .weight(1f, fill = true)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = bottomPadding + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -125,8 +145,8 @@ internal fun CaffeineProfileSettingsScreen(
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     ProfileSnapshotMetric(
                         title = stringResource(R.string.profile_estimated_half_life),
@@ -156,81 +176,123 @@ internal fun CaffeineProfileSettingsScreen(
                 }
             }
 
-            ReAdjustHealthProfileCard(
-                userSettings = userSettings,
-                halfLifeHours = halfLifeHours,
-                currentAgeBucket = currentAgeBucket,
-                currentWeightUnit = currentWeightUnit,
-                currentSmokingHabit = currentSmokingHabit,
-                currentLiverDisease = currentLiverDisease,
-                currentMedications = currentMedications,
-                viewModel = viewModel,
-            )
+            Column {
+                SettingsSectionLabel(stringResource(R.string.profile_group_health))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ReAdjustHealthProfileCard(
+                        userSettings = userSettings,
+                        halfLifeHours = halfLifeHours,
+                        currentAgeBucket = currentAgeBucket,
+                        currentWeightUnit = currentWeightUnit,
+                        currentSmokingHabit = currentSmokingHabit,
+                        currentLiverDisease = currentLiverDisease,
+                        currentMedications = currentMedications,
+                        viewModel = viewModel,
+                    )
+                    AdvancedMetabolismCard(
+                        userSettings = userSettings,
+                        onCyp1a2Change = viewModel::updateCyp1a2Genotype,
+                        onAhrChange = viewModel::updateAhrGenotype,
+                        onHormonalStatusChange = viewModel::updateHormonalStatus,
+                    )
+                }
+            }
 
-            AdvancedMetabolismCard(
-                userSettings = userSettings,
-                onCyp1a2Change = viewModel::updateCyp1a2Genotype,
-                onAhrChange = viewModel::updateAhrGenotype,
-                onHormonalStatusChange = viewModel::updateHormonalStatus,
-            )
-
-            WeeklySleepRotaNavCard(
-                enabled = userSettings.weeklySleepRotaEnabled,
-                customDayCount = userSettings.weeklySleepRota.size,
-                onClick = onWeeklySleepRotaClick,
-            )
-
-            CaffeineCoachToggleCard(
-                enabled = userSettings.caffeineCoachEnabled,
-                onToggle = viewModel::updateCaffeineCoachEnabled,
-            )
-
-            AnimatedVisibility(
-                visible = userSettings.caffeineCoachEnabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
-                val toleranceMgPerDay by viewModel.coachToleranceMgPerDay.collectAsStateWithLifecycle()
-                CoachToleranceCard(
-                    enabled = userSettings.coachToleranceEnabled,
-                    seedMg = userSettings.coachToleranceSeedMg,
-                    toleranceMgPerDay = toleranceMgPerDay,
-                    onToggle = viewModel::updateCoachToleranceEnabled,
-                    onSeedChange = viewModel::updateCoachToleranceSeedMg,
+            Column {
+                SettingsSectionLabel(stringResource(R.string.profile_group_schedules))
+                SettingsNavGroup(
+                    items = listOf(
+                        SettingsNavItem(
+                            title = stringResource(R.string.profile_weekly_sleep_rota_title),
+                            summary = if (userSettings.weeklySleepRotaEnabled && userSettings.weeklySleepRota.isNotEmpty()) {
+                                stringResource(R.string.weekly_sleep_rota_nav_on)
+                            } else {
+                                stringResource(R.string.profile_weekly_sleep_rota_summary)
+                            },
+                            icon = Icons.Rounded.CalendarMonth,
+                            onClick = onWeeklySleepRotaClick,
+                        ),
+                        SettingsNavItem(
+                            title = stringResource(R.string.settings_duration_title),
+                            summary = stringResource(R.string.settings_duration_summary),
+                            icon = Icons.Rounded.Timer,
+                            onClick = onTimeToFinishClick,
+                        ),
+                    ),
                 )
             }
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.profile_redo_onboarding),
-                        style = MaterialTheme.typography.titleMedium,
+            if (!coachLocked) {
+                // No parent spacing here: the tolerance group animates, and its gap lives inside it.
+                Column {
+                    SettingsSectionLabel(stringResource(R.string.profile_group_coach))
+                    CaffeineCoachToggleCard(
+                        enabled = userSettings.caffeineCoachEnabled,
+                        onToggle = viewModel::updateCaffeineCoachEnabled,
                     )
-                    Text(
-                        text = stringResource(R.string.profile_redo_onboarding_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedButton(onClick = onRedoOnboarding) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = null,
-                        )
-                        Text(
-                            text = stringResource(R.string.profile_redo_onboarding),
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
+                    AnimatedVisibility(
+                        visible = userSettings.caffeineCoachEnabled,
+                        enter = settingsExpandEnter(),
+                        exit = settingsCollapseExit(),
+                    ) {
+                        val toleranceMgPerDay by viewModel.coachToleranceMgPerDay.collectAsStateWithLifecycle()
+                        Box(Modifier.padding(top = 8.dp)) {
+                            CoachToleranceCard(
+                                enabled = userSettings.coachToleranceEnabled,
+                                seedMg = userSettings.coachToleranceSeedMg,
+                                toleranceMgPerDay = toleranceMgPerDay,
+                                onToggle = viewModel::updateCoachToleranceEnabled,
+                                onSeedChange = viewModel::updateCoachToleranceSeedMg,
+                            )
+                        }
                     }
                 }
             }
+
+            Column {
+                SettingsSectionLabel(stringResource(R.string.profile_group_setup))
+                SettingsActionRow(
+                    icon = Icons.Rounded.Refresh,
+                    title = stringResource(R.string.profile_redo_onboarding),
+                    summary = stringResource(R.string.profile_redo_onboarding_description),
+                    onClick = onRedoOnboarding,
+                )
+            }
+
+            if (coachLocked) {
+                PlusDivider(stringResource(R.string.plus_divider_label), openPlus)
+                LockedCoachSettings(userSettings,
+                    onDisable = { viewModel.updateCaffeineCoachEnabled(false) },
+                    onDisableTolerance = { viewModel.updateCoachToleranceEnabled(false) },
+                    onExplain = { requestPlus(ProFeature.Coach) })
+            }
         }
+    }
+}
+
+@Composable
+internal fun LockedCoachSettings(
+    userSettings: UserSettings,
+    onDisable: () -> Unit,
+    onDisableTolerance: () -> Unit,
+    onExplain: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CaffeineCoachToggleCard(
+            enabled = userSettings.caffeineCoachEnabled,
+            onToggle = { onDisable() },
+            locked = true,
+            onExplain = onExplain,
+        )
+        if (userSettings.caffeineCoachEnabled) CoachToleranceCard(
+            enabled = userSettings.coachToleranceEnabled,
+            seedMg = userSettings.coachToleranceSeedMg,
+            toleranceMgPerDay = null,
+            onToggle = { onDisableTolerance() },
+            onSeedChange = { onExplain() },
+            locked = true,
+            onExplain = onExplain,
+        )
     }
 }
 
@@ -242,26 +304,32 @@ private fun CoachToleranceCard(
     toleranceMgPerDay: Int?,
     onToggle: (Boolean) -> Unit,
     onSeedChange: (Int) -> Unit,
+    locked: Boolean = false,
+    onExplain: () -> Unit = {},
 ) {
     val haptics = rememberAppHaptics()
     val seedSteps = 0..(CaffeineTolerance.MAX_SEED_MG_PER_DAY / CaffeineTolerance.SEED_STEP_MG)
     // Saved when the drag ends, not on every step.
-    var seedStep by remember(seedMg) { mutableIntStateOf(seedMg / CaffeineTolerance.SEED_STEP_MG) }
+    var seedStep by rememberSaveable(seedMg) { mutableIntStateOf(seedMg / CaffeineTolerance.SEED_STEP_MG) }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = MaterialTheme.shapes.large,
+        color = CaffeineSurfaceDefaults.groupedListContainerColor,
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .plusLockedSemantics(locked, enabled,
+                        if (locked && enabled) stringResource(R.string.plus_turn_off_saved, stringResource(R.string.coach_tolerance_label))
+                        else stringResource(R.string.plus_locked_click_label))
                     .clickable {
                         haptics.toggle()
-                        onToggle(!enabled)
+                        if (locked && !enabled) onExplain() else onToggle(!enabled)
                     }
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .plusLockedContent(locked),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -274,30 +342,31 @@ private fun CoachToleranceCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.coach_tolerance_label),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMediumEmphasized,
                     )
                     Text(
                         text = stringResource(R.string.coach_tolerance_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (locked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(
                     checked = enabled,
-                    onCheckedChange = {
+                    modifier = Modifier.minimumInteractiveComponentSize(),
+                    onCheckedChange = if (locked) null else { checked ->
                         haptics.toggle()
-                        onToggle(it)
+                        onToggle(checked)
                     },
                 )
             }
 
             AnimatedVisibility(
                 visible = enabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
+                enter = settingsExpandEnter(),
+                exit = settingsCollapseExit(),
             ) {
                 Column(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).plusLockedContent(locked),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -315,16 +384,24 @@ private fun CoachToleranceCard(
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
-                    ExpressiveIntSlider(
-                        value = seedStep,
-                        onValueChange = { seedStep = it },
-                        valueRange = seedSteps,
-                        onValueChangeFinished = { onSeedChange(seedStep * CaffeineTolerance.SEED_STEP_MG) },
-                    )
+                    Box(Modifier.plusLockedSemantics(locked).then(if (locked) Modifier.clickable {
+                        haptics.toggle(); onExplain()
+                    } else Modifier)) {
+                        ExpressiveIntSlider(
+                            value = seedStep,
+                            onValueChange = { seedStep = it },
+                            valueRange = seedSteps,
+                            onValueChangeFinished = { onSeedChange(seedStep * CaffeineTolerance.SEED_STEP_MG) },
+                            modifier = if (locked) Modifier.clearAndSetSemantics {}.focusProperties { canFocus = false } else Modifier,
+                        )
+                        if (locked) Box(Modifier.matchParentSize().clearAndSetSemantics {}.clickable {
+                            haptics.toggle(); onExplain()
+                        })
+                    }
                     Text(
                         text = stringResource(R.string.coach_tolerance_seed_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (locked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (toleranceMgPerDay != null) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -344,95 +421,20 @@ private fun CoachToleranceCard(
 private fun CaffeineCoachToggleCard(
     enabled: Boolean,
     onToggle: (Boolean) -> Unit,
+    locked: Boolean = false,
+    onExplain: () -> Unit = {},
 ) {
-    val haptics = rememberAppHaptics()
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        onClick = {
-            haptics.toggle()
-            onToggle(!enabled)
-        },
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Bolt,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.coach_setting_label),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = stringResource(R.string.coach_setting_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Switch(
-                checked = enabled,
-                onCheckedChange = {
-                    haptics.toggle()
-                    onToggle(it)
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun WeeklySleepRotaNavCard(
-    enabled: Boolean,
-    customDayCount: Int,
-    onClick: () -> Unit,
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        onClick = onClick,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.profile_weekly_sleep_rota_title),
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                Text(
-                    text = if (enabled && customDayCount > 0) {
-                        stringResource(R.string.weekly_sleep_rota_nav_on)
-                    } else {
-                        stringResource(R.string.profile_weekly_sleep_rota_summary)
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    SettingsSwitchRow(
+        title = stringResource(R.string.coach_setting_label),
+        summary = stringResource(R.string.coach_setting_description),
+        checked = enabled,
+        onCheckedChange = { if (locked && !enabled) onExplain() else onToggle(it) },
+        icon = Icons.Filled.Bolt,
+        locked = locked,
+        modifier = Modifier.plusLockedSemantics(locked, enabled,
+            if (locked && enabled) stringResource(R.string.plus_turn_off_saved, stringResource(R.string.coach_setting_label))
+            else stringResource(R.string.plus_locked_click_label)),
+    )
 }
 
 @Composable
@@ -447,232 +449,167 @@ private fun ReAdjustHealthProfileCard(
     viewModel: CaffeineViewModel,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val haptics = rememberAppHaptics()
     val factors = userSettings.profileFactors
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    SettingsExpandableGroup(
+        icon = Icons.Filled.Tune,
+        title = stringResource(R.string.profile_re_adjust_title),
+        summary = stringResource(R.string.profile_re_adjust_description),
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        val ageBucketLabels = AgeBucket.entries.associateWith { stringResource(it.labelRes) }
+        val smokingHabitLabels = SmokingHabit.entries.associateWith { stringResource(it.buttonLabelRes()) }
+        val liverDiseaseLabels = LiverDisease.entries.associateWith { stringResource(it.buttonLabelRes()) }
+        val medicationLabels = Medication.entries.associateWith { stringResource(it.buttonLabelRes()) }
+
+        ExpressiveStepperCard(
+            title = stringResource(R.string.profile_caffeine_half_life),
+            value = stringResource(R.string.profile_half_life_value, halfLifeHours),
+            supportingText = stringResource(R.string.profile_caffeine_half_life_supporting),
+            hint = stringResource(R.string.profile_caffeine_half_life_hint),
+            onDecrease = { viewModel.updateHalfLife((halfLifeHours - 1).coerceIn(2, 12)) },
+            onIncrease = { viewModel.updateHalfLife((halfLifeHours + 1).coerceIn(2, 12)) },
+            decreaseEnabled = halfLifeHours > 2,
+            increaseEnabled = halfLifeHours < 12,
+        )
+
+        SleepTimePickerCard(
+            displaySettings = userSettings,
+            selectedTime = LocalTime.of(
+                userSettings.effectiveSleepTimeHour,
+                userSettings.effectiveSleepTimeMinute,
+            ),
+            onSleepTimeChanged = { time ->
+                viewModel.updateSleepTime(time.hour, time.minute)
+            },
+            // Disabled only when HC has actual data to provide; if HC is
+            // connected but returned nothing, keep the picker editable as fallback.
+            enabled = !(userSettings.hcSleepEnabled && userSettings.hcSleepTimeHour != null),
+            hint = when {
+                userSettings.hcSleepEnabled && userSettings.hcSleepTimeHour != null ->
+                    stringResource(R.string.health_connect_sleep_hint_active)
+                userSettings.hcSleepEnabled ->
+                    stringResource(R.string.health_connect_sleep_hint_no_data)
+                userSettings.weeklySleepRotaEnabled ->
+                    stringResource(R.string.profile_sleep_time_rota_hint)
+                else -> null
+            },
+        )
+
+        ExpressiveStepperCard(
+            title = stringResource(R.string.profile_sleep_threshold),
+            value = stringResource(R.string.profile_sleep_threshold_value, userSettings.sleepThresholdMg),
+            supportingText = stringResource(R.string.profile_sleep_threshold_supporting),
+            hint = stringResource(R.string.profile_sleep_threshold_hint),
+            onDecrease = { viewModel.updateSleepThreshold((userSettings.sleepThresholdMg - 5).coerceIn(20, 200)) },
+            onIncrease = { viewModel.updateSleepThreshold((userSettings.sleepThresholdMg + 5).coerceIn(20, 200)) },
+            decreaseEnabled = userSettings.sleepThresholdMg > 20,
+            increaseEnabled = userSettings.sleepThresholdMg < 200,
+        )
+
+        HorizontalDivider()
+
+        Text(
+            text = stringResource(R.string.profile_health_section),
+            style = MaterialTheme.typography.labelLargeEmphasized,
+            color = MaterialTheme.colorScheme.primary,
+        )
+
+        SettingsField(
+            title = stringResource(R.string.profile_age_range),
+            description = stringResource(R.string.profile_age_range_description),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        haptics.toggle()
-                        expanded = !expanded
-                    },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Tune,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Text(
-                            text = stringResource(R.string.profile_re_adjust_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.profile_re_adjust_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
-                )
-            }
+            ConnectedChoiceButtonGroup(
+                options = AgeBucket.entries,
+                selectedOption = currentAgeBucket,
+                labelFor = { ageBucketLabels[it] ?: "" },
+                onOptionSelected = { viewModel.updateProfileAgeBucket(it) },
+            )
+        }
 
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut(),
-            ) {
-                val yesLabel = stringResource(R.string.action_yes)
-                val noLabel = stringResource(R.string.action_no)
-                val ageBucketLabels = AgeBucket.entries.associateWith { stringResource(it.labelRes) }
-                val smokingHabitLabels = SmokingHabit.entries.associateWith { stringResource(it.buttonLabelRes()) }
-                val liverDiseaseLabels = LiverDisease.entries.associateWith { stringResource(it.buttonLabelRes()) }
-                val medicationLabels = Medication.entries.associateWith { stringResource(it.buttonLabelRes()) }
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    ExpressiveStepperCard(
-                        title = stringResource(R.string.profile_caffeine_half_life),
-                        value = stringResource(R.string.profile_half_life_value, halfLifeHours),
-                        supportingText = stringResource(R.string.profile_caffeine_half_life_supporting),
-                        hint = stringResource(R.string.profile_caffeine_half_life_hint),
-                        onDecrease = { viewModel.updateHalfLife((halfLifeHours - 1).coerceIn(2, 12)) },
-                        onIncrease = { viewModel.updateHalfLife((halfLifeHours + 1).coerceIn(2, 12)) },
-                        decreaseEnabled = halfLifeHours > 2,
-                        increaseEnabled = halfLifeHours < 12,
-                    )
+        SettingsField(title = stringResource(R.string.profile_weight), description = null) {
+            WeightStepperCard(
+                weightValue = factors.weightValue,
+                weightUnit = currentWeightUnit,
+                onWeightUnitSelected = { viewModel.updateProfileWeightUnit(it) },
+                onIncrement = { viewModel.updateProfileWeight(factors.weightValue + 1) },
+                onDecrement = { viewModel.updateProfileWeight(factors.weightValue - 1) },
+                onWeightChanged = { viewModel.updateProfileWeight(it) },
+            )
+        }
 
-                    SleepTimePickerCard(
-                        displaySettings = userSettings,
-                        selectedTime = LocalTime.of(
-                            userSettings.effectiveSleepTimeHour,
-                            userSettings.effectiveSleepTimeMinute,
-                        ),
-                        onSleepTimeChanged = { time ->
-                            viewModel.updateSleepTime(time.hour, time.minute)
-                        },
-                        // Disabled only when HC has actual data to provide; if HC is
-                        // connected but returned nothing, keep the picker editable as fallback.
-                        enabled = !(userSettings.hcSleepEnabled && userSettings.hcSleepTimeHour != null),
-                        hint = when {
-                            userSettings.hcSleepEnabled && userSettings.hcSleepTimeHour != null ->
-                                stringResource(R.string.health_connect_sleep_hint_active)
-                            userSettings.hcSleepEnabled ->
-                                stringResource(R.string.health_connect_sleep_hint_no_data)
-                            userSettings.weeklySleepRotaEnabled ->
-                                stringResource(R.string.profile_sleep_time_rota_hint)
-                            else -> null
-                        },
-                    )
+        SettingsField(
+            title = stringResource(R.string.profile_sleep_sensitivity),
+            description = stringResource(R.string.profile_sleep_sensitivity_description),
+        ) {
+            YesNoChoiceGroup(
+                selected = factors.hasInsomnia,
+                onSelected = { viewModel.updateProfileInsomnia(it) },
+            )
+        }
 
-                    ExpressiveStepperCard(
-                        title = stringResource(R.string.profile_sleep_threshold),
-                        value = stringResource(R.string.profile_sleep_threshold_value, userSettings.sleepThresholdMg),
-                        supportingText = stringResource(R.string.profile_sleep_threshold_supporting),
-                        hint = stringResource(R.string.profile_sleep_threshold_hint),
-                        onDecrease = { viewModel.updateSleepThreshold((userSettings.sleepThresholdMg - 5).coerceIn(20, 200)) },
-                        onIncrease = { viewModel.updateSleepThreshold((userSettings.sleepThresholdMg + 5).coerceIn(20, 200)) },
-                        decreaseEnabled = userSettings.sleepThresholdMg > 20,
-                        increaseEnabled = userSettings.sleepThresholdMg < 200,
-                    )
+        SettingsField(
+            title = stringResource(R.string.profile_smoking_habit),
+            description = stringResource(R.string.profile_smoking_habit_description),
+        ) {
+            GridSingleSelectButtonGroup(
+                options = SmokingHabit.entries,
+                selectedOption = currentSmokingHabit,
+                labelFor = { smokingHabitLabels[it] ?: "" },
+                onOptionSelected = { viewModel.updateProfileSmokingHabit(it) },
+            )
+        }
 
-                    HorizontalDivider()
+        SettingsField(
+            title = stringResource(R.string.profile_heavy_alcohol),
+            description = stringResource(R.string.profile_heavy_alcohol_description),
+        ) {
+            YesNoChoiceGroup(
+                selected = factors.heavyAlcohol,
+                onSelected = { viewModel.updateProfileHeavyAlcohol(it) },
+            )
+        }
 
-                    Text(
-                        text = stringResource(R.string.profile_health_section),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+        SettingsField(
+            title = stringResource(R.string.profile_high_caffeine),
+            description = stringResource(R.string.profile_high_caffeine_description),
+        ) {
+            YesNoChoiceGroup(
+                selected = factors.heavyCaffeine,
+                onSelected = { viewModel.updateProfileHeavyCaffeine(it) },
+            )
+        }
 
-                    SelectorField(
-                        title = stringResource(R.string.profile_age_range),
-                        description = stringResource(R.string.profile_age_range_description),
-                    ) {
-                        ConnectedChoiceButtonGroup(
-                            options = AgeBucket.entries,
-                            selectedOption = currentAgeBucket,
-                            labelFor = { ageBucketLabels[it] ?: "" },
-                            onOptionSelected = { viewModel.updateProfileAgeBucket(it) },
-                        )
-                    }
+        SettingsField(
+            title = stringResource(R.string.profile_liver_context),
+            description = stringResource(R.string.profile_liver_context_description),
+        ) {
+            GridSingleSelectButtonGroup(
+                options = LiverDisease.entries,
+                selectedOption = currentLiverDisease,
+                labelFor = { liverDiseaseLabels[it] ?: "" },
+                onOptionSelected = { viewModel.updateProfileLiverDisease(it) },
+            )
+        }
 
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = stringResource(R.string.profile_weight),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        WeightStepperCard(
-                            weightValue = factors.weightValue,
-                            weightUnit = currentWeightUnit,
-                            onWeightUnitSelected = { viewModel.updateProfileWeightUnit(it) },
-                            onIncrement = { viewModel.updateProfileWeight(factors.weightValue + 1) },
-                            onDecrement = { viewModel.updateProfileWeight(factors.weightValue - 1) },
-                            onWeightChanged = { viewModel.updateProfileWeight(it) },
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_sleep_sensitivity),
-                        description = stringResource(R.string.profile_sleep_sensitivity_description),
-                    ) {
-                        ConnectedChoiceButtonGroup(
-                            options = listOf(true, false),
-                            selectedOption = factors.hasInsomnia,
-                            labelFor = { if (it) yesLabel else noLabel },
-                            onOptionSelected = { viewModel.updateProfileInsomnia(it) },
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_smoking_habit),
-                        description = stringResource(R.string.profile_smoking_habit_description),
-                    ) {
-                        GridSingleSelectButtonGroup(
-                            options = SmokingHabit.entries,
-                            selectedOption = currentSmokingHabit,
-                            labelFor = { smokingHabitLabels[it] ?: "" },
-                            onOptionSelected = { viewModel.updateProfileSmokingHabit(it) },
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_heavy_alcohol),
-                        description = stringResource(R.string.profile_heavy_alcohol_description),
-                    ) {
-                        ConnectedChoiceButtonGroup(
-                            options = listOf(true, false),
-                            selectedOption = factors.heavyAlcohol,
-                            labelFor = { if (it) yesLabel else noLabel },
-                            onOptionSelected = { viewModel.updateProfileHeavyAlcohol(it) },
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_high_caffeine),
-                        description = stringResource(R.string.profile_high_caffeine_description),
-                    ) {
-                        ConnectedChoiceButtonGroup(
-                            options = listOf(true, false),
-                            selectedOption = factors.heavyCaffeine,
-                            labelFor = { if (it) yesLabel else noLabel },
-                            onOptionSelected = { viewModel.updateProfileHeavyCaffeine(it) },
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_liver_context),
-                        description = stringResource(R.string.profile_liver_context_description),
-                    ) {
-                        GridSingleSelectButtonGroup(
-                            options = LiverDisease.entries,
-                            selectedOption = currentLiverDisease,
-                            labelFor = { liverDiseaseLabels[it] ?: "" },
-                            onOptionSelected = { viewModel.updateProfileLiverDisease(it) },
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_medications),
-                        description = stringResource(R.string.profile_medications_description),
-                    ) {
-                        GridMultiSelectButtonGroup(
-                            options = Medication.noneAndInhibitors,
-                            selectedOptions = currentMedications,
-                            labelFor = { medicationLabels[it] ?: "" },
-                            onOptionToggled = { viewModel.toggleProfileMedication(it) },
-                        )
-                        MedicationGroupLabel(text = stringResource(R.string.medication_group_inducers))
-                        GridMultiSelectButtonGroup(
-                            options = Medication.inducers,
-                            selectedOptions = currentMedications,
-                            labelFor = { medicationLabels[it] ?: "" },
-                            onOptionToggled = { viewModel.toggleProfileMedication(it) },
-                        )
-                    }
-                }
-            }
+        SettingsField(
+            title = stringResource(R.string.profile_medications),
+            description = stringResource(R.string.profile_medications_description),
+        ) {
+            GridMultiSelectButtonGroup(
+                options = Medication.noneAndInhibitors,
+                selectedOptions = currentMedications,
+                labelFor = { medicationLabels[it] ?: "" },
+                onOptionToggled = { viewModel.toggleProfileMedication(it) },
+            )
+            MedicationGroupLabel(text = stringResource(R.string.medication_group_inducers))
+            GridMultiSelectButtonGroup(
+                options = Medication.inducers,
+                selectedOptions = currentMedications,
+                labelFor = { medicationLabels[it] ?: "" },
+                onOptionToggled = { viewModel.toggleProfileMedication(it) },
+            )
         }
     }
 }
@@ -691,12 +628,12 @@ private fun ProfileSnapshotMetric(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineSmallEmphasized,
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
             text = description,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -716,7 +653,7 @@ private fun ExpressiveStepperCard(
     val haptics = rememberAppHaptics()
 
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ) {
         Column(
@@ -728,11 +665,11 @@ private fun ExpressiveStepperCard(
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMediumEmphasized,
                 )
                 Text(
                     text = supportingText,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -748,6 +685,7 @@ private fun ExpressiveStepperCard(
                         onDecrease()
                     },
                     enabled = decreaseEnabled,
+                    shapes = IconButtonDefaults.shapes(),
                     modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
@@ -772,7 +710,7 @@ private fun ExpressiveStepperCard(
                     )
                     Text(
                         text = hint,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
@@ -784,6 +722,7 @@ private fun ExpressiveStepperCard(
                         onIncrease()
                     },
                     enabled = increaseEnabled,
+                    shapes = IconButtonDefaults.shapes(),
                     modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
@@ -797,27 +736,6 @@ private fun ExpressiveStepperCard(
 }
 
 @Composable
-private fun SelectorField(
-    title: String,
-    description: String,
-    content: @Composable () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        content()
-    }
-}
-
-@Composable
 private fun AdvancedMetabolismCard(
     userSettings: UserSettings,
     onCyp1a2Change: (Cyp1a2Genotype) -> Unit,
@@ -825,136 +743,83 @@ private fun AdvancedMetabolismCard(
     onHormonalStatusChange: (HormonalStatus) -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val haptics = rememberAppHaptics()
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    SettingsExpandableGroup(
+        icon = Icons.Filled.Science,
+        title = stringResource(R.string.profile_advanced_metabolism),
+        summary = stringResource(R.string.profile_advanced_metabolism_description),
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        Text(
+            text = stringResource(R.string.profile_advanced_metabolism_intro),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        SettingsField(
+            title = stringResource(R.string.profile_cyp1a2),
+            description = stringResource(R.string.profile_cyp1a2_description),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        haptics.toggle()
-                        expanded = !expanded
-                    },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            GridSingleSelectButtonGroup(
+                options = Cyp1a2Genotype.entries,
+                selectedOption = userSettings.cyp1a2Genotype,
+                labelFor = { it.label },
+                onOptionSelected = onCyp1a2Change,
+            )
+        }
+
+        SettingsField(
+            title = stringResource(R.string.profile_ahr),
+            description = stringResource(R.string.profile_ahr_description),
+        ) {
+            GridSingleSelectButtonGroup(
+                options = AhrGenotype.entries,
+                selectedOption = userSettings.ahrGenotype,
+                labelFor = { it.label },
+                onOptionSelected = onAhrChange,
+            )
+        }
+
+        SettingsField(
+            title = stringResource(R.string.profile_hormonal_status),
+            description = stringResource(R.string.profile_hormonal_status_description),
+        ) {
+            GridSingleSelectButtonGroup(
+                options = HormonalStatus.entries,
+                selectedOption = userSettings.hormonalStatus,
+                labelFor = { it.label },
+                onOptionSelected = onHormonalStatusChange,
+            )
+        }
+
+        if (userSettings.clearanceFactor != 1.0) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.tertiaryContainer,
             ) {
                 Column(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Science,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Text(
-                            text = stringResource(R.string.profile_advanced_metabolism),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    }
                     Text(
-                        text = stringResource(R.string.profile_advanced_metabolism_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = stringResource(
+                            R.string.profile_effective_half_life,
+                            userSettings.effectiveHalfLifeMinutes / 60,
+                            userSettings.effectiveHalfLifeMinutes % 60,
+                        ),
+                        style = MaterialTheme.typography.titleSmallEmphasized,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                     )
-                }
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
-                )
-            }
-
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut(),
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(
-                        text = stringResource(R.string.profile_advanced_metabolism_intro),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = stringResource(
+                            R.string.profile_clearance_factor_explanation,
+                            userSettings.halfLifeMinutes / 60,
+                            "%.2f".format(userSettings.clearanceFactor),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
                     )
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_cyp1a2),
-                        description = stringResource(R.string.profile_cyp1a2_description),
-                    ) {
-                        GridSingleSelectButtonGroup(
-                            options = Cyp1a2Genotype.entries,
-                            selectedOption = userSettings.cyp1a2Genotype,
-                            labelFor = { it.label },
-                            onOptionSelected = onCyp1a2Change,
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_ahr),
-                        description = stringResource(R.string.profile_ahr_description),
-                    ) {
-                        GridSingleSelectButtonGroup(
-                            options = AhrGenotype.entries,
-                            selectedOption = userSettings.ahrGenotype,
-                            labelFor = { it.label },
-                            onOptionSelected = onAhrChange,
-                        )
-                    }
-
-                    SelectorField(
-                        title = stringResource(R.string.profile_hormonal_status),
-                        description = stringResource(R.string.profile_hormonal_status_description),
-                    ) {
-                        GridSingleSelectButtonGroup(
-                            options = HormonalStatus.entries,
-                            selectedOption = userSettings.hormonalStatus,
-                            labelFor = { it.label },
-                            onOptionSelected = onHormonalStatusChange,
-                        )
-                    }
-
-                    if (userSettings.clearanceFactor != 1.0) {
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.tertiaryContainer,
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(
-                                        R.string.profile_effective_half_life,
-                                        userSettings.effectiveHalfLifeMinutes / 60,
-                                        userSettings.effectiveHalfLifeMinutes % 60,
-                                    ),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                )
-                                Text(
-                                    text = stringResource(
-                                        R.string.profile_clearance_factor_explanation,
-                                        userSettings.halfLifeMinutes / 60,
-                                        "%.2f".format(userSettings.clearanceFactor),
-                                    ),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
-                                )
-                            }
-                        }
-                    }
                 }
             }
         }

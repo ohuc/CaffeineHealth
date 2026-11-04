@@ -1,8 +1,8 @@
 package com.uc.caffeine.ui.screens.settings
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.content.Context
-import android.os.Build
-import android.os.LocaleList
 import java.text.Collator
 import java.util.Locale
 import org.xmlpull.v1.XmlPullParser
@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -21,10 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -141,23 +139,16 @@ internal fun LanguageSettingsScreen(
 
     val supportedLanguages = remember { buildSupportedLanguages(context) }
 
-    val currentTag = remember {
-        val appLocaleTag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val appLocales = context.getSystemService(android.app.LocaleManager::class.java)
-                .applicationLocales
-            if (appLocales.isEmpty) null else appLocales[0]?.toLanguageTag()
-        } else {
-            null
-        } ?: java.util.Locale.getDefault().language
-        // App locale tags are region-qualified only where the entry needs it (e.g. zh-CN);
-        // fall back to a base-language match so a plain system locale (e.g. "zh") still highlights it.
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val currentTag = remember(configuration) {
+        val appLocaleTag = configuration.locales[0].toLanguageTag()
         supportedLanguages.firstOrNull { it.tag == appLocaleTag }?.tag
-            ?: supportedLanguages.firstOrNull {
-                it.tag.substringBefore('-') == appLocaleTag.substringBefore('-')
-            }?.tag
+            ?: supportedLanguages.firstOrNull { it.tag.substringBefore('-') == appLocaleTag.substringBefore('-') }?.tag
             ?: appLocaleTag
     }
-    var selectedTag by remember { mutableStateOf(currentTag) }
+    val activity = androidx.activity.compose.LocalActivity.current
+
+    var selectedTag by rememberSaveable(currentTag) { mutableStateOf(currentTag) }
 
     SettingsPageScaffold(
         title = stringResource(R.string.settings_language_title),
@@ -177,10 +168,7 @@ internal fun LanguageSettingsScreen(
                     onClick = {
                         haptics.toggle()
                         selectedTag = language.tag
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            context.getSystemService(android.app.LocaleManager::class.java)
-                                .applicationLocales = LocaleList.forLanguageTags(language.tag)
-                        }
+                        activity?.let { com.uc.caffeine.util.AppLocale.select(it, language.tag) }
                     },
                     leadingContent = {
                         Text(

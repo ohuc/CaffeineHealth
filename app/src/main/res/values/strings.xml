@@ -19,7 +19,12 @@
     <!-- Settings list -->
     <string name="settings_title">Settings</string>
     <string name="settings_caffeine_profile_title">Caffeine Profile</string>
-    <string name="settings_caffeine_profile_summary">Half-life, bedtime, safe threshold</string>
+    <string name="settings_caffeine_profile_summary">Half-life, bedtime, safe threshold, time to finish</string>
+    <string name="settings_look_feel_title">Look &amp; feel</string>
+    <string name="settings_look_feel_summary">Theme, colours, home layout, clock and date</string>
+    <string name="settings_connections_title">Connections &amp; data</string>
+    <string name="settings_connections_summary">Health Connect, automation, export and import</string>
+    <string name="settings_developer_title">Developer settings</string>
     <string name="settings_appearance_title">Appearance</string>
     <string name="settings_appearance_summary">Theme mode and dynamic color</string>
     <string name="settings_language_title">Language</string>
@@ -111,6 +116,10 @@
     <!-- Caffeine profile re-adjust card -->
     <string name="profile_re_adjust_title">Re-Adjust Caffeine Health Profile</string>
     <string name="profile_re_adjust_description">Fine-tune your half-life, sleep settings, and metabolism factors.</string>
+    <string name="profile_group_health">Health profile</string>
+    <string name="profile_group_schedules">Schedules and timing</string>
+    <string name="profile_group_coach">Coach</string>
+    <string name="profile_group_setup">Setup</string>
     <string name="profile_redo_onboarding">Redo onboarding</string>
     <string name="profile_redo_onboarding_description">Walk through the profile setup again without deleting any logged drinks or history.</string>
 
@@ -146,6 +155,7 @@
     <string name="weekly_sleep_rota_enable_description">When on, each day uses its own bedtime for sleep guidance. Days you leave unset fall back to your typical bedtime.</string>
     <string name="weekly_sleep_rota_days_section">Bedtime by day</string>
     <string name="weekly_sleep_rota_fallback">Days without a custom time fall back to your typical bedtime (%1$s).</string>
+    <string name="weekly_sleep_rota_uses_typical">Uses your typical bedtime</string>
     <string name="weekly_sleep_rota_custom_cd">Set a custom bedtime for %1$s</string>
     <string name="weekly_sleep_rota_clear_cd">Reset %1$s to typical bedtime</string>
     <string name="weekly_sleep_rota_disabled_hint">Turn on the weekly rota to give individual days their own bedtime.</string>
@@ -183,6 +193,23 @@
     <string name="health_connect_uses_recent_session">Uses the most recent sleep session</string>
     <string name="health_connect_seven_day_avg">7-day average</string>
     <string name="health_connect_seven_day_avg_description">Averages bedtime across the past week</string>
+    <string name="health_connect_caffeine_title">Sync caffeine</string>
+    <string name="health_connect_caffeine_not_granted">Allow caffeine access in Health Connect</string>
+    <string name="health_connect_caffeine_off">Your logs are not shared with Health Connect</string>
+    <string name="health_connect_sleep_title">Use sleep for bedtime</string>
+    <string name="health_connect_sleep_summary_not_granted">Allow sleep access to set your bedtime automatically</string>
+    <string name="health_connect_sleep_summary_off">Your bedtime comes from your profile</string>
+    <string name="health_connect_sleep_summary_waiting">Waiting for a sleep session</string>
+    <string name="health_connect_sleep_summary_active">Bedtime follows your Health Connect sleep</string>
+    <string name="health_connect_sleep_missing_title">Sleep data is not provided</string>
+    <string name="health_connect_sleep_missing_body">Your bedtime is not updated from Health Connect. Caffeine uses the bedtime from your profile.</string>
+    <string name="health_connect_allow_sleep">Allow sleep access</string>
+    <string name="health_connect_open_settings">Open Health Connect</string>
+    <string name="health_connect_sleep_off_title">Sleep is turned off</string>
+    <string name="health_connect_sleep_off_body">Your bedtime comes from your profile. Turn sleep on to set it from Health Connect.</string>
+    <string name="health_connect_turn_on">Turn on</string>
+    <string name="health_connect_sleep_waiting_title">No sleep recorded yet</string>
+    <string name="health_connect_sleep_waiting_body">Your own bedtime is used until Health Connect has a sleep session.</string>
 
     <!-- Notifications settings -->
     <string name="notifications_inactivity_section">Inactivity Reminders</string>
@@ -229,7 +256,19 @@
     <string name="home_edit_drink">Edit %1$s</string>
     <string name="home_serving">Serving</string>
     <string name="home_serving_unavailable">Serving options are unavailable for this entry.</string>
-
+    <string name="chart_sleep_unaffected">Sleep should be unaffected</string>
+    <string name="chart_sleep_affected">Sleep may be affected</string>
+    <string name="chart_return_to_today_cd">Return to current day</string>
+    <string name="chart_scrub_now">Right now</string>
+    <string name="chart_scrub_today">Today at %1$s</string>
+    <string name="chart_scrub_tomorrow">Tomorrow at %1$s</string>
+    <string name="chart_scrub_yesterday">Yesterday at %1$s</string>
+    <string name="chart_scrub_other_day">%1$s at %2$s</string>
+    <string name="chart_graph_cd">Caffeine level graph. Press and hold, then drag, to check your level at any time.</string>
+    <string name="chart_status_cd">%1$s mg of caffeine now. %2$s</string>
+    <string name="home_history_today">Today</string>
+    <string name="home_history_yesterday">Yesterday</string>
+    <string name="weekly_sleep_rota_after_midnight_note">Times after midnight count as that day\'s night, so Friday 1:00 AM means the early hours of Saturday.</string>
     <!-- Sleep forecast (HomeScreen card) -->
     <string name="sleep_forecast_title">Sleep Forecast</string>
     <string name="sleep_forecast_safe">Safe to sleep at %1$s</string>
@@ -248,11 +287,20 @@
     <string name="coach_hold_already_alert_debt">Running on %1$s of sleep, but you\'re alert enough right now, so hold off for now.</string>
     <string name="coach_hold_bedtime">Skip caffeine now. It\'s too close to your %1$s bedtime to add any without risking sleep.</string>
     <string name="coach_connect_sleep">Connect sleep data for a recommendation tuned to how you actually slept.</string>
+    <string name="coach_connect_sleep_action">Connect sleep data</string>
     <string name="coach_sleep_hours">%1$dh %2$dm</string>
     <string name="coach_chip_recommend_now">Coach · ~%1$dmg now</string>
     <string name="coach_chip_recommend_at">Coach · ~%1$dmg around %2$s</string>
     <string name="coach_chip_hold_alert">Coach · you\'re set, no caffeine needed</string>
     <string name="coach_chip_hold_bedtime">Coach · winding down for your %1$s bedtime</string>
+    <!-- Compact Coach pill beside the "My Consumptions" title; the full coach_chip_* line is its spoken label. -->
+    <string name="coach_pill_dose">Coach: ~%1$d mg</string>
+    <string name="coach_pill_hold_alert">Coach: you\'re set</string>
+    <string name="coach_pill_hold_bedtime">Coach: wind down</string>
+    <!-- Locked Coach pill for users without Caffeine Health+ (Plus mark + this + a lock). -->
+    <string name="coach_pill_locked">Coach</string>
+    <string name="home_delete_entry_title">Delete %1$s?</string>
+    <string name="home_delete_entry_body">It will be removed from your history and the caffeine graph.</string>
     <string name="coach_log_dose">Log this dose</string>
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Caffeine Coach</string>
@@ -278,7 +326,7 @@
     <string name="add_no_serving_options">No serving options are available for this drink yet.</string>
     <string name="add_choose_unit">Choose a unit</string>
     <string name="add_total_caffeine">Total caffeine</string>
-    <string name="add_bedtime_warning">By bedtime, ~%1$d mg will still be active — above your %2$d mg sleep threshold.</string>
+    <string name="add_bedtime_warning">Bedtime: ~%1$d mg, above your %2$d mg target.</string>
     <string name="add_entry">Add entry</string>
 
     <!-- Add screen empty results -->
@@ -489,6 +537,16 @@
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_takes_a_minute">Takes about a minute · No account needed</string>
 
+    <!-- Onboarding: reminders -->
+    <string name="onboarding_notifications_title">Gentle reminders?</string>
+    <string name="onboarding_notifications_subtitle">Pick when Caffeine nudges you.</string>
+    <string name="onboarding_notifications_body">A nudge at times you choose to log a drink, and one if a day passes without a log. Change either any time in Settings.</string>
+    <string name="onboarding_notifications_turn_on">Turn on reminders</string>
+    <string name="onboarding_notifications_not_now">Not now</string>
+    <string name="onboarding_notifications_permission_hint">Android will ask you to allow notifications.</string>
+    <string name="onboarding_notifications_ready_title">Reminders are on</string>
+    <string name="onboarding_notifications_ready_subtitle">Set them up now, or change them any time in Settings.</string>
+
     <!-- Onboarding scaffolding -->
     <string name="onboarding_step_format">STEP %1$d OF %2$d</string>
     <string name="onboarding_skip_for_now">Skip for now</string>
@@ -682,6 +740,8 @@
     <string name="appearance_home_view_summary">Choose how caffeine is shown on the home screen</string>
     <string name="appearance_home_view_graph">Graph</string>
     <string name="appearance_home_view_circular">Circular</string>
+    <string name="appearance_sticky_chart_label">Sticky graph</string>
+    <string name="appearance_sticky_chart_summary">Keep the graph pinned at the top of Home while you scroll through your drinks</string>
     <string name="appearance_recent_servings_label">Recent servings</string>
     <string name="appearance_recent_servings_summary">How many of your latest servings to offer as one-tap shortcuts on the Add screen</string>
     <string name="appearance_recent_servings_off">Off</string>

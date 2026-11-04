@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uc.caffeine.LocalAppScaffoldPadding
 import com.uc.caffeine.R
 import com.uc.caffeine.data.ImportMode
+import com.uc.caffeine.ui.components.SettingsActionRow
 import com.uc.caffeine.ui.components.SettingsPageScaffold
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
@@ -63,13 +64,12 @@ internal fun MyDataSettingsScreen(
     val haptics = rememberAppHaptics()
     val userSettings by viewModel.userSettings.collectAsStateWithLifecycle()
     val myDataState by viewModel.myDataState.collectAsStateWithLifecycle()
+    val pendingImportJson by viewModel.pendingImportJson.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    var pendingImportJson by remember { mutableStateOf<String?>(null) }
-    var showImportModeDialog by remember { mutableStateOf(false) }
 
     val unknownErrorText = stringResource(R.string.my_data_export_error_unknown)
     val exportFailedTemplate = stringResource(R.string.my_data_export_failed, "%1\$s")
+    val tooLargeText = stringResource(R.string.my_data_import_too_large)
     val couldNotReadFileText = stringResource(R.string.my_data_import_could_not_read)
 
     LaunchedEffect(myDataState) {
@@ -113,14 +113,17 @@ internal fun MyDataSettingsScreen(
             coroutineScope.launch(Dispatchers.IO) {
                 try {
                     val json = context.contentResolver.openInputStream(uri)?.use { stream ->
-                        stream.readBytes().toString(Charsets.UTF_8)
+                        com.uc.caffeine.util.readBackupJson(stream)
                     }
                     if (json != null) {
                         withContext(Dispatchers.Main) {
-                            pendingImportJson = json
-                            showImportModeDialog = true
+                            viewModel.prepareBackupImport(json)
                         }
+                    } else {
+                        withContext(Dispatchers.Main) { viewModel.onExportError(couldNotReadFileText) }
                     }
+                } catch (e: com.uc.caffeine.util.BackupTooLargeException) {
+                    withContext(Dispatchers.Main) { viewModel.onExportError(tooLargeText) }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         viewModel.onExportError(couldNotReadFileText)
@@ -130,22 +133,15 @@ internal fun MyDataSettingsScreen(
         }
     }
 
-    if (showImportModeDialog) {
+    if (pendingImportJson != null) {
         ImportModeDialog(
             onMerge = {
-                showImportModeDialog = false
-                pendingImportJson?.let { viewModel.importBackup(it, ImportMode.MERGE) }
-                pendingImportJson = null
+                viewModel.importPendingBackup(ImportMode.MERGE)
             },
             onReplace = {
-                showImportModeDialog = false
-                pendingImportJson?.let { viewModel.importBackup(it, ImportMode.REPLACE) }
-                pendingImportJson = null
+                viewModel.importPendingBackup(ImportMode.REPLACE)
             },
-            onDismiss = {
-                showImportModeDialog = false
-                pendingImportJson = null
-            },
+            onDismiss = viewModel::dismissBackupImport,
         )
     }
 
@@ -163,6 +159,9 @@ internal fun MyDataSettingsScreen(
                 importLauncher.launch(arrayOf("application/json", "*/*"))
             },
             onBack = onBack,
+            cloudBackup = {
+                viewModel.distributionServices.distributionUi.CloudBackupSettings(onRestore = viewModel::prepareBackupImport)
+            },
         )
         SnackbarHost(
             hostState = snackbarHostState,
@@ -180,6 +179,7 @@ private fun MyDataSettingsContent(
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
     onBack: () -> Unit,
+    cloudBackup: @Composable () -> Unit = {},
 ) {
     SettingsPageScaffold(
         title = stringResource(R.string.settings_my_data_title),
@@ -194,50 +194,28 @@ private fun MyDataSettingsContent(
                 .padding(bottom = bottomPadding + 24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                SegmentedListItem(
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                SettingsActionRow(
+                    icon = Icons.Rounded.FileUpload,
+                    title = stringResource(R.string.my_data_export_title),
+                    summary = stringResource(R.string.my_data_export_description),
                     onClick = onExportClick,
                     enabled = !isWorking,
-                    leadingContent = {
-                        Icon(imageVector = Icons.Rounded.FileUpload, contentDescription = null)
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(R.string.my_data_export_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.my_data_export_description))
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                    shapes = segmentedListItemShapes(0, 2),
-                    colors = ListItemDefaults.colors(
-                        containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-                    ),
+                    index = 0,
+                    count = 2,
                 )
-                SegmentedListItem(
+                SettingsActionRow(
+                    icon = Icons.Rounded.FileDownload,
+                    title = stringResource(R.string.my_data_import_title),
+                    summary = stringResource(R.string.my_data_import_description),
                     onClick = onImportClick,
                     enabled = !isWorking,
-                    leadingContent = {
-                        Icon(imageVector = Icons.Rounded.FileDownload, contentDescription = null)
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(R.string.my_data_import_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    },
-                    supportingContent = {
-                        Text(stringResource(R.string.my_data_import_description))
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                    shapes = segmentedListItemShapes(1, 2),
-                    colors = ListItemDefaults.colors(
-                        containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-                    ),
+                    index = 1,
+                    count = 2,
                 )
             }
+
+            cloudBackup()
 
             if (isWorking) {
                 LoadingIndicator(

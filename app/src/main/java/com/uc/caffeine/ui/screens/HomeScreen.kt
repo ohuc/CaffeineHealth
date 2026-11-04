@@ -1,7 +1,19 @@
 package com.uc.caffeine.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.FlowRow
+import com.uc.caffeine.ui.components.DrinkListItem
+import com.uc.caffeine.ui.components.SwipeRevealAction
+import com.uc.caffeine.ui.components.SwipeRevealActions
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
+import com.uc.caffeine.ui.components.DrinkListSupportingText
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -62,6 +74,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.uc.caffeine.ui.components.AdaptiveConnectedButtonGroup
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -87,6 +102,18 @@ import com.uc.caffeine.ui.components.CaffeineCircularView
 import com.uc.caffeine.ui.components.CaffeineCoachChip
 import com.uc.caffeine.ui.components.CaffeineCoachSheet
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
+import com.uc.caffeine.ui.components.AdaptiveMainSupportingLayout
+import com.uc.caffeine.ui.components.LocalPanePlacement
+import com.uc.caffeine.ui.components.PanePlacement
+import com.uc.caffeine.ui.components.ScreenHeaderMinHeight
+import com.uc.caffeine.LocalAppScaffoldPadding
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.ui.unit.Dp
 import com.uc.caffeine.ui.components.ConsumptionContributionChart
 import com.uc.caffeine.ui.components.ConsumptionTimingSection
 import com.uc.caffeine.ui.components.DrinkIcon
@@ -130,6 +157,15 @@ import kotlinx.coroutines.flow.first
 import kotlin.math.abs
 import kotlinx.coroutines.withContext
 
+/** Sticky graph pins only when at least this much list height stays visible below the chart. */
+private val StickyChartMinListHeight = 240.dp
+
+/**
+ * In a split Home the chart fills its pane only when the pane also has this much room for the Plus
+ * status and What's new cards beneath a chart of at least the phone height; shorter panes scroll.
+ */
+private val MainPaneCardsAllowance = 200.dp
+
 private const val DetailContentFadeInDurationMillis = 180
 private const val DetailContentFadeInDelayMillis = 40
 private const val DetailContentFadeOutDurationMillis = 80
@@ -141,8 +177,16 @@ private const val DetailContentFadeOutDurationMillis = 80
 )
 @Composable
 fun HomeScreen(
-    viewModel: CaffeineViewModel = viewModel()
+    viewModel: CaffeineViewModel = viewModel(),
+    onOpenPlus: () -> Unit = {},
+    onOpenHealthConnect: () -> Unit = {},
 ) {
+    val access by viewModel.accessSnapshot.collectAsStateWithLifecycle()
+    // Keyed on the snapshot so Home re-checks access whenever it (or the lock policy) changes;
+    // canUse() alone reads no Compose state and would leave Home showing a stale answer.
+    val coachAllowed = remember(access) {
+        viewModel.distributionServices.featureAccess.canUse(com.uc.caffeine.monetization.ProFeature.Coach)
+    }
     // Grab the global snackbar instance!
     val snackbarHostState = LocalSnackbarHostState.current
 
@@ -157,18 +201,33 @@ fun HomeScreen(
     val caffeineTrend by viewModel.caffeineTrend.collectAsStateWithLifecycle()
     val coachRecommendation by viewModel.coachRecommendation.collectAsStateWithLifecycle()
 
-    var selectedEntry by remember { mutableStateOf<ConsumptionEntry?>(null) }
-    var showCoachSheet by remember { mutableStateOf(false) }
-    var showWhatsNewSheet by remember { mutableStateOf(false) }
+    var selectedEntryId by rememberSaveable { mutableStateOf<Int?>(null) }
+    val selectedEntry = selectedEntryId?.let { id ->
+        groupedConsumptionEntries.values.asSequence().flatten().firstOrNull { it.id == id }
+    }
+    var showCoachSheet by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(coachAllowed) { if (!coachAllowed) showCoachSheet = false }
+    var showWhatsNewSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val haptics = rememberAppHaptics()
+    val listState = rememberLazyListState()
+    // The history pane's own list when Home is split into two panes.
+    val historyListState = rememberLazyListState()
+    // Swipe actions: at most one row is open; a vertical scroll closes it.
+    var swipedEntryId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var pendingDeleteEntryId by rememberSaveable { mutableStateOf<Int?>(null) }
+    LaunchedEffect(listState, historyListState) {
+        snapshotFlow { listState.isScrollInProgress || historyListState.isScrollInProgress }.collect { scrolling ->
+            if (scrolling) swipedEntryId = null
+        }
+    }
 
     LaunchedEffect(viewModel, snackbarHostState, sheetState) {
         viewModel.homeScreenEvents.collectLatest { event ->
             if (sheetState.isVisible) {
                 sheetState.hide()
             }
-            selectedEntry = null
+            selectedEntryId = null
             snackbarHostState.currentSnackbarData?.dismiss()
 
             when (event) {
@@ -182,231 +241,86 @@ fun HomeScreen(
         }
     }
 
-    CaffeineScreenScaffold(
-        title = stringResource(R.string.home_title),
-        actions = {
-            val modes = HomeViewMode.entries
-            Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
-                modes.forEachIndexed { index, mode ->
-                    ToggleButton(
-                        checked = userSettings.homeViewMode == mode,
-                        onCheckedChange = { if (it) { haptics.toggle(); viewModel.updateHomeViewMode(mode) } },
-                        shapes = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            modes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+    val headerActions: @Composable RowScope.() -> Unit = {
+        val modes = HomeViewMode.entries
+        Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+            modes.forEachIndexed { index, mode ->
+                ToggleButton(
+                    checked = userSettings.homeViewMode == mode,
+                    onCheckedChange = { if (it) { haptics.toggle(); viewModel.updateHomeViewMode(mode) } },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        modes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                ) {
+                    Icon(
+                        imageVector = when (mode) {
+                            HomeViewMode.GRAPH -> Icons.AutoMirrored.Filled.ShowChart
+                            HomeViewMode.CIRCULAR -> Icons.Filled.DonutLarge
                         },
-                    ) {
-                        Icon(
-                            imageVector = when (mode) {
-                                HomeViewMode.GRAPH -> Icons.AutoMirrored.Filled.ShowChart
-                                HomeViewMode.CIRCULAR -> Icons.Filled.DonutLarge
-                            },
-                            contentDescription = when (mode) {
-                                HomeViewMode.GRAPH -> stringResource(R.string.home_view_toggle_to_graph_cd)
-                                HomeViewMode.CIRCULAR -> stringResource(R.string.home_view_toggle_to_circular_cd)
-                            },
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
+                        contentDescription = when (mode) {
+                            HomeViewMode.GRAPH -> stringResource(R.string.home_view_toggle_to_graph_cd)
+                            HomeViewMode.CIRCULAR -> stringResource(R.string.home_view_toggle_to_circular_cd)
+                        },
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }
-    ) { bottomPadding ->
-        // Everything scrolls as one list: pinning the chart + coach above a weighted list left
-        // almost no visible list area on short screens or large font/display scaling (#45).
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f, fill = true),
-            contentPadding = PaddingValues(bottom = bottomPadding + 16.dp)
+    }
+
+    val chartHeight = 300.dp * androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
+    // The chart card's height comes from the caller: fixed in the phone list, filling the pane
+    // in a side-by-side or tabletop layout.
+    val chartCard: @Composable (Modifier) -> Unit = { cardModifier ->
+        Card(
+            modifier = cardModifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = CaffeineSurfaceDefaults.chartContainerColor,
+            ),
         ) {
-            item(key = "home-chart", contentType = "home-chart") {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = CaffeineSurfaceDefaults.chartContainerColor,
-                    ),
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        if (isConsumptionEntriesLoading) {
-                            ContainedLoadingIndicator(
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        } else {
-                            AnimatedContent(
-                                targetState = userSettings.homeViewMode,
-                                transitionSpec = {
-                                    (fadeIn(animationSpec = tween(220, delayMillis = 90))) togetherWith
-                                        fadeOut(animationSpec = tween(90))
-                                },
-                                label = "home_view_mode",
-                            ) { viewMode ->
-                                when (viewMode) {
-                                    HomeViewMode.GRAPH -> CaffeineChart(
-                                        chartData = chartData,
-                                        modelProducer = viewModel.chartModelProducer,
-                                        userSettings = userSettings,
-                                        liveNowMillis = liveNowMillis,
-                                        currentCaffeineLevel = currentLevel,
-                                        predictedBedtimeCaffeineLevel = bedtimeForecast.first,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
-                                        onEntryClick = { entryId ->
-                                            val entry = groupedConsumptionEntries.values
-                                                .flatten()
-                                                .find { it.id == entryId }
-                                            if (entry != null) {
-                                                haptics.navigation()
-                                                selectedEntry = entry
-                                            }
-                                        }
-                                    )
-                                    HomeViewMode.CIRCULAR -> CaffeineCircularView(
-                                        currentMg = currentLevel,
-                                        maxMg = userSettings.sleepThresholdMg.toDouble(),
-                                        trend = caffeineTrend,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            coachRecommendation?.let { recommendation ->
-                item(key = "home-coach", contentType = "home-coach") {
-                    Column {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        CaffeineCoachChip(
-                            recommendation = recommendation,
-                            userSettings = userSettings,
-                            onClick = {
-                                haptics.navigation()
-                                showCoachSheet = true
-                            },
-                        )
-                    }
-                }
-            }
-
-            if (showWhatsNew) {
-                item(key = "home-whats-new", contentType = "home-whats-new") {
-                    Column(modifier = Modifier.animateItem()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        WhatsNewCard(
-                            onOpen = {
-                                haptics.navigation()
-                                showWhatsNewSheet = true
-                            },
-                            onDismiss = {
-                                haptics.toggle()
-                                viewModel.markWhatsNewSeen()
-                            },
-                        )
-                    }
-                }
-            }
-
-            item(key = "home-history-title", contentType = "home-history-title") {
-                Column {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.home_my_consumptions),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (isConsumptionEntriesLoading) {
+                    ContainedLoadingIndicator(
+                        modifier = Modifier.align(Alignment.Center)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-
-            if (isConsumptionEntriesLoading) {
-                item(key = "history-loading") {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ElevatedCard {
-                            Box(
-                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                ContainedLoadingIndicator()
-                            }
-                        }
-                    }
-                }
-            } else if (groupedConsumptionEntries.isEmpty()) {
-                item(key = "history-empty") {
-                    Text(
-                        text = stringResource(R.string.home_no_consumptions),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                groupedConsumptionEntries.entries.forEachIndexed { index, (date, entriesForDay) ->
-                    if (index > 0) {
-                        item(
-                            key = "history-gap-$date",
-                            contentType = "history-gap",
-                        ) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                    }
-
-                    stickyHeader(key = "history-header-$date") {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.surface
-                        ) {
-                            Text(
-                                text = formatTimelineHeaderText(
-                                    date = date,
-                                    settings = userSettings,
-                                    referenceTimeMillis = chartData.currentTimeMillis,
-                                ),
-                                modifier = Modifier.padding(bottom = 8.dp),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-
-                    entriesForDay.forEachIndexed { entryIndex, entry ->
-                        item(
-                            key = "history-entry-${entry.id}",
-                            contentType = "history-entry",
-                        ) {
-                            ConsumptionHistoryListItem(
-                                entry = entry,
-                                index = entryIndex,
-                                count = entriesForDay.size,
+                } else {
+                    AnimatedContent(
+                        targetState = userSettings.homeViewMode,
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(220, delayMillis = 90))) togetherWith
+                                fadeOut(animationSpec = tween(90))
+                        },
+                        label = "home_view_mode",
+                    ) { viewMode ->
+                        when (viewMode) {
+                            HomeViewMode.GRAPH -> CaffeineChart(
+                                chartData = chartData,
+                                modelProducer = viewModel.chartModelProducer,
                                 userSettings = userSettings,
-                                onClick = {
-                                    haptics.navigation()
-                                    selectedEntry = entry
-                                },
-                                modifier = Modifier.heightIn(min = 56.dp),
+                                liveNowMillis = liveNowMillis,
+                                currentCaffeineLevel = currentLevel,
+                                predictedBedtimeCaffeineLevel = bedtimeForecast.first,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
+                                onEntryClick = { entryId ->
+                                    val entry = groupedConsumptionEntries.values
+                                        .flatten()
+                                        .find { it.id == entryId }
+                                    if (entry != null) {
+                                        haptics.navigation()
+                                        selectedEntryId = entry.id
+                                    }
+                                }
                             )
-                        }
-
-                        if (entryIndex < entriesForDay.lastIndex) {
-                            item(
-                                key = "history-entry-gap-${entry.id}",
-                                contentType = "history-entry-gap",
-                            ) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                            }
+                            HomeViewMode.CIRCULAR -> CaffeineCircularView(
+                                currentMg = currentLevel,
+                                maxMg = userSettings.sleepThresholdMg.toDouble(),
+                                trend = caffeineTrend,
+                                modifier = Modifier.fillMaxSize(),
+                            )
                         }
                     }
                 }
@@ -414,7 +328,360 @@ fun HomeScreen(
         }
     }
 
-    if (showCoachSheet) {
+    // The Coach's slot beside the "My Consumptions" title.
+    val coachSlot: @Composable (Modifier) -> Unit = { slotModifier ->
+        val coachPill = coachRecommendation?.takeIf { coachAllowed }
+        if (!coachAllowed) {
+            // Free users see the Coach's place, locked; tapping explains Plus. Where Plus is not on
+            // sale the slot stays empty: the Coach is simply off, with nothing nudging a purchase.
+            if (access.plusOnSale) com.uc.caffeine.monetization.LockedCoachChip(
+                expired = access.expired,
+                expiryKey = access.paidExpiresAtMillis ?: access.previewEndsAtMillis,
+                onClick = {
+                    haptics.navigation()
+                    viewModel.requestFeature(com.uc.caffeine.monetization.ProFeature.Coach)
+                },
+                modifier = slotModifier,
+            )
+        } else AnimatedVisibility(
+            visible = coachPill != null,
+            modifier = slotModifier,
+            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                scaleIn(MaterialTheme.motionScheme.defaultSpatialSpec()),
+            exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+        ) {
+            coachPill?.let { recommendation ->
+                CaffeineCoachChip(
+                    recommendation = recommendation,
+                    userSettings = userSettings,
+                    onClick = {
+                        haptics.navigation()
+                        showCoachSheet = true
+                    },
+                )
+            }
+        }
+    }
+
+    val plusStatusItem: LazyListScope.() -> Unit = {
+        item(key = "home-plus-status") {
+            viewModel.distributionServices.distributionUi.StatusCard(onOpen = onOpenPlus)
+        }
+    }
+
+    val whatsNewItem: LazyListScope.() -> Unit = {
+        if (showWhatsNew) {
+            item(key = "home-whats-new", contentType = "home-whats-new") {
+                Column(modifier = Modifier.animateItem()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    WhatsNewCard(
+                        onOpen = {
+                            haptics.navigation()
+                            showWhatsNewSheet = true
+                        },
+                        onDismiss = {
+                            haptics.toggle()
+                            viewModel.markWhatsNewSeen()
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    val historyTitleItem: LazyListScope.(topSpacing: Dp) -> Unit = { topSpacing ->
+        item(key = "home-history-title", contentType = "home-history-title") {
+            Column {
+                Spacer(modifier = Modifier.height(topSpacing))
+                // The Coach rides beside the title as a compact pill; FlowRow wraps it under
+                // the title when a long translation or large font leaves no room.
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        // Pane header: as tall as the page header in the other pane, so they align.
+                        .then(if (topSpacing == 0.dp) Modifier.heightIn(min = ScreenHeaderMinHeight) else Modifier),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_my_consumptions),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(end = 12.dp),
+                    )
+                    coachSlot(Modifier.align(Alignment.CenterVertically))
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+
+    val historyItems: LazyListScope.() -> Unit = {
+        if (isConsumptionEntriesLoading) {
+            item(key = "history-loading") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ElevatedCard {
+                        Box(
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            ContainedLoadingIndicator()
+                        }
+                    }
+                }
+            }
+        } else if (groupedConsumptionEntries.isEmpty()) {
+            item(key = "history-empty") {
+                Text(
+                    text = stringResource(R.string.home_no_consumptions),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            groupedConsumptionEntries.entries.forEachIndexed { index, (date, entriesForDay) ->
+                if (index > 0) {
+                    item(
+                        key = "history-gap-$date",
+                        contentType = "history-gap",
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                stickyHeader(key = "history-header-$date") {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        Text(
+                            text = formatTimelineHeaderText(
+                                date = date,
+                                settings = userSettings,
+                                referenceTimeMillis = chartData.currentTimeMillis,
+                                todayLabel = stringResource(R.string.home_history_today),
+                                yesterdayLabel = stringResource(R.string.home_history_yesterday),
+                            ),
+                            modifier = Modifier.padding(bottom = 12.dp),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                entriesForDay.forEachIndexed { entryIndex, entry ->
+                    item(
+                        key = "history-entry-${entry.id}",
+                        contentType = "history-entry",
+                    ) {
+                        val colorScheme = MaterialTheme.colorScheme
+                        val duplicateLabel = stringResource(R.string.home_action_duplicate)
+                        val deleteLabel = stringResource(R.string.home_action_delete)
+                        // Swipe right-to-left to reveal Duplicate and Delete (icons only).
+                        SwipeRevealActions(
+                            actions = listOf(
+                                SwipeRevealAction(
+                                    icon = Icons.Filled.ContentCopy,
+                                    label = duplicateLabel,
+                                    containerColor = colorScheme.secondaryContainer,
+                                    contentColor = colorScheme.onSecondaryContainer,
+                                ) {
+                                    haptics.confirm()
+                                    swipedEntryId = null
+                                    viewModel.duplicateLoggedEntry(entry)
+                                },
+                                SwipeRevealAction(
+                                    icon = Icons.Filled.Delete,
+                                    label = deleteLabel,
+                                    containerColor = colorScheme.errorContainer,
+                                    contentColor = colorScheme.onErrorContainer,
+                                ) {
+                                    haptics.toggle()
+                                    pendingDeleteEntryId = entry.id
+                                },
+                            ),
+                            open = swipedEntryId == entry.id,
+                            onOpenChange = { isOpen ->
+                                if (isOpen) swipedEntryId = entry.id
+                                else if (swipedEntryId == entry.id) swipedEntryId = null
+                            },
+                        ) { closeRow ->
+                            // Same row as the Add Consumption catalogue (DrinkListItem).
+                            DrinkListItem(
+                                name = entry.drinkName,
+                                imageName = entry.imageName,
+                                emoji = entry.emoji,
+                                caffeineMg = entry.caffeineMg,
+                                index = entryIndex,
+                                count = entriesForDay.size,
+                                onClick = {
+                                    if (closeRow != null) {
+                                        haptics.toggle()
+                                        closeRow()
+                                    } else {
+                                        haptics.navigation()
+                                        selectedEntryId = entry.id
+                                    }
+                                },
+                                supportingContent = {
+                                    DrinkListSupportingText(buildLoggedEntryMetaText(entry, userSettings))
+                                },
+                            )
+                        }
+                    }
+
+                    if (entryIndex < entriesForDay.lastIndex) {
+                        item(
+                            key = "history-entry-gap-${entry.id}",
+                            contentType = "history-entry-gap",
+                        ) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    val title = stringResource(R.string.home_title)
+    AdaptiveMainSupportingLayout(
+        splitTabletop = true,
+        // Phone and medium windows: one scrolling list, exactly as before.
+        single = {
+            CaffeineScreenScaffold(title = title, actions = headerActions) { bottomPadding ->
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = true),
+                ) {
+                    // Sticky graph pins the chart above the list. It only pins when the window still
+                    // leaves room for the list below it: a pinned chart over a weighted list left
+                    // almost no visible list on short screens or with large font/display scaling
+                    // (#45), so those keep everything scrolling as one list.
+                    val pinChart = userSettings.stickyHomeChart && maxHeight >= chartHeight + StickyChartMinListHeight
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        if (pinChart) {
+                            chartCard(Modifier.height(chartHeight))
+                        }
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f, fill = true),
+                            contentPadding = PaddingValues(bottom = bottomPadding + 16.dp)
+                        ) {
+                            if (!pinChart) {
+                                item(key = "home-chart", contentType = "home-chart") {
+                                    chartCard(Modifier.height(chartHeight))
+                                }
+                            }
+                            plusStatusItem()
+                            whatsNewItem()
+                            historyTitleItem(16.dp)
+                            historyItems()
+                        }
+                    }
+                }
+            }
+        },
+        // Side by side (or above a tabletop hinge): the chart fills its pane, so the curve is as
+        // tall as the window allows. The Plus status and What's new cards sit under it when the
+        // pane is tall enough, and otherwise scroll below a chart of the phone height.
+        main = {
+            val placement = LocalPanePlacement.current
+            CaffeineScreenScaffold(
+                title = title,
+                actions = headerActions,
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = if (placement == PanePlacement.Start) 8.dp else 16.dp,
+                    top = 12.dp,
+                ),
+            ) { bottomPadding ->
+                val paneBottom = if (placement.touchesBottom) bottomPadding + 16.dp else 12.dp
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = true),
+                ) {
+                    if (maxHeight - paneBottom >= chartHeight + MainPaneCardsAllowance) {
+                        Column(Modifier.fillMaxSize().padding(bottom = paneBottom)) {
+                            chartCard(Modifier.weight(1f, fill = true))
+                            LazyColumn(userScrollEnabled = false) {
+                                plusStatusItem()
+                                whatsNewItem()
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = paneBottom),
+                        ) {
+                            item(key = "home-chart", contentType = "home-chart") {
+                                chartCard(Modifier.height(minOf(chartHeight, maxHeight - paneBottom).coerceAtLeast(160.dp)))
+                            }
+                            plusStatusItem()
+                            whatsNewItem()
+                        }
+                    }
+                }
+            }
+        },
+        supporting = {
+            val placement = LocalPanePlacement.current
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(placement.headerInsetSides))
+                    .padding(
+                        start = if (placement == PanePlacement.End) 8.dp else 16.dp,
+                        end = 16.dp,
+                        top = 12.dp,
+                    ),
+            ) {
+                LazyColumn(
+                    state = historyListState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = LocalAppScaffoldPadding.current.calculateBottomPadding() + 16.dp),
+                ) {
+                    // No top spacing: the title lines up with the Home title in the other pane.
+                    historyTitleItem(0.dp)
+                    historyItems()
+                }
+            }
+        },
+    )
+
+    pendingDeleteEntryId?.let { id ->
+        val entry = groupedConsumptionEntries.values.asSequence().flatten().firstOrNull { it.id == id }
+        if (entry == null) {
+            LaunchedEffect(id) { pendingDeleteEntryId = null }
+        } else {
+            DeleteLoggedEntryDialog(
+                drinkName = entry.drinkName,
+                onConfirm = {
+                    haptics.confirm()
+                    pendingDeleteEntryId = null
+                    swipedEntryId = null
+                    viewModel.deleteLoggedEntry(entry)
+                },
+                // Cancel keeps the row open so Duplicate is still one tap away.
+                onDismiss = { pendingDeleteEntryId = null },
+            )
+        }
+    }
+
+    if (showCoachSheet && coachAllowed) {
         coachRecommendation?.let { recommendation ->
             CaffeineCoachSheet(
                 recommendation = recommendation,
@@ -425,12 +692,17 @@ fun HomeScreen(
                     showCoachSheet = false
                 },
                 onDismiss = { showCoachSheet = false },
+                onConnectSleep = {
+                    haptics.navigation()
+                    showCoachSheet = false
+                    onOpenHealthConnect()
+                },
             )
         }
     }
 
     selectedEntry?.let { entry ->
-        val detailSnapshotTimeMillis = remember(entry.id) {
+        val detailSnapshotTimeMillis = rememberSaveable(entry.id) {
             chartData.currentTimeMillis
         }
         // Composing the Vico chart while the sheet's entrance spring is running drops
@@ -458,10 +730,10 @@ fun HomeScreen(
             }
         }
 
-        var isEditing by remember(entry.id) { mutableStateOf(false) }
+        var isEditing by rememberSaveable(entry.id) { mutableStateOf(false) }
 
         ModalBottomSheet(
-            onDismissRequest = { selectedEntry = null },
+            onDismissRequest = { selectedEntryId = null },
             sheetState = sheetState,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
@@ -519,66 +791,77 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** "Are you sure?" before a swipe-delete; Duplicate needs no confirmation. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ConsumptionHistoryListItem(
-    entry: ConsumptionEntry,
-    index: Int,
-    count: Int,
-    userSettings: UserSettings,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+private fun DeleteLoggedEntryDialog(
+    drinkName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    // Denser than the app's other segmented lists (#53): a day can hold many entries, and the
-    // floating Add Consumption button and toolbar already cover the bottom of the screen.
-    SegmentedListItem(
-        modifier = modifier,
-        onClick = onClick,
-        leadingContent = {
-            ExpressiveIconBadge(
-                index = index,
-                size = 36.dp,
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = AlertDialogDefaults.shape,
+            color = AlertDialogDefaults.containerColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                DrinkIcon(
-                    imageName = entry.imageName,
-                    emoji = entry.emoji,
-                    contentDescription = entry.drinkName,
-                    modifier = Modifier.size(24.dp),
-                    emojiSize = MaterialTheme.typography.titleMedium.fontSize,
+                ExpressiveIconBadge(
+                    index = 0,
+                    size = 56.dp,
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.home_delete_entry_title, drinkName),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 16.dp),
                 )
+                Text(
+                    text = stringResource(R.string.home_delete_entry_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilledTonalButton(
+                        onClick = onDismiss,
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.action_cancel), textAlign = TextAlign.Center)
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        shapes = ButtonDefaults.shapes(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.home_action_delete), textAlign = TextAlign.Center)
+                    }
+                }
             }
-        },
-        content = {
-            Text(
-                text = entry.drinkName,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        supportingContent = {
-            Text(
-                text = buildLoggedEntryMetaText(entry, userSettings),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        trailingContent = {
-            Text(
-                text = stringResource(R.string.caffeine_mg_compact, entry.caffeineMg),
-                style = MaterialTheme.typography.titleMediumEmphasized,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        },
-        verticalAlignment = Alignment.CenterVertically,
-        shapes = segmentedListItemShapes(index, count),
-        colors = ListItemDefaults.colors(
-            containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-        ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-    )
+        }
+    }
 }
 
 @Composable
@@ -657,6 +940,7 @@ private fun ConsumptionLogDetailSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
@@ -750,14 +1034,11 @@ private fun ConsumptionLogDetailSheet(
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-        ) {
+        AdaptiveConnectedButtonGroup(itemCount = 3) { index, shapes ->
+            when (index) {
+            0 ->
             SheetActionButton(
-                modifier = Modifier.weight(1f),
-                index = 0,
-                count = 3,
+                shapes = shapes,
                 icon = Icons.Default.Edit,
                 label = stringResource(R.string.home_action_edit),
                 enabled = presentedDetail != null,
@@ -767,10 +1048,8 @@ private fun ConsumptionLogDetailSheet(
                     onEdit()
                 }
             )
-            SheetActionButton(
-                modifier = Modifier.weight(1f),
-                index = 1,
-                count = 3,
+            1 -> SheetActionButton(
+                shapes = shapes,
                 icon = Icons.Default.ContentCopy,
                 label = stringResource(R.string.home_action_duplicate),
                 onClick = {
@@ -778,10 +1057,8 @@ private fun ConsumptionLogDetailSheet(
                     onDuplicate()
                 }
             )
-            SheetActionButton(
-                modifier = Modifier.weight(1f),
-                index = 2,
-                count = 3,
+            else -> SheetActionButton(
+                shapes = shapes,
                 icon = Icons.Default.Delete,
                 label = stringResource(R.string.home_action_delete),
                 tint = MaterialTheme.colorScheme.error,
@@ -791,6 +1068,7 @@ private fun ConsumptionLogDetailSheet(
                     onDelete()
                 }
             )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -964,8 +1242,7 @@ private fun ContributionStatRow(
 @Composable
 private fun SheetActionButton(
     modifier: Modifier = Modifier,
-    index: Int,
-    count: Int,
+    shapes: ToggleButtonShapes,
     icon: ImageVector,
     label: String,
     enabled: Boolean = true,
@@ -975,19 +1252,14 @@ private fun SheetActionButton(
 ) {
     val contentTint = tint ?: MaterialTheme.colorScheme.onSurface
     val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surfaceVariant
-    val connectedShapes = when (index) {
-        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-        count - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-    }
 
     FilledTonalButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.heightIn(min = ButtonDefaults.MediumContainerHeight),
         shapes = ButtonShapes(
-            shape = connectedShapes.shape,
-            pressedShape = connectedShapes.pressedShape,
+            shape = shapes.shape,
+            pressedShape = shapes.pressedShape,
         ),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
         colors = ButtonDefaults.filledTonalButtonColors(
@@ -1007,9 +1279,7 @@ private fun SheetActionButton(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            softWrap = false,
-            overflow = TextOverflow.Ellipsis
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
 }
@@ -1026,13 +1296,13 @@ private fun EditConsumptionEntrySheet(
     val availableUnits by produceState<List<DrinkUnit>?>(initialValue = null, key1 = entry.id, key2 = entry.presetItemId) {
         value = viewModel.getUnitsForPresetItemId(entry.presetItemId)
     }
-    var quantity by remember(entry.id) {
+    var quantity by rememberSaveable(entry.id) {
         mutableStateOf(entry.quantity.coerceAtLeast(MIN_SERVING_QUANTITY))
     }
-    var startedAtMillis by remember(entry.id) {
+    var startedAtMillis by rememberSaveable(entry.id) {
         mutableStateOf(entry.startedAtMillis)
     }
-    var durationMinutes by remember(entry.id) {
+    var durationMinutes by rememberSaveable(entry.id) {
         mutableIntStateOf(entry.normalizedDurationMinutes)
     }
     val presetIsExtendedRelease by produceState(initialValue = false, key1 = entry.presetItemId) {
@@ -1079,7 +1349,7 @@ private fun EditConsumptionEntrySheet(
             findMatchingUnit(displayedUnits, entry.unitKey, entry.unitCaffeineMg)
         }
     }
-    var selectedUnitKey by remember(entry.id, availableUnits) {
+    var selectedUnitKey by rememberSaveable(entry.id) {
         mutableStateOf(initialUnit?.unitKey)
     }
     val selectedUnit = remember(displayedUnits, selectedUnitKey, initialUnit) {
@@ -1197,11 +1467,15 @@ private fun formatTimelineHeaderText(
     date: LocalDate,
     settings: UserSettings,
     referenceTimeMillis: Long,
+    todayLabel: String,
+    yesterdayLabel: String,
 ): String {
     return formatConsumptionDateHeader(
         date = date,
         settings = settings,
-        referenceTimeMillis = referenceTimeMillis
+        referenceTimeMillis = referenceTimeMillis,
+        todayLabel = todayLabel,
+        yesterdayLabel = yesterdayLabel,
     )
 }
 

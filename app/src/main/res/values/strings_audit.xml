@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notifications_permission_intro">Notifications deliver your daily and five-day inactivity reminders. You choose whether Android may show them.</string>
+    <string name="notifications_paused_title">Reminders are paused</string>
+    <string name="notifications_paused_body">Android is blocking some or all reminders. Your saved times stay here; allow notifications to receive them.</string>
+    <string name="notifications_daily_blocked">Daily reminders are blocked in Android settings.</string>
+    <string name="notifications_inactivity_blocked">Inactivity reminders are blocked in Android settings.</string>
+    <string name="notifications_enable_action">Enable notifications</string>
+    <string name="notifications_settings_action">Open Android settings</string>
+    <string name="notifications_edit_daily_dialog_title">Edit reminder</string>
+    <string name="analytics_average_per_logged_day">Average per logged day</string>
+    <string name="analytics_calendar_safe">At or below your bedtime threshold</string>
+    <string name="analytics_calendar_above">Above your bedtime threshold</string>
+    <string name="analytics_calendar_no_data">No caffeine logged</string>
+    <string name="analytics_calendar_future">Future date</string>
+    <string name="my_data_import_too_large">This backup is larger than 10 MB. Choose a smaller Caffeine Health JSON backup.</string>
+    <string name="health_privacy_title">Health Connect privacy</string>
+    <string name="health_privacy_intro">Health Connect is optional. These permissions let Caffeine Health connect your caffeine log and sleep information on this device.</string>
+    <string name="health_privacy_nutrition_title">Caffeine records</string>
+    <string name="health_privacy_nutrition_body">Nutrition access lets the app write the caffeine amount, drink name and time from your log to Health Connect, and read caffeine records from other apps into your log and estimates.</string>
+    <string name="health_privacy_hydration_title">Drink volume</string>
+    <string name="health_privacy_hydration_body">Hydration access lets the app write the volume and time of eligible drinks you log to Health Connect.</string>
+    <string name="health_privacy_sleep_title">Sleep information</string>
+    <string name="health_privacy_sleep_body">Sleep access lets the app read sleep sessions to estimate your bedtime and support Coach calculations. The app does not write sleep records.</string>
+    <string name="health_privacy_storage_title">Where health data goes</string>
+    <string name="health_privacy_storage_body">Imported caffeine entries are stored in the local app database. Health Connect data is used on this device, not sent to a Caffeine Health server or used for advertising. A backup you export can include imported caffeine entries; you choose where that file is saved.</string>
+    <string name="health_privacy_control_title">Your choices</string>
+    <string name="health_privacy_control_body">You can disconnect in Settings → Health Connect or revoke individual permissions in Android Health Connect settings. Disconnecting stops further access; existing local log entries and records already written to Health Connect are not automatically removed. Delete local entries in the app and manage Health Connect records in Android settings.</string>
+    <string name="privacy_policy_title">Privacy policy</string>
+    <string name="privacy_policy_summary">How Caffeine Health handles your data</string>
+    <string name="privacy_policy_url" translatable="false">https://ritzy-apricot-3b1.notion.site/Caffeine-Health-Privacy-policy-40c80f6db08e80ef9a8fd813d3e06dc6</string>
+</resources>

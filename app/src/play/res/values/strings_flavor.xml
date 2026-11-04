@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="distribution_edition_label">Google Play edition</string>
+    <string name="distribution_summary">All current features available</string>
+    <string name="distribution_description">All current features are available in this build. Purchases are not available yet. Your history stays on this device unless you export it or turn on Google Drive backup. Optional barcode lookup uses Open Food Facts after you agree to it.</string>
+    <string name="cloud_backup_section">Google Drive backup</string>
+    <string name="cloud_backup_auto_title">Back up automatically</string>
+    <string name="cloud_backup_off_summary">Saves your history every day to a private folder in your own Google Drive. Only this app can open it.</string>
+    <string name="cloud_backup_last">Last backup %1$s</string>
+    <string name="cloud_backup_last_account">%1$s · last backup %2$s</string>
+    <string name="cloud_backup_first_pending">On · the first backup is on its way</string>
+    <string name="cloud_backup_running">Backing up…</string>
+    <string name="cloud_backup_sign_in_needed">Paused · tap Back up now to sign in again</string>
+    <string name="cloud_backup_failed">The last backup didn’t finish. It will try again.</string>
+    <string name="cloud_backup_now">Back up now</string>
+    <string name="cloud_backup_now_summary">Save a fresh copy to Google Drive</string>
+    <string name="cloud_backup_restore">Restore from Google Drive</string>
+    <string name="cloud_backup_restore_summary">Bring back the history saved in your Google account</string>
+    <string name="cloud_backup_delete">Delete backup from Google Drive</string>
+    <string name="cloud_backup_delete_summary">Removes the copy in your Drive and stops automatic backups</string>
+    <string name="cloud_backup_delete_title">Delete your Google Drive backup?</string>
+    <string name="cloud_backup_delete_body">The backup in your Google Drive is removed and automatic backups stop. Everything on this phone stays as it is.</string>
+    <string name="cloud_backup_delete_confirm">Delete</string>
+    <string name="cloud_backup_cancel">Cancel</string>
+    <string name="cloud_backup_existing_title">A backup is already in this Google account</string>
+    <string name="cloud_backup_existing_body">It was saved %1$s. Restore it to bring that history back, or replace it with what is on this phone.</string>
+    <string name="cloud_backup_existing_restore">Restore it</string>
+    <string name="cloud_backup_existing_replace">Replace it</string>
+    <string name="cloud_backup_none_found">No backup was found in this Google account.</string>
+    <string name="cloud_backup_unavailable">Couldn’t reach Google Drive. Check your connection and try again.</string>
+    <string name="cloud_backup_restore_failed">That backup couldn’t be restored.</string>
+    <string name="cloud_backup_ok">OK</string>
+    <string name="onboarding_restore_drive">Restore from Google Drive</string>
+    <string name="onboarding_restore_working">Bringing back your history…</string>
+</resources>

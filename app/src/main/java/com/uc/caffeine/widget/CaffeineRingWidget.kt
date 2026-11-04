@@ -36,6 +36,7 @@ class CaffeineRingWidget : CaffeineGlanceWidget() {
 
     @Composable
     override fun Content(data: WidgetData, confirmedDrinkKey: String?, isPreview: Boolean) {
+        if (!isPreview && !data.premiumWidgetsAllowed) { LockedPlusWidget(); return }
         val context = LocalContext.current
         val palette = widgetPalette
         val size = LocalSize.current

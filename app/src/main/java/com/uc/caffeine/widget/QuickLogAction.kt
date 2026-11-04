@@ -1,6 +1,8 @@
 package com.uc.caffeine.widget
 
 import android.content.Context
+import com.uc.caffeine.distributionServices
+import com.uc.caffeine.monetization.canRenderWidget
 import android.widget.Toast
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
@@ -46,6 +48,9 @@ class QuickLogAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters,
     ) {
+        context.distributionServices.featureAccess.awaitReady()
+        if (!canRenderWidget("combined", context.distributionServices.featureAccess) &&
+            androidx.glance.appwidget.GlanceAppWidgetManager(context).getGlanceIds(CombinedWidget::class.java).contains(glanceId)) return
         val drinkKey = parameters[KEY_DRINK_KEY]
         // A second tap while the tile still shows "Logged" is almost always a double tap.
         if (drinkKey != null && isConfirming(context, glanceId, drinkKey)) return

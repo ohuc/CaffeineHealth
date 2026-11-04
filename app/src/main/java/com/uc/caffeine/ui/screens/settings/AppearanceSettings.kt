@@ -1,5 +1,7 @@
 package com.uc.caffeine.ui.screens.settings
 
+import com.uc.caffeine.monetization.*
+import androidx.compose.ui.semantics.*
 import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColor
@@ -34,6 +36,8 @@ import androidx.compose.material.icons.rounded.DonutLarge
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.PushPin
+import com.uc.caffeine.ui.components.SettingsSwitchRow
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,6 +71,7 @@ import com.uc.caffeine.data.ThemeMode
 import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.ui.components.ExpressiveIntSlider
 import com.uc.caffeine.ui.components.SettingsPageScaffold
+import com.uc.caffeine.ui.components.AdaptiveConnectedButtonGroup
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
 import com.uc.caffeine.ui.theme.colorSchemeForPalette
@@ -84,6 +89,7 @@ internal fun AppearanceSettingsScreen(
     onRecentServingsCountChange: (Int) -> Unit,
     onExpressiveBlurChange: (Boolean) -> Unit,
     onBack: () -> Unit,
+    onStickyHomeChartChange: (Boolean) -> Unit = {},
 ) {
     val haptics = rememberAppHaptics()
     val themeModes = listOf(
@@ -100,21 +106,11 @@ internal fun AppearanceSettingsScreen(
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    val context = LocalContext.current
-
-    SettingsPageScaffold(
-        title = stringResource(R.string.settings_appearance_title),
-        showBackButton = true,
-        onBack = onBack,
-    ) { bottomPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f, fill = true)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = bottomPadding + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
+    val appearanceLocked = isPlusFeatureLocked(ProFeature.AdvancedAppearance)
+    val openPlus = LocalOpenPlus.current
+    val request = LocalRequestPlusFeature.current
+    val onLocked = { request(ProFeature.AdvancedAppearance) }
+    val themeContent: @Composable () -> Unit = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
@@ -137,15 +133,14 @@ internal fun AppearanceSettingsScreen(
                         )
                     },
                     supportingContent = {
-                        Row(
+                        AdaptiveConnectedButtonGroup(
+                            itemCount = themeModes.size,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                        ) {
-                            themeModes.forEachIndexed { index, (themeMode, label) ->
+                        ) { index, shapes ->
+                                val (themeMode, label) = themeModes[index]
                                 ToggleButton(
-                                    modifier = Modifier.weight(1f),
                                     checked = userSettings.themeMode == themeMode,
                                     onCheckedChange = { checked ->
                                         if (checked && userSettings.themeMode != themeMode) {
@@ -153,18 +148,13 @@ internal fun AppearanceSettingsScreen(
                                             onThemeModeChange(themeMode)
                                         }
                                     },
-                                    shapes = when (index) {
-                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                        themeModes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                                    },
+                                    shapes = shapes,
                                 ) {
                                     Text(
                                         text = label,
                                         style = MaterialTheme.typography.labelMedium,
                                     )
                                 }
-                            }
                         }
                     },
                     colors = ListItemDefaults.colors(
@@ -173,60 +163,8 @@ internal fun AppearanceSettingsScreen(
                 )
             }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            text = stringResource(R.string.appearance_color_palette_label),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    },
-                    modifier = Modifier.clip(MaterialTheme.shapes.large),
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Rounded.Palette,
-                            contentDescription = null,
-                        )
-                    },
-                    supportingContent = {
-                        // Plain scrollable Row: ListItem measures slots with intrinsics,
-                        // which LazyRow (SubcomposeLayout) cannot provide.
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState())
-                                .padding(top = 8.dp, bottom = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            AppColorPalette.entries.forEach { palette ->
-                                val previewScheme = remember(palette, isDark) {
-                                    if (palette == AppColorPalette.DYNAMIC) {
-                                        if (isDark) dynamicDarkColorScheme(context)
-                                        else dynamicLightColorScheme(context)
-                                    } else {
-                                        colorSchemeForPalette(palette, isDark)
-                                    }
-                                }
-                                ColorPaletteItem(
-                                    colorScheme = previewScheme,
-                                    isSelected = userSettings.colorPalette == palette,
-                                    name = stringResource(palette.labelRes()),
-                                    onClick = {
-                                        haptics.toggle()
-                                        onColorPaletteChange(palette)
-                                    },
-                                )
-                            }
-                        }
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-                    ),
-                )
-            }
-
+    }
+    val homeContent: @Composable () -> Unit = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
@@ -245,15 +183,14 @@ internal fun AppearanceSettingsScreen(
                         )
                     },
                     supportingContent = {
-                        Row(
+                        AdaptiveConnectedButtonGroup(
+                            itemCount = homeViewModes.size,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                        ) {
-                            homeViewModes.forEachIndexed { index, (mode, label) ->
+                        ) { index, shapes ->
+                                val (mode, label) = homeViewModes[index]
                                 ToggleButton(
-                                    modifier = Modifier.weight(1f),
                                     checked = userSettings.homeViewMode == mode,
                                     onCheckedChange = { checked ->
                                         if (checked && userSettings.homeViewMode != mode) {
@@ -261,17 +198,13 @@ internal fun AppearanceSettingsScreen(
                                             onHomeViewModeChange(mode)
                                         }
                                     },
-                                    shapes = when (index) {
-                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                        else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                    },
+                                    shapes = shapes,
                                 ) {
                                     Text(
                                         text = label,
                                         style = MaterialTheme.typography.labelMedium,
                                     )
                                 }
-                            }
                         }
                     },
                     colors = ListItemDefaults.colors(
@@ -280,24 +213,31 @@ internal fun AppearanceSettingsScreen(
                 )
             }
 
+    }
+    val blurContent: @Composable (Boolean) -> Unit = { locked ->
             SegmentedListItem(
                 checked = userSettings.expressiveBlur,
                 onCheckedChange = { enabled ->
                     haptics.toggle()
-                    onExpressiveBlurChange(enabled)
+                    if (locked && !userSettings.expressiveBlur) onLocked()
+                    else onExpressiveBlurChange(enabled)
                 },
+                modifier = Modifier.plusLockedSemantics(locked, userSettings.expressiveBlur,
+                    if (locked && userSettings.expressiveBlur) stringResource(R.string.plus_turn_off_saved,
+                        stringResource(R.string.appearance_expressive_blur_label)) else stringResource(R.string.plus_locked_click_label)),
                 leadingContent = {
                     Icon(
                         imageVector = Icons.Rounded.BlurOn,
                         contentDescription = null,
+                        modifier = Modifier.plusLockedContent(locked),
                     )
                 },
                 supportingContent = {
-                    Text(text = stringResource(R.string.appearance_expressive_blur_summary))
+                    Text(text = stringResource(R.string.appearance_expressive_blur_summary), color = if (locked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.plusLockedContent(locked))
                 },
                 trailingContent = {
                     // The whole row toggles; the switch only mirrors the state.
-                    Switch(checked = userSettings.expressiveBlur, onCheckedChange = null)
+                    Switch(checked = userSettings.expressiveBlur, onCheckedChange = null, modifier = Modifier.plusLockedContent(locked))
                 },
                 verticalAlignment = Alignment.CenterVertically,
                 shapes = segmentedListItemShapes(index = 0, count = 1),
@@ -308,14 +248,130 @@ internal fun AppearanceSettingsScreen(
                 Text(
                     text = stringResource(R.string.appearance_expressive_blur_label),
                     style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.plusLockedContent(locked),
                 )
             }
 
+    }
+    SettingsPageScaffold(
+        title = stringResource(R.string.settings_appearance_title),
+        showBackButton = true,
+        onBack = onBack,
+    ) { bottomPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = true)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = bottomPadding + 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            themeContent()
+            PaletteChoices(
+                palettes = if (appearanceLocked) listOf(AppColorPalette.DYNAMIC) else AppColorPalette.entries,
+                selectedPalette = userSettings.colorPalette,
+                dark = isDark,
+                onSelect = onColorPaletteChange,
+            )
+            homeContent()
+            SettingsSwitchRow(
+                title = stringResource(R.string.appearance_sticky_chart_label),
+                summary = stringResource(R.string.appearance_sticky_chart_summary),
+                icon = Icons.Rounded.PushPin,
+                checked = userSettings.stickyHomeChart,
+                onCheckedChange = onStickyHomeChartChange,
+            )
+            if (!appearanceLocked) blurContent(false)
             RecentServingsCountItem(
                 count = userSettings.recentServingsCount,
                 onCountChange = onRecentServingsCountChange,
             )
+            if (appearanceLocked) {
+                PlusDivider(stringResource(R.string.plus_divider_label), openPlus)
+                PaletteChoices(
+                    palettes = AppColorPalette.entries.filter { it != AppColorPalette.DYNAMIC },
+                    selectedPalette = userSettings.colorPalette,
+                    dark = isDark,
+                    onSelect = onColorPaletteChange,
+                    locked = true,
+                    onLocked = onLocked,
+                )
+                blurContent(true)
+            }
+
         }
+    }
+}
+
+@Composable
+private fun PaletteChoices(
+    palettes: List<AppColorPalette>,
+    selectedPalette: AppColorPalette,
+    dark: Boolean,
+    onSelect: (AppColorPalette) -> Unit,
+    locked: Boolean = false,
+    onLocked: () -> Unit = {},
+) {
+    val haptics = rememberAppHaptics()
+    val context = LocalContext.current
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        ListItem(
+            headlineContent = {
+                Text(
+                    text = stringResource(if (locked) R.string.appearance_more_palettes else R.string.appearance_color_palette_label),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.plusLockedContent(locked),
+                )
+            },
+            modifier = Modifier.clip(MaterialTheme.shapes.large)
+                .plusLockedSemantics(locked)
+                .then(if (locked) Modifier.clickable { haptics.toggle(); onLocked() } else Modifier),
+            leadingContent = {
+                Icon(
+                    imageVector = Icons.Rounded.Palette,
+                    contentDescription = null,
+                    modifier = Modifier.plusLockedContent(locked),
+                )
+            },
+            supportingContent = {
+                // Plain scrollable Row: ListItem measures slots with intrinsics,
+                // which LazyRow (SubcomposeLayout) cannot provide.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(top = 8.dp, bottom = 4.dp)
+                        .plusLockedContent(locked),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    palettes.forEach { palette ->
+                        val previewScheme = remember(palette, dark) {
+                            if (palette == AppColorPalette.DYNAMIC) {
+                                if (dark) dynamicDarkColorScheme(context)
+                                else dynamicLightColorScheme(context)
+                            } else {
+                                colorSchemeForPalette(palette, dark)
+                            }
+                        }
+                        ColorPaletteItem(
+                            colorScheme = previewScheme,
+                            isSelected = selectedPalette == palette,
+                            name = stringResource(palette.labelRes()),
+                            locked = locked,
+                            onClick = {
+                                haptics.toggle()
+                                if (locked) onLocked() else onSelect(palette)
+                            },
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
+            ),
+        )
     }
 }
 
@@ -383,6 +439,7 @@ private fun ColorPaletteItem(
     isSelected: Boolean,
     name: String,
     onClick: () -> Unit,
+    locked: Boolean = false,
 ) {
     val transition = updateTransition(targetState = isSelected, label = "palette_selection")
     val corner by transition.animateDp(label = "corner") { if (it) 28.dp else 12.dp }
@@ -399,6 +456,8 @@ private fun ColorPaletteItem(
         modifier = Modifier
             .clip(RoundedCornerShape(topStart = corner, topEnd = corner, bottomStart = 12.dp, bottomEnd = 12.dp))
             .drawBehind { drawRect(backgroundColor) }
+            .plusLockedSemantics(locked)
+            .semantics { selected = isSelected }
             .clickable(onClick = onClick)
             .padding(bottom = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

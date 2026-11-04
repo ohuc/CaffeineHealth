@@ -15,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
@@ -23,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +36,8 @@ import com.uc.caffeine.data.UserSettings
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.ui.components.DurationPickerDialog
 import com.uc.caffeine.ui.components.SettingsPageScaffold
+import com.uc.caffeine.ui.components.SettingsSectionLabel
+import com.uc.caffeine.ui.components.SettingsValueRow
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.components.segmentedListItemShapes
 import com.uc.caffeine.ui.theme.CaffeineSurfaceDefaults
@@ -49,6 +54,25 @@ private sealed interface DurationTarget {
     data class Drink(val itemId: String) : DurationTarget
 }
 
+private val DurationTargetSaver = listSaver<DurationTarget?, String>(
+    save = {
+        when (it) {
+            DurationTarget.Default -> listOf("default")
+            is DurationTarget.Category -> listOf("category", it.key)
+            is DurationTarget.Drink -> listOf("drink", it.itemId)
+            null -> emptyList()
+        }
+    },
+    restore = {
+        when (it.firstOrNull()) {
+            "default" -> DurationTarget.Default
+            "category" -> DurationTarget.Category(it[1])
+            "drink" -> DurationTarget.Drink(it[1])
+            else -> null
+        }
+    },
+)
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun DurationSettingsScreen(
@@ -60,7 +84,7 @@ internal fun DurationSettingsScreen(
     onBack: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
-    var pickerTarget by remember { mutableStateOf<DurationTarget?>(null) }
+    var pickerTarget by rememberSaveable(stateSaver = DurationTargetSaver) { mutableStateOf<DurationTarget?>(null) }
     val categoryKeys = CategoryUtils.getCategoryOrder()
     val drinkOverrides = remember(userSettings.drinkDurationMinutes, drinkPresets) {
         resolveVisibleDrinkDurationOverrides(
@@ -80,77 +104,50 @@ internal fun DurationSettingsScreen(
                 .weight(1f, fill = true)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = bottomPadding + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            SegmentedListItem(
-                onClick = {
-                    haptics.toggle()
-                    pickerTarget = DurationTarget.Default
-                },
-                leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null) },
-                content = { Text(text = stringResource(R.string.duration_settings_default_title)) },
-                supportingContent = {
-                    Text(text = stringResource(R.string.duration_settings_default_description))
-                },
-                trailingContent = {
-                    FilledTonalButton(
-                        onClick = {
-                            haptics.toggle()
-                            pickerTarget = DurationTarget.Default
-                        },
-                    ) {
-                        Text(formatDurationMinutes(userSettings.defaultDurationMinutes))
-                    }
-                },
-                verticalAlignment = Alignment.CenterVertically,
-                shapes = segmentedListItemShapes(0, 1),
-                colors = ListItemDefaults.colors(
-                    containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-                ),
+            SettingsValueRow(
+                icon = Icons.Rounded.Timer,
+                title = stringResource(R.string.duration_settings_default_title),
+                summary = stringResource(R.string.duration_settings_default_description),
+                value = formatDurationMinutes(userSettings.defaultDurationMinutes),
+                onClick = { pickerTarget = DurationTarget.Default },
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column {
                 SectionHeader(
                     title = stringResource(R.string.duration_settings_categories_section),
                     hint = stringResource(R.string.duration_settings_categories_hint),
                 )
-                categoryKeys.forEachIndexed { index, key ->
-                    val label = CategoryUtils.getCategoryDisplayName(key)
-                    val hasOverride = key in userSettings.categoryDurationMinutes
-                    SegmentedListItem(
-                        onClick = {
-                            haptics.toggle()
-                            pickerTarget = DurationTarget.Category(key)
-                        },
-                        leadingContent = {
-                            Icon(CategoryIcons.getIcon(label), contentDescription = null)
-                        },
-                        content = { Text(text = label) },
-                        trailingContent = {
-                            OverrideTrailing(
-                                valueText = formatDurationMinutes(userSettings.defaultDurationForCategory(key)),
-                                clearIcon = if (hasOverride) Icons.Rounded.Replay else null,
-                                clearContentDescription = stringResource(R.string.duration_settings_reset_cd, label),
-                                onClear = {
-                                    haptics.toggle()
-                                    onCategoryDurationChange(key, null)
-                                },
-                                onEdit = {
-                                    haptics.toggle()
-                                    pickerTarget = DurationTarget.Category(key)
-                                },
-                            )
-                        },
-                        verticalAlignment = Alignment.CenterVertically,
-                        shapes = segmentedListItemShapes(index, categoryKeys.size),
-                        colors = ListItemDefaults.colors(
-                            containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-                        ),
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    categoryKeys.forEachIndexed { index, key ->
+                        val label = CategoryUtils.getCategoryDisplayName(key)
+                        val hasOverride = key in userSettings.categoryDurationMinutes
+                        SettingsValueRow(
+                            icon = CategoryIcons.getIcon(label),
+                            title = label,
+                            value = formatDurationMinutes(userSettings.defaultDurationForCategory(key)),
+                            onClick = { pickerTarget = DurationTarget.Category(key) },
+                            index = index,
+                            count = categoryKeys.size,
+                            trailingAction = if (hasOverride) {
+                                {
+                                    OverrideAction(
+                                        icon = Icons.Rounded.Replay,
+                                        contentDescription = stringResource(R.string.duration_settings_reset_cd, label),
+                                        onClick = {
+                                            haptics.toggle()
+                                            onCategoryDurationChange(key, null)
+                                        },
+                                    )
+                                }
+                            } else null,
+                        )
+                    }
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column {
                 SectionHeader(
                     title = stringResource(R.string.duration_settings_drinks_section),
                     hint = if (drinkOverrides.isEmpty()) {
@@ -159,34 +156,26 @@ internal fun DurationSettingsScreen(
                         null
                     },
                 )
-                drinkOverrides.forEachIndexed { index, (itemId, name, minutes) ->
-                    SegmentedListItem(
-                        onClick = {
-                            haptics.toggle()
-                            pickerTarget = DurationTarget.Drink(itemId)
-                        },
-                        content = { Text(text = name) },
-                        trailingContent = {
-                            OverrideTrailing(
-                                valueText = formatDurationMinutes(minutes),
-                                clearIcon = Icons.Rounded.Close,
-                                clearContentDescription = stringResource(R.string.duration_settings_remove_cd, name),
-                                onClear = {
-                                    haptics.toggle()
-                                    onDrinkDurationChange(itemId, null)
-                                },
-                                onEdit = {
-                                    haptics.toggle()
-                                    pickerTarget = DurationTarget.Drink(itemId)
-                                },
-                            )
-                        },
-                        verticalAlignment = Alignment.CenterVertically,
-                        shapes = segmentedListItemShapes(index, drinkOverrides.size),
-                        colors = ListItemDefaults.colors(
-                            containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
-                        ),
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    drinkOverrides.forEachIndexed { index, (itemId, name, minutes) ->
+                        SettingsValueRow(
+                            title = name,
+                            value = formatDurationMinutes(minutes),
+                            onClick = { pickerTarget = DurationTarget.Drink(itemId) },
+                            index = index,
+                            count = drinkOverrides.size,
+                            trailingAction = {
+                                OverrideAction(
+                                    icon = Icons.Rounded.Close,
+                                    contentDescription = stringResource(R.string.duration_settings_remove_cd, name),
+                                    onClick = {
+                                        haptics.toggle()
+                                        onDrinkDurationChange(itemId, null)
+                                    },
+                                )
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -220,38 +209,24 @@ internal fun DurationSettingsScreen(
 
 @Composable
 private fun SectionHeader(title: String, hint: String?) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 4.dp),
-    )
+    SettingsSectionLabel(title)
     if (hint != null) {
         Text(
             text = hint,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 4.dp),
+            modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 8.dp),
         )
     }
 }
 
 @Composable
-private fun OverrideTrailing(
-    valueText: String,
-    clearIcon: androidx.compose.ui.graphics.vector.ImageVector?,
-    clearContentDescription: String,
-    onClear: () -> Unit,
-    onEdit: () -> Unit,
+private fun OverrideAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        if (clearIcon != null) {
-            IconButton(onClick = onClear) {
-                Icon(clearIcon, contentDescription = clearContentDescription)
-            }
-        }
-        FilledTonalButton(onClick = onEdit) {
-            Text(valueText)
-        }
+    IconButton(onClick = onClick, shapes = IconButtonDefaults.shapes()) {
+        Icon(icon, contentDescription = contentDescription)
     }
 }
