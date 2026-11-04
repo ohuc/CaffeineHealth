@@ -436,4 +436,10 @@
     <string name="home_view_toggle_to_circular_cd">Переключить на круговой вид</string>
     <string name="home_view_toggle_to_graph_cd">Переключить на график</string>
     <string name="health_connect_bedtime_reading">Запись о сне: %1$s</string>
+    <string name="widget_caffeine_ring_label">Кольцо кофеина</string>
+    <string name="widget_caffeine_ring_description">Активный кофеин в виде кольца, которое заполняется до вашего порога сна.</string>
+    <string name="settings_automation_title">Автоматизация</string>
+    <string name="settings_automation_summary">Добавляйте выпитые напитки через Tasker, NFC теги и другие приложения</string>
+    <string name="automation_enable_title">Разрешить другим приложениям добавлять выпитые напитки</string>
+    <string name="automation_enable_description">Приложения вроде Tasker и MacroDroid могут добавлять записи, посылая широковещательные сообщения. Включайте только если пользуйтесь ими.</string>
 </resources>
