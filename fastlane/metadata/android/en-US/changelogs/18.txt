@@ -1,0 +1,8 @@
+- Redesigned first-run setup, with a notifications step
+- Settings reorganised into clear sections
+- Layouts for tablets, foldables and landscape
+- Press and hold the chart to read your caffeine level at any moment
+- Health Connect: separate switches for sleep and caffeine, with clearer status
+- New drinks, including Indian chai
+- Privacy policy link in Settings → About
+- Updated translations
