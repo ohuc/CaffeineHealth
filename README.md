@@ -290,11 +290,26 @@ You can contribute to this project even if you are not a developer by helping in
 
 ## 💖 Support Development
 
-Caffeine Health is free, open source and has no ads. If it helps you, you can support its development through [GitHub Sponsors](https://github.com/sponsors/ohuc), monthly or as a one-time amount. Sponsorship is entirely voluntary: every feature stays the same whether you sponsor or not.
+Caffeine Health is free, open source and has no ads. If it helps you, you can support its development through [GitHub Sponsors](https://github.com/sponsors/ohuc), monthly or as a one-time amount. Sponsorship is entirely voluntary and never unlocks app features: the app works the same whether you sponsor or not.
 
 <a href="https://github.com/sponsors/ohuc">
   <img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor ohuc on GitHub" />
 </a>
+
+| Tier | Monthly | One-time |
+|------|---------|----------|
+| ☕ Espresso shot · $1 | Sponsor badge, name in release notes | Sponsor badge, name in the next release notes |
+| ☕ Cappuccino · $5 | + avatar in release notes, prioritise 1 feature request | Name and avatar in the next release notes |
+| ☕ Cold brew · $10 | + name and avatar in this README, prioritise 2 feature requests | + name in this README |
+| ☕ Whole pot · $15 | + prioritise 4 feature requests | + name and avatar in this README |
+
+You can also choose any custom amount.
+
+### Sponsors
+
+Thank you to everyone supporting Caffeine Health! Sponsors at the Cold brew tier and above are listed here.
+
+<!-- sponsors --><!-- sponsors -->
 
 Starring the repo, reporting bugs and [translating](https://hosted.weblate.org/engage/caffeine-health/) help just as much.
 
