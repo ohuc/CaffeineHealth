@@ -20,6 +20,9 @@
   </a>
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white&labelColor=1a1a1a" alt="Platform" />
   <img src="https://img.shields.io/badge/Min%20SDK-31-brightgreen&labelColor=1a1a1a" alt="Min SDK" />
+  <a href="https://github.com/sponsors/ohuc">
+    <img src="https://img.shields.io/github/sponsors/ohuc?logo=githubsponsors&logoColor=ea4aaa&label=Sponsors&labelColor=1a1a1a" alt="GitHub Sponsors" />
+  </a>
 </p>
 
 <p align="center">
@@ -282,6 +285,18 @@ This project is available on [Hosted Weblate](https://hosted.weblate.org/engage/
 You can contribute to this project even if you are not a developer by helping in translating this project into languages you know.
 
 <a href="https://hosted.weblate.org/engage/caffeine-health/"><img src="https://hosted.weblate.org/widget/caffeine-health/strings/287x66-grey.png" alt="Translation status"></a>
+
+---
+
+## 💖 Support Development
+
+Caffeine Health is free, open source and has no ads. If it helps you, you can support its development through [GitHub Sponsors](https://github.com/sponsors/ohuc), monthly or as a one-time amount. Sponsorship is entirely voluntary: every feature stays the same whether you sponsor or not.
+
+<a href="https://github.com/sponsors/ohuc">
+  <img src="https://img.shields.io/badge/Sponsor%20on%20GitHub-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor ohuc on GitHub" />
+</a>
+
+Starring the repo, reporting bugs and [translating](https://hosted.weblate.org/engage/caffeine-health/) help just as much.
 
 ---
 
