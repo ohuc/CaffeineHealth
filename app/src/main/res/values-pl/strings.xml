@@ -1,3 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Caffeine Health</string>
+    <string name="onboarding_smoking_source_url">https://pubmed.ncbi.nlm.nih.gov/2623013/</string>
+    <string name="onboarding_alcohol_source_url">https://www.cdc.gov/alcohol/about-alcohol-use/alcohol-caffeine.html</string>
+    <string name="onboarding_caffeine_source_url">https://pmc.ncbi.nlm.nih.gov/articles/PMC11703537/</string>
+    <string name="onboarding_medication_source_url">https://www.ncbi.nlm.nih.gov/books/NBK223808/</string>
+    <string name="widget_caffeine_now_label">Poziom kofeiny</string>
+    <string name="widget_caffeine_now_description">Pokazuje na pierwszy rzut oka aktualny poziom aktywnej kofeiny.</string>
+    <string name="widget_quick_add_label">Szybki dziennik</string>
+    <string name="widget_quick_add_description">Rejestruj ostatnie napoje bezpośrednio na ekranie głównym.</string>
+    <string name="widget_combined_label">Panel kofeiny</string>
+    <string name="widget_combined_description">Sprawdź poziom kofeiny i zapisz spożyte napoje bez otwierania aplikacji.</string>
+    <string name="widget_caffeine_ring_label">Pierścień kofeinowy</string>
+    <string name="widget_caffeine_ring_description">Twoja aktywna kofeina to pierścień, który wypełnia się do progu snu.</string>
+    <string name="action_back">Z powrotem</string>
+    <string name="settings_title">Ustawienia</string>
+    <string name="settings_caffeine_profile_title">Profil kofeiny</string>
+    <string name="settings_caffeine_profile_summary">Okres półtrwania, pora snu, próg bezpieczeństwa, czas zakończyć</string>
+    <string name="settings_look_feel_title">Wygląd i styl</string>
+    <string name="settings_look_feel_summary">Motyw, kolory, układ ekranu głównego, czas i data</string>
+    <string name="settings_connections_title">Połączenia i dane</string>
 </resources>
